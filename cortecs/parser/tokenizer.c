@@ -8,7 +8,7 @@ cortecs_tokenizer_result_t cortecs_tokenizer_result(cortecs_token_tag_t tag, sds
     return (cortecs_tokenizer_result_t){
         .start = end,
         .token = {
-            .tag = CORTECS_TOKEN_INT,
+            .tag = tag,
             .text = sdsnewlen(&text[start], end - start),
         },
     };
