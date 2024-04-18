@@ -9,4 +9,5 @@ cc_library(
         "@flecs",
         "@sds",
     ],
+    visibility = ["//cortecs:__subpackages__"]
 )
