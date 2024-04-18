@@ -1,0 +1,17 @@
+"This is a docstring?"
+module(name = "cortecs", version = "2024.04.16")
+
+git_repository = use_repo_rule("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
+
+git_repository(
+    name = "flecs",
+    remote = "https://github.com/SanderMertens/flecs.git",
+    branch = "master",
+)
+
+git_repository(
+    name = "sds",
+    remote = "https://github.com/antirez/sds.git",
+    branch = "master",
+    build_file = "@//third_party/sds:BUILD",
+)
