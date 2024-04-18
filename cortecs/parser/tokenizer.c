@@ -29,6 +29,8 @@ cortecs_tokenizer_result_t cortecs_tokenizer_next_int(sds text, uint32_t start) 
         if (!isdigit(c)) {
             break;
         }
+
+        end++;
     }
 
     return cortecs_tokenizer_result(CORTECS_TOKEN_INT, text, start, end);
@@ -45,6 +47,8 @@ cortecs_tokenizer_result_t cortecs_tokenizer_next_invalid(sds text, uint32_t sta
         if (isdigit(c)) {
             break;
         }
+
+        end++;
     }
 
     return cortecs_tokenizer_result(CORTECS_TOKEN_INVALID, text, start, end);
