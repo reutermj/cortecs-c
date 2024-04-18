@@ -6,7 +6,6 @@ cc_library(
     hdrs = glob(["*.h"]),
     includes = ["./"],
     deps = [
-        "//cortecs/ast",
         "@flecs",
         "@sds",
     ],
