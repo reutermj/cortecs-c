@@ -10,13 +10,6 @@ git_repository(
 )
 
 git_repository(
-    name = "sds",
-    remote = "https://github.com/antirez/sds.git",
-    branch = "master",
-    build_file = "@//third_party/sds:BUILD",
-)
-
-git_repository(
     name = "unity",
     remote = "https://github.com/ThrowTheSwitch/Unity.git",
     branch = "master",

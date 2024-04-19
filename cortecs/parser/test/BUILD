@@ -7,6 +7,5 @@ cc_test(
     deps = [
         "//cortecs/parser",
         "@unity",
-        "@sds",
     ],
 )

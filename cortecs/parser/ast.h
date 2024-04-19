@@ -1,8 +1,6 @@
 #ifndef CORTECS_AST_AST_H
 #define CORTECS_AST_AST_H
 
-#include <sds.h>
-
 typedef enum {
     CORTECS_TOKEN_NAME,
     CORTECS_TOKEN_INT,
@@ -13,7 +11,7 @@ typedef enum {
 
 typedef struct {
     cortecs_token_tag_t tag;
-    sds text;
+    char *text;
 } cortecs_token_t;
 
 #endif

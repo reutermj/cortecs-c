@@ -1,6 +1,5 @@
 #include <unity.h>
 #include <tokenizer.h>
-#include <sds.h>
 #include <string.h>
 
 void setUp(void) {
@@ -12,11 +11,11 @@ void tearDown(void) {
 }
 
 void test_tokenize_int(void) {
-    sds text = sdsnew("1");
+    char *text = "1";
     cortecs_tokenizer_result_t result = cortecs_tokenizer_next(text, 0);
     TEST_ASSERT_EQUAL_INT32(result.start, 1);
     TEST_ASSERT_TRUE(result.token.tag == CORTECS_TOKEN_INT);
-    TEST_ASSERT_FALSE(strncmp(text, result.token.text, sdslen(text)));
+    TEST_ASSERT_FALSE(strncmp(text, result.token.text, strlen(text)));
 }
 
 // not needed when using generate_test_runner.rb
