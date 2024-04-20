@@ -93,6 +93,29 @@ cortecs_tokenizer_result_t cortecs_tokenizer_next_name(char *text, uint32_t star
     return cortecs_tokenizer_result(tag, text, start, end);
 }
 
+cortecs_tokenizer_result_t cortecs_tokenizer_next_whitespace(char *text, uint32_t start) {
+    uint32_t end = start + 1;
+    while (true) {
+        char c = text[end];
+        if (c == 0) {
+            break;
+        }
+
+        if (c == '\n') {
+            break;
+        }
+
+        if (isspace(c)) {
+            end++;
+            continue;
+        }
+
+        break;
+    }
+
+    return cortecs_tokenizer_result(CORTECS_TOKEN_WHITESPACE, text, start, end);
+}
+
 cortecs_tokenizer_result_t cortecs_tokenizer_next_invalid(char *text, uint32_t start) {
     uint32_t end = start + 1;
     while (true) {
@@ -127,6 +150,14 @@ cortecs_tokenizer_result_t cortecs_tokenizer_next(char *text, uint32_t start) {
 
     if (c == '.') {
         return cortecs_tokenizer_next_float(text, start, start + 1);
+    }
+
+    if (c == '\n') {
+        return cortecs_tokenizer_result(CORTECS_TOKEN_NEWLINE, text, start, start + 1);
+    }
+
+    if (isspace(c)) {
+        return cortecs_tokenizer_next_whitespace(text, start);
     }
 
     return cortecs_tokenizer_next_invalid(text, start);
