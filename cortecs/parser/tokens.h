@@ -1,5 +1,5 @@
-#ifndef CORTECS_AST_AST_H
-#define CORTECS_AST_AST_H
+#ifndef CORTECS_PARSER_TOKENS_H
+#define CORTECS_PARSER_TOKENS_H
 
 typedef enum {
     CORTECS_TOKEN_NAME,

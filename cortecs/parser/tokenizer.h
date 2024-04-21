@@ -1,7 +1,7 @@
 #ifndef CORTECS_PARSER_TOKENIZER_H
 #define CORTECS_PARSER_TOKENIZER_H
 
-#include <ast.h>
+#include <tokens.h>
 #include <stdint.h>
 
 typedef struct {
