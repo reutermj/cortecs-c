@@ -5,6 +5,6 @@ cc_library(
     srcs = glob(["*.c"]),
     hdrs = glob(["*.h"]),
     includes = ["./"],
+    visibility = ["//cortecs:__subpackages__"],
     deps = ["@flecs"],
-    visibility = ["//cortecs:__subpackages__"]
 )

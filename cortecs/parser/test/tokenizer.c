@@ -1,7 +1,7 @@
-#include <unity.h>
-#include <tokenizer.h>
-#include <string.h>
 #include <stdint.h>
+#include <string.h>
+#include <tokenizer.h>
+#include <unity.h>
 
 void setUp() {
     // set stuff up here

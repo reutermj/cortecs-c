@@ -1,4 +1,5 @@
 bazel-*
 .vscode
 *.lock
-buildifier
+buildifier*
+bazelisk*
