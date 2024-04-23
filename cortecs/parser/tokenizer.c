@@ -5,7 +5,7 @@
 #include <string.h>
 #include <tokenizer.h>
 
-cortecs_tokenizer_result_t cortecs_tokenizer_result(cortecs_token_tag_t tag, char *text, uint32_t start, uint32_t end) {
+cortecs_tokenizer_result_t cortecs_tokenizer_result(cortecs_token_tag_t tag, char *text, uint32_t start, uint32_t end, cortecs_span_t span) {
     char *token = (char *)calloc(end - start + 1, sizeof(char));
     memcpy(token, &text[start], end - start);
 
@@ -13,6 +13,7 @@ cortecs_tokenizer_result_t cortecs_tokenizer_result(cortecs_token_tag_t tag, cha
         .start = end,
         .token = {
             .tag = tag,
+            .span = span,
             .text = token,
         },
     };
@@ -32,7 +33,12 @@ cortecs_tokenizer_result_t cortecs_tokenizer_next_float(char *text, uint32_t sta
         end++;
     }
 
-    return cortecs_tokenizer_result(CORTECS_TOKEN_INT, text, start, end);
+    cortecs_span_t span = {
+        .lines = 0,
+        .columns = end - start,
+    };
+
+    return cortecs_tokenizer_result(CORTECS_TOKEN_INT, text, start, end, span);
 }
 
 cortecs_tokenizer_result_t cortecs_tokenizer_next_int(char *text, uint32_t start) {
@@ -54,7 +60,12 @@ cortecs_tokenizer_result_t cortecs_tokenizer_next_int(char *text, uint32_t start
         end++;
     }
 
-    return cortecs_tokenizer_result(CORTECS_TOKEN_INT, text, start, end);
+    cortecs_span_t span = {
+        .lines = 0,
+        .columns = end - start,
+    };
+
+    return cortecs_tokenizer_result(CORTECS_TOKEN_INT, text, start, end, span);
 }
 
 cortecs_tokenizer_result_t cortecs_tokenizer_next_name(char *text, uint32_t start) {
@@ -90,10 +101,29 @@ cortecs_tokenizer_result_t cortecs_tokenizer_next_name(char *text, uint32_t star
         tag = CORTECS_TOKEN_NAME;
     }
 
-    return cortecs_tokenizer_result(tag, text, start, end);
+    cortecs_span_t span = {
+        .lines = 0,
+        .columns = end - start,
+    };
+
+    return cortecs_tokenizer_result(tag, text, start, end, span);
 }
 
 cortecs_tokenizer_result_t cortecs_tokenizer_next_whitespace(char *text, uint32_t start) {
+    cortecs_span_t span;
+
+    if (text[start] == '\n') {
+        span = (cortecs_span_t){
+            .lines = 1,
+            .columns = 0,
+        };
+    } else {
+        span = (cortecs_span_t){
+            .lines = 0,
+            .columns = 1,
+        };
+    }
+
     uint32_t end = start + 1;
     while (true) {
         char c = text[end];
@@ -101,19 +131,21 @@ cortecs_tokenizer_result_t cortecs_tokenizer_next_whitespace(char *text, uint32_
             break;
         }
 
-        if (c == '\n') {
+        if (!isspace(c)) {
             break;
         }
 
-        if (isspace(c)) {
-            end++;
-            continue;
+        if (c == '\n') {
+            span.columns = 0;
+            span.lines++;
+        } else {
+            span.columns++;
         }
 
-        break;
+        end++;
     }
 
-    return cortecs_tokenizer_result(CORTECS_TOKEN_WHITESPACE, text, start, end);
+    return cortecs_tokenizer_result(CORTECS_TOKEN_WHITESPACE, text, start, end, span);
 }
 
 cortecs_tokenizer_result_t cortecs_tokenizer_next_invalid(char *text, uint32_t start) {
@@ -124,20 +156,37 @@ cortecs_tokenizer_result_t cortecs_tokenizer_next_invalid(char *text, uint32_t s
             break;
         }
 
-        if (isdigit(c)) {
+        if (isalnum(c)) {
+            break;
+        }
+
+        if (isspace(c)) {
+            break;
+        }
+
+        if (c == '.') {
             break;
         }
 
         end++;
     }
 
-    return cortecs_tokenizer_result(CORTECS_TOKEN_INVALID, text, start, end);
+    cortecs_span_t span = {
+        .lines = 0,
+        .columns = end - start,
+    };
+
+    return cortecs_tokenizer_result(CORTECS_TOKEN_INVALID, text, start, end, span);
 }
 
 cortecs_tokenizer_result_t cortecs_tokenizer_next(char *text, uint32_t start) {
     char c = text[start];
     if (c == 0) {
-        return cortecs_tokenizer_result(CORTECS_TOKEN_INVALID, "", 0, 0);
+        cortecs_span_t span = {
+            .lines = 0,
+            .columns = 0,
+        };
+        return cortecs_tokenizer_result(CORTECS_TOKEN_INVALID, "", 0, 0, span);
     }
 
     if (isalpha(c)) {
@@ -150,10 +199,6 @@ cortecs_tokenizer_result_t cortecs_tokenizer_next(char *text, uint32_t start) {
 
     if (c == '.') {
         return cortecs_tokenizer_next_float(text, start, start + 1);
-    }
-
-    if (c == '\n') {
-        return cortecs_tokenizer_result(CORTECS_TOKEN_NEWLINE, text, start, start + 1);
     }
 
     if (isspace(c)) {

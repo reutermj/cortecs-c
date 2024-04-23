@@ -14,7 +14,28 @@ void tearDown() {
 void test_tokenize(char *in, uint32_t offset, char *gold, cortecs_token_tag_t tag) {
     cortecs_tokenizer_result_t result = cortecs_tokenizer_next(in, offset);
     int target_length = strlen(gold);
+    cortecs_span_t gold_span = {
+        .lines = 0,
+        .columns = 0,
+    };
+    for (uint32_t i = 0;; i++) {
+        char c = gold[i];
+        if (c == 0) {
+            break;
+        }
+
+        if (c == '\n') {
+            gold_span.columns = 0;
+            gold_span.lines++;
+        } else {
+            gold_span.columns++;
+        }
+    }
+
+    printf("\"%s\"\n", gold);
     TEST_ASSERT_EQUAL_INT32(offset + target_length, result.start);
+    TEST_ASSERT_EQUAL_INT32(gold_span.lines, result.token.span.lines);
+    TEST_ASSERT_EQUAL_INT32(gold_span.columns, result.token.span.columns);
     TEST_ASSERT_TRUE(result.token.tag == tag);
     TEST_ASSERT_TRUE(strncmp(gold, result.token.text, strlen(gold)) == 0);
 }
@@ -78,18 +99,12 @@ void test_tokenize_type(void) {
 void test_tokenize_whitespace(void) {
     test_tokenize(" ", 0, " ", CORTECS_TOKEN_WHITESPACE);
     test_tokenize("\t", 0, "\t", CORTECS_TOKEN_WHITESPACE);
-    test_tokenize("  \t\t  ", 0, "  \t\t  ", CORTECS_TOKEN_WHITESPACE);
+    test_tokenize("\n", 0, "\n", CORTECS_TOKEN_WHITESPACE);
+    test_tokenize("  \t\n  ", 0, "  \t\n  ", CORTECS_TOKEN_WHITESPACE);
     test_tokenize("  \t\t  123", 0, "  \t\t  ", CORTECS_TOKEN_WHITESPACE);
     test_tokenize("asdf  \t", 4, "  \t", CORTECS_TOKEN_WHITESPACE);
+    test_tokenize("asdf  \n", 4, "  \n", CORTECS_TOKEN_WHITESPACE);
     test_tokenize("asdf  \t123", 4, "  \t", CORTECS_TOKEN_WHITESPACE);
-}
-
-void test_tokenize_newline(void) {
-    test_tokenize("\n", 0, "\n", CORTECS_TOKEN_NEWLINE);
-    test_tokenize("\n\n", 0, "\n", CORTECS_TOKEN_NEWLINE);
-    test_tokenize("asdf\n", 4, "\n", CORTECS_TOKEN_NEWLINE);
-    test_tokenize("\nasdf", 0, "\n", CORTECS_TOKEN_NEWLINE);
-    test_tokenize("asdf\nasdf", 4, "\n", CORTECS_TOKEN_NEWLINE);
 }
 
 int main() {
@@ -102,6 +117,5 @@ int main() {
     RUN_TEST(test_tokenize_name);
     RUN_TEST(test_tokenize_type);
     RUN_TEST(test_tokenize_whitespace);
-    RUN_TEST(test_tokenize_newline);
     return UNITY_END();
 }
