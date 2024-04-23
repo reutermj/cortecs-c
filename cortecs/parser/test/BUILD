@@ -4,6 +4,7 @@ cc_test(
     name = "test",
     size = "small",
     srcs = glob(["*.c"]),
+    features = ["treat_warnings_as_errors"],
     deps = [
         "//cortecs/parser",
         "@unity",
