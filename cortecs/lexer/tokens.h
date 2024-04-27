@@ -1,12 +1,7 @@
 #ifndef CORTECS_LEXER_TOKENS_H
 #define CORTECS_LEXER_TOKENS_H
 
-#include <stdint.h>
-
-typedef struct {
-    uint32_t lines;
-    uint32_t columns;
-} cortecs_span_t;
+#include <common.h>
 
 typedef enum {
     CORTECS_LEXER_TAG_NAME,
