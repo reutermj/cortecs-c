@@ -7,15 +7,23 @@ typedef struct {
     cortecs_span_t absolute_offset;
 } cortecs_parser_context_t;
 
-static void *cortecs_parser_context_create(ecs_world_t *, uint64_t, void *) {
+static void *cortecs_parser_context_create(ecs_world_t *world, uint64_t group_id, void *group_by_arg) {
+    CORTECS_UNUSED(world);
+    CORTECS_UNUSED(group_id);
+    CORTECS_UNUSED(group_by_arg);
     return calloc(1, sizeof(cortecs_parser_context_t));
 }
 
-static void cortecs_parser_context_destroy(ecs_world_t *, uint64_t, void *context, void *) {
+static void cortecs_parser_context_destroy(ecs_world_t *world, uint64_t group_id, void *context, void *group_by_arg) {
+    CORTECS_UNUSED(world);
+    CORTECS_UNUSED(group_id);
+    CORTECS_UNUSED(group_by_arg);
     free(context);
 }
 
-static int cortecs_parser_span_compare(ecs_entity_t, const void *left_span, ecs_entity_t, const void *right_span) {
+static int cortecs_parser_span_compare(ecs_entity_t left, const void *left_span, ecs_entity_t right, const void *right_span) {
+    CORTECS_UNUSED(left);
+    CORTECS_UNUSED(right);
     return cortecs_span_compare(*(cortecs_span_t *)left_span, *(cortecs_span_t *)right_span);
 }
 
