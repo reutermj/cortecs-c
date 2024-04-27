@@ -7,4 +7,5 @@ cc_library(
     features = ["treat_warnings_as_errors"],
     includes = ["./"],
     visibility = ["//cortecs:__subpackages__"],
+    deps = ["@flecs"],
 )
