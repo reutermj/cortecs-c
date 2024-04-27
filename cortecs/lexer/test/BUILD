@@ -6,7 +6,7 @@ cc_test(
     srcs = glob(["*.c"]),
     features = ["treat_warnings_as_errors"],
     deps = [
-        "//cortecs/parser",
+        "//cortecs/lexer",
         "@unity",
     ],
 )

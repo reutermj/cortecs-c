@@ -1,0 +1,29 @@
+#ifndef CORTECS_PARSER_PARSER_H
+#define CORTECS_PARSER_PARSER_H
+
+#include <flecs.h>
+#include <stdbool.h>
+#include <tokens.h>
+
+ecs_world_t *world;
+
+typedef enum {
+    CORTECS_AST_FUNCTION,
+
+    CORTECS_AST_BODY,
+    CORTECS_AST_LET,
+    CORTECS_AST_RETURN,
+
+    CORTECS_AST_EXPRESSION,
+    CORTECS_AST_UNARY,
+    CORTECS_AST_ATOMIC,
+    CORTECS_AST_FUNCTION_CALL,
+    CORTECS_AST_BINARY,
+    CORTECS_AST_BINARY_P1,
+    CORTECS_AST_BINARY_P2,
+    CORTECS_AST_BINARY_P3,
+    CORTECS_AST_BINARY_P4,
+    CORTECS_AST_BINARY_P5,
+} cortecs_ast_tag_t;
+
+#endif
