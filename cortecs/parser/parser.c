@@ -7,9 +7,7 @@ typedef struct {
     cortecs_span_t absolute_offset;
 } cortecs_parser_context_t;
 
-static void *cortecs_parser_context_create(ecs_world_t *world, uint64_t group_id, void *group_by_arg) {
-    CORTECS_UNUSED(group_by_arg);
-    CORTECS_UNUSED(group_id);
+static void *cortecs_parser_context_create(ecs_world_t *, uint64_t, void *) {
     return calloc(1, sizeof(cortecs_parser_context_t));
 }
 

@@ -3,3 +3,4 @@ bazel-*
 *.lock
 buildifier*
 bazelisk*
+compile_commands.json
