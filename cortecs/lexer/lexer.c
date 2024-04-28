@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-cortecs_lexer_result_t cortecs_lexer_result(cortecs_lexer_tag_t tag, char *text, uint32_t start, uint32_t end, cortecs_span_t span) {
+static cortecs_lexer_result_t construct_result(cortecs_lexer_tag_t tag, char *text, uint32_t start, uint32_t end, cortecs_span_t span) {
     char *token = (char *)calloc(end - start + 1, sizeof(char));
     memcpy(token, &text[start], end - start);
 
@@ -19,7 +19,7 @@ cortecs_lexer_result_t cortecs_lexer_result(cortecs_lexer_tag_t tag, char *text,
     };
 }
 
-cortecs_lexer_result_t cortecs_lexer_next_float(char *text, uint32_t start, uint32_t end) {
+static cortecs_lexer_result_t lex_float(char *text, uint32_t start, uint32_t end) {
     while (true) {
         char c = text[end];
         if (c == 0) {
@@ -38,10 +38,10 @@ cortecs_lexer_result_t cortecs_lexer_next_float(char *text, uint32_t start, uint
         .columns = end - start,
     };
 
-    return cortecs_lexer_result(CORTECS_LEXER_TAG_INT, text, start, end, span);
+    return construct_result(CORTECS_LEXER_TAG_INT, text, start, end, span);
 }
 
-cortecs_lexer_result_t cortecs_lexer_next_int(char *text, uint32_t start) {
+static cortecs_lexer_result_t lex_int(char *text, uint32_t start) {
     uint32_t end = start + 1;
     while (true) {
         char c = text[end];
@@ -50,7 +50,7 @@ cortecs_lexer_result_t cortecs_lexer_next_int(char *text, uint32_t start) {
         }
 
         if (c == '.') {
-            return cortecs_lexer_next_float(text, start, end + 1);
+            return lex_float(text, start, end + 1);
         }
 
         if (!isdigit(c)) {
@@ -65,10 +65,10 @@ cortecs_lexer_result_t cortecs_lexer_next_int(char *text, uint32_t start) {
         .columns = end - start,
     };
 
-    return cortecs_lexer_result(CORTECS_LEXER_TAG_INT, text, start, end, span);
+    return construct_result(CORTECS_LEXER_TAG_INT, text, start, end, span);
 }
 
-cortecs_lexer_result_t cortecs_lexer_next_name(char *text, uint32_t start) {
+static cortecs_lexer_result_t lex_name(char *text, uint32_t start) {
     //[a-zA-Z_]+
     uint32_t end = start + 1;
     while (true) {
@@ -106,10 +106,10 @@ cortecs_lexer_result_t cortecs_lexer_next_name(char *text, uint32_t start) {
         .columns = end - start,
     };
 
-    return cortecs_lexer_result(tag, text, start, end, span);
+    return construct_result(tag, text, start, end, span);
 }
 
-cortecs_lexer_result_t cortecs_lexer_next_whitespace(char *text, uint32_t start) {
+static cortecs_lexer_result_t lex_whitespace(char *text, uint32_t start) {
     cortecs_span_t span;
 
     if (text[start] == '\n') {
@@ -145,10 +145,10 @@ cortecs_lexer_result_t cortecs_lexer_next_whitespace(char *text, uint32_t start)
         end++;
     }
 
-    return cortecs_lexer_result(CORTECS_LEXER_TAG_SPACE, text, start, end, span);
+    return construct_result(CORTECS_LEXER_TAG_SPACE, text, start, end, span);
 }
 
-cortecs_lexer_result_t cortecs_lexer_next_invalid(char *text, uint32_t start) {
+static cortecs_lexer_result_t lex_invalid(char *text, uint32_t start) {
     uint32_t end = start + 1;
     while (true) {
         char c = text[end];
@@ -176,7 +176,7 @@ cortecs_lexer_result_t cortecs_lexer_next_invalid(char *text, uint32_t start) {
         .columns = end - start,
     };
 
-    return cortecs_lexer_result(CORTECS_LEXER_TAG_INVALID, text, start, end, span);
+    return construct_result(CORTECS_LEXER_TAG_INVALID, text, start, end, span);
 }
 
 cortecs_lexer_result_t cortecs_lexer_next(char *text, uint32_t start) {
@@ -186,24 +186,24 @@ cortecs_lexer_result_t cortecs_lexer_next(char *text, uint32_t start) {
             .lines = 0,
             .columns = 0,
         };
-        return cortecs_lexer_result(CORTECS_LEXER_TAG_INVALID, "", 0, 0, span);
+        return construct_result(CORTECS_LEXER_TAG_INVALID, "", 0, 0, span);
     }
 
     if (isalpha(c)) {
-        return cortecs_lexer_next_name(text, start);
+        return lex_name(text, start);
     }
 
     if (isdigit(c)) {
-        return cortecs_lexer_next_int(text, start);
+        return lex_int(text, start);
     }
 
     if (c == '.') {
-        return cortecs_lexer_next_float(text, start, start + 1);
+        return lex_float(text, start, start + 1);
     }
 
     if (isspace(c)) {
-        return cortecs_lexer_next_whitespace(text, start);
+        return lex_whitespace(text, start);
     }
 
-    return cortecs_lexer_next_invalid(text, start);
+    return lex_invalid(text, start);
 }
