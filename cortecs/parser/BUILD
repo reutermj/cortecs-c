@@ -14,3 +14,12 @@ cc_library(
         "@flecs",
     ],
 )
+
+cc_library(
+    name = "private",
+    hdrs = glob(["private/*.h"]),
+    features = ["treat_warnings_as_errors"],
+    includes = ["./"],
+    visibility = ["//cortecs/parser:__subpackages__"],
+    deps = ["//cortecs/parser"],
+)
