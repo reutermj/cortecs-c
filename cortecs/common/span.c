@@ -1,4 +1,4 @@
-#include <common.h>
+#include <span.h>
 
 int cortecs_span_compare(cortecs_span_t left, cortecs_span_t right) {
     if (left.lines < right.lines) {

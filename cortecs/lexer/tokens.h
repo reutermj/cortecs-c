@@ -1,7 +1,7 @@
 #ifndef CORTECS_LEXER_TOKENS_H
 #define CORTECS_LEXER_TOKENS_H
 
-#include <common.h>
+#include <span.h>
 
 typedef enum {
     CORTECS_LEXER_TAG_NAME,

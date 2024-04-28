@@ -8,6 +8,7 @@ cc_library(
     includes = ["./"],
     visibility = ["//cortecs:__subpackages__"],
     deps = [
+        "//common",
         "//cortecs/common",
         "//cortecs/lexer",
         "@flecs",

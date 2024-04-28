@@ -1,12 +1,8 @@
-#ifndef CORTECS_COMMON_COMMON_H
-#define CORTECS_COMMON_COMMON_H
+#ifndef CORTECS_COMMON_SPAN_H
+#define CORTECS_COMMON_SPAN_H
 
 #include <flecs.h>
 #include <stdint.h>
-
-#define CORTECS_UNUSED(X) (void)(X)
-
-extern ecs_world_t *cortecs_world;
 
 typedef struct {
     uint32_t lines;
