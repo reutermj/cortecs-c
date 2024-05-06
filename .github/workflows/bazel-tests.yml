@@ -1,6 +1,6 @@
 name: Bazel test
 run-name: Bazel test
-on: [push]
+on: [pull_request]
 jobs:
   test:
     runs-on: ubuntu-latest
