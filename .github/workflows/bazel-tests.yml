@@ -2,7 +2,6 @@ name: Bazel test
 run-name: Bazel test
 on: 
   pull_request:
-  merge_group:
 jobs:
   test:
     runs-on: ubuntu-latest
