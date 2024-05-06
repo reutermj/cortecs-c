@@ -1,9 +1,13 @@
 name: Bazel test
 run-name: Bazel test
-on: [pull_request]
+on: 
+  pull_request:
+  merge_group:
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - run: bazel test //...
+      - name: Run slow CI (emulated by a long sleep)
+        run: sleep 300
