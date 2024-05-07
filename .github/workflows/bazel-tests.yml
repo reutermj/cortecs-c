@@ -8,5 +8,3 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: bazel test //...
-      - name: Run slow CI (emulated by a long sleep)
-        run: sleep 300
