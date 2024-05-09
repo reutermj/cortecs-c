@@ -2,7 +2,7 @@ name: Update calver
 run-name: Update calver
 on:
   schedule:
-    - cron: "0 16 * * *"
+    - cron: "*/10 * * * *"
 jobs:
   update-calver:
     runs-on: ubuntu-latest
