@@ -4,7 +4,7 @@ on:
   pull_request:
 jobs:
   approve-calver:
+    if: contains(github.event.pull_request.head.ref, 'version-bump/')
     runs-on: ubuntu-latest
     steps:
-      - if ${{contains(github.event.pull_request.head.ref, 'version-bump/')}}
-      - gh pr comment ${{github.event.pull_request.number}} --body "/trunk merge"
+      - run: gh pr comment ${{github.event.pull_request.number}} --body "/trunk merge"
