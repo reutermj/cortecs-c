@@ -1,0 +1,17 @@
+name: Run Required Checks
+run-name: PR Checks for ${{ github.ref_name }}
+
+# Trigger jobs whenever Trunk Merge tests a PR using a `trunk-merge/` branch
+on:
+  push:
+    branches:
+      - trunk-merge/**
+
+jobs:
+  unit_tests:
+    runs-on: ubuntu-latest
+    name: All Unit Tests
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - run: bazel test //...

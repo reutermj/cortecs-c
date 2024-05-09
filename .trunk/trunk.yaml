@@ -1,0 +1,5 @@
+cli:
+  version: 1.16.0
+merge: 
+  required_statuses:
+    - All Unit Tests
