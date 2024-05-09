@@ -1,0 +1,22 @@
+name: Update calver
+run-name: Update calver
+on:
+  schedule:
+    - cron: "0 16 * * *"
+jobs:
+  update-calver:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ssh-key: ${{ secrets.SSH_KEY }}
+      - uses: actions/setup-python@v5
+        with: 
+          python-version: '3.x'
+      - run: pip install GitPython
+      - run: git config user.name "github-actions[bot]"
+      - run: git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+      - run: python .github/calver/update-calver.py
+      - run: echo "TODAY=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+      - run: git push origin version-bump/$TODAY
+      - run: gh pr create --title "Pull request title" --body "Pull request body" --base main --head version-bump/$TODAY
