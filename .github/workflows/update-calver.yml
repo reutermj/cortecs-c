@@ -18,5 +18,5 @@ jobs:
       - run: git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
       - run: python .github/calver/update-calver.py
       - run: echo "TODAY=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
-      - run: git push origin version-bump/$TODAY
+      - run: git push origin HEAD:version-bump/$TODAY
       - run: gh pr create --title "Pull request title" --body "Pull request body" --base main --head version-bump/$TODAY
