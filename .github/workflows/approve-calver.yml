@@ -1,0 +1,10 @@
+name: Approve calver
+run-name: Approve calver
+on:
+  pull_request:
+jobs:
+  approve-calver:
+    runs-on: ubuntu-latest
+    steps:
+      - if ${{contains(github.event.pull_request.head.ref, 'version-bump/')}}
+      - gh pr comment ${{github.event.pull_request.number}} --body "/trunk merge"
