@@ -2,7 +2,7 @@ name: Update calver
 run-name: Update calver
 on:
   schedule:
-    - cron: "*/10 * * * *"
+    - cron: "19 6 * * *"
 env:
   GH_TOKEN: ${{ github.token }}
 jobs:
