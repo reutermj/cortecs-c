@@ -3,6 +3,8 @@ run-name: Update calver
 on:
   schedule:
     - cron: "*/10 * * * *"
+env:
+  GH_TOKEN: ${{ github.token }}
 jobs:
   update-calver:
     runs-on: ubuntu-latest
