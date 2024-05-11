@@ -69,7 +69,7 @@ static cortecs_lexer_result_t lex_int(char *text, uint32_t start) {
 }
 
 static cortecs_lexer_result_t lex_name(char *text, uint32_t start) {
-    //[a-zA-Z_]+
+    //[a-zA-Z][a-zA-Z0-9_]*
     uint32_t end = start + 1;
     while (true) {
         char c = text[end];
@@ -189,7 +189,7 @@ cortecs_lexer_result_t cortecs_lexer_next(char *text, uint32_t start) {
         return construct_result(CORTECS_LEXER_TAG_INVALID, "", 0, 0, span);
     }
 
-    if (isalpha(c)) {
+    if (isalpha(c) || c == '_') {
         return lex_name(text, start);
     }
 

@@ -1,10 +1,14 @@
 #include <lexer.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <string.h>
+#include <tokens.h>
 #include <unity.h>
 
+#include "fuzz.h"
+
 void setUp() {
-    // required for unity
+    cortecs_lexer_fuzz_init();
 }
 
 void tearDown() {
@@ -13,6 +17,7 @@ void tearDown() {
 
 void cortecs_lexer_test(char *in, uint32_t offset, char *gold, cortecs_lexer_tag_t tag) {
     cortecs_lexer_result_t result = cortecs_lexer_next(in, offset);
+
     int target_length = strlen(gold);
     cortecs_span_t gold_span = {
         .lines = 0,
@@ -76,6 +81,12 @@ void cortecs_lexer_test_if(void) {
 }
 
 void cortecs_lexer_test_name(void) {
+    for (int i = 0; i < 1000; i++) {
+        cortecs_lexer_token_t token = cortecs_lexer_fuzz_name();
+        cortecs_lexer_test(token.text, 0, token.text, token.tag);
+        free(token.text);
+    }
+
     cortecs_lexer_test("a", 0, "a", CORTECS_LEXER_TAG_NAME);
     cortecs_lexer_test("asdf", 0, "asdf", CORTECS_LEXER_TAG_NAME);
     cortecs_lexer_test("a123", 0, "a123", CORTECS_LEXER_TAG_NAME);
