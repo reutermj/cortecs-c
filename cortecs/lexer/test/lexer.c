@@ -113,6 +113,12 @@ void cortecs_lexer_test_type(void) {
 }
 
 void cortecs_lexer_test_whitespace(void) {
+    for (int i = 0; i < 1000; i++) {
+        cortecs_lexer_token_t token = cortecs_lexer_fuzz_whitespace();
+        cortecs_lexer_test(token.text, 0, token.text, token.tag);
+        free(token.text);
+    }
+
     cortecs_lexer_test(" ", 0, " ", CORTECS_LEXER_TAG_SPACE);
     cortecs_lexer_test("\t", 0, "\t", CORTECS_LEXER_TAG_SPACE);
     cortecs_lexer_test("\n", 0, "\n", CORTECS_LEXER_TAG_SPACE);
@@ -125,13 +131,13 @@ void cortecs_lexer_test_whitespace(void) {
 
 int main() {
     UNITY_BEGIN();
-    // RUN_TEST(cortecs_lexer_test_int);
-    // RUN_TEST(cortecs_lexer_test_function);
-    // RUN_TEST(cortecs_lexer_test_let);
-    // RUN_TEST(cortecs_lexer_test_return);
-    // RUN_TEST(cortecs_lexer_test_if);
-    // RUN_TEST(cortecs_lexer_test_name);
+    RUN_TEST(cortecs_lexer_test_int);
+    RUN_TEST(cortecs_lexer_test_function);
+    RUN_TEST(cortecs_lexer_test_let);
+    RUN_TEST(cortecs_lexer_test_return);
+    RUN_TEST(cortecs_lexer_test_if);
+    RUN_TEST(cortecs_lexer_test_name);
     RUN_TEST(cortecs_lexer_test_type);
-    // RUN_TEST(cortecs_lexer_test_whitespace);
+    RUN_TEST(cortecs_lexer_test_whitespace);
     return UNITY_END();
 }
