@@ -5,5 +5,6 @@
 
 void cortecs_lexer_fuzz_init();
 cortecs_lexer_token_t cortecs_lexer_fuzz_name();
+cortecs_lexer_token_t cortecs_lexer_fuzz_type();
 
 #endif
