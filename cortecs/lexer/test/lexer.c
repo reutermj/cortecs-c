@@ -136,6 +136,39 @@ void cortecs_lexer_test_name(void) {
     cortecs_lexer_test("qwer asdf 123", 5, "asdf", CORTECS_LEXER_TAG_NAME);
 }
 
+void cortecs_lexer_test_type_one_char(void) {
+    char str[2] = {0};
+    for (uint32_t i = 0; i < CORTECS_LEXER_TYPE_FIRST_CHAR_MAX; i++) {
+        str[0] = cortecs_lexer_type_first_char(i);
+        cortecs_lexer_test(str, 0, str, CORTECS_LEXER_TAG_TYPE);
+    }
+}
+
+void cortecs_lexer_test_type_two_char(void) {
+    char str[3] = {0};
+    for (uint32_t i = 0; i < CORTECS_LEXER_TYPE_FIRST_CHAR_MAX; i++) {
+        str[0] = cortecs_lexer_type_first_char(i);
+        for (uint32_t j = 0; j < CORTECS_LEXER_TYPE_VALID_CHAR_MAX; j++) {
+            str[1] = cortecs_lexer_type_valid_char(j);
+            cortecs_lexer_test(str, 0, str, CORTECS_LEXER_TAG_TYPE);
+        }
+    }
+}
+
+void cortecs_lexer_test_type_three_char(void) {
+    char str[4] = {0};
+    for (uint32_t i = 0; i < CORTECS_LEXER_TYPE_FIRST_CHAR_MAX; i++) {
+        str[0] = cortecs_lexer_type_first_char(i);
+        for (uint32_t j = 0; j < CORTECS_LEXER_TYPE_VALID_CHAR_MAX; j++) {
+            str[1] = cortecs_lexer_type_valid_char(j);
+            for (uint32_t k = 0; k < CORTECS_LEXER_TYPE_VALID_CHAR_MAX; k++) {
+                str[2] = cortecs_lexer_type_valid_char(k);
+                cortecs_lexer_test(str, 0, str, CORTECS_LEXER_TAG_TYPE);
+            }
+        }
+    }
+}
+
 void cortecs_lexer_test_type(void) {
     for (int i = 0; i < 1000; i++) {
         cortecs_lexer_token_t token = cortecs_lexer_fuzz_type();
@@ -180,6 +213,9 @@ int main() {
     RUN_TEST(cortecs_lexer_test_name_two_char);
     RUN_TEST(cortecs_lexer_test_name_three_char);
     RUN_TEST(cortecs_lexer_test_name);
+    RUN_TEST(cortecs_lexer_test_type_one_char);
+    RUN_TEST(cortecs_lexer_test_type_two_char);
+    RUN_TEST(cortecs_lexer_test_type_three_char);
     RUN_TEST(cortecs_lexer_test_type);
     RUN_TEST(cortecs_lexer_test_whitespace);
     return UNITY_END();
