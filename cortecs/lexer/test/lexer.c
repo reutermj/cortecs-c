@@ -80,6 +80,15 @@ void cortecs_lexer_test_if(void) {
     cortecs_lexer_test("asdf if 123", 5, "if", CORTECS_LEXER_TAG_IF);
 }
 
+void cortecs_lexer_test_name_one_char(void) {
+    char str[] = {'_', 0};
+    cortecs_lexer_test(str, 0, str, CORTECS_LEXER_TAG_NAME);
+    for (char c = 'a'; c <= 'z'; c++) {
+        str[0] = c;
+        cortecs_lexer_test(str, 0, str, CORTECS_LEXER_TAG_NAME);
+    }
+}
+
 void cortecs_lexer_test_name(void) {
     for (int i = 0; i < 1000; i++) {
         cortecs_lexer_token_t token = cortecs_lexer_fuzz_name();
@@ -136,6 +145,7 @@ int main() {
     RUN_TEST(cortecs_lexer_test_let);
     RUN_TEST(cortecs_lexer_test_return);
     RUN_TEST(cortecs_lexer_test_if);
+    RUN_TEST(cortecs_lexer_test_name_one_char);
     RUN_TEST(cortecs_lexer_test_name);
     RUN_TEST(cortecs_lexer_test_type);
     RUN_TEST(cortecs_lexer_test_whitespace);
