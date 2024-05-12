@@ -43,6 +43,7 @@ void cortecs_lexer_test(char *in, uint32_t offset, char *gold, cortecs_lexer_tag
     TEST_ASSERT_EQUAL_INT32(gold_span.columns, result.token.span.columns);
     TEST_ASSERT_TRUE(result.token.tag == tag);
     TEST_ASSERT_TRUE(strncmp(gold, result.token.text, strlen(gold)) == 0);
+    free(result.token.text);
 }
 
 void cortecs_lexer_test_int(void) {
