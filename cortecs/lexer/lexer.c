@@ -20,6 +20,7 @@ static cortecs_lexer_result_t construct_result(cortecs_lexer_tag_t tag, char *te
 }
 
 static cortecs_lexer_result_t lex_float(char *text, uint32_t start, uint32_t end) {
+    //([0-9]*\.[0-9]+) | ([0-9]+\.[0-9]*)
     while (true) {
         char c = text[end];
         if (c == 0) {
@@ -42,6 +43,7 @@ static cortecs_lexer_result_t lex_float(char *text, uint32_t start, uint32_t end
 }
 
 static cortecs_lexer_result_t lex_int(char *text, uint32_t start) {
+    //[0-9]+
     uint32_t end = start + 1;
     while (true) {
         char c = text[end];
@@ -111,6 +113,7 @@ static cortecs_lexer_result_t lex_name(char *text, uint32_t start) {
 }
 
 static cortecs_lexer_result_t lex_whitespace(char *text, uint32_t start) {
+    //[\ \t\r\f\v]+
     uint32_t end = start + 1;
     while (true) {
         char c = text[end];
