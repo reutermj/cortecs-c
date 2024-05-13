@@ -6,7 +6,7 @@
 #include <string.h>
 
 static cortecs_lexer_result_t construct_result(cortecs_lexer_tag_t tag, char *text, uint32_t start, uint32_t end, cortecs_span_t span) {
-    char *token = (char *)calloc(end - start + 1, sizeof(char));
+    char *token = calloc(end - start + 1, sizeof(char));
     memcpy(token, &text[start], end - start);
 
     return (cortecs_lexer_result_t){
@@ -111,20 +111,6 @@ static cortecs_lexer_result_t lex_name(char *text, uint32_t start) {
 }
 
 static cortecs_lexer_result_t lex_whitespace(char *text, uint32_t start) {
-    cortecs_span_t span;
-
-    if (text[start] == '\n') {
-        span = (cortecs_span_t){
-            .lines = 1,
-            .columns = 0,
-        };
-    } else {
-        span = (cortecs_span_t){
-            .lines = 0,
-            .columns = 1,
-        };
-    }
-
     uint32_t end = start + 1;
     while (true) {
         char c = text[end];
@@ -137,14 +123,16 @@ static cortecs_lexer_result_t lex_whitespace(char *text, uint32_t start) {
         }
 
         if (c == '\n') {
-            span.columns = 0;
-            span.lines++;
-        } else {
-            span.columns++;
+            break;
         }
 
         end++;
     }
+
+    cortecs_span_t span = {
+        .lines = 0,
+        .columns = end - start,
+    };
 
     return construct_result(CORTECS_LEXER_TAG_SPACE, text, start, end, span);
 }
@@ -200,6 +188,15 @@ cortecs_lexer_result_t cortecs_lexer_next(char *text, uint32_t start) {
 
     if (c == '.') {
         return lex_float(text, start, start + 1);
+    }
+
+    if (c == '\n') {
+        cortecs_span_t span = {
+            .lines = 1,
+            .columns = 0,
+        };
+
+        return construct_result(CORTECS_LEXER_TAG_NEW_LINE, text, start, start + 1, span);
     }
 
     if (isspace(c)) {

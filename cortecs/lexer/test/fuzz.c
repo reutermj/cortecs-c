@@ -56,17 +56,11 @@ cortecs_lexer_token_t cortecs_lexer_fuzz_type() {
     };
 }
 
-cortecs_lexer_token_t cortecs_lexer_fuzz_whitespace() {
+cortecs_lexer_token_t cortecs_lexer_fuzz_space() {
     uint32_t length = rand() % 256 + 1;
-
-    cortecs_span_t span = {
-        .columns = length,
-        .lines = 0,
-    };
 
     char *text = calloc(length + 1, sizeof(char));
     for (int i = 0; i < length; i++) {
-        span.columns++;
         switch (rand() % 6) {
             case 0:
                 text[i] = ' ';
@@ -76,18 +70,17 @@ cortecs_lexer_token_t cortecs_lexer_fuzz_whitespace() {
                 text[i] = '\r';
             case 3:
                 text[i] = '\v';
-            case 4:
-                text[i] = '\f';
             default:
-                text[i] = '\n';
-                span.columns = 0;
-                span.lines++;
+                text[i] = '\f';
         }
     }
 
     return (cortecs_lexer_token_t){
         .tag = CORTECS_LEXER_TAG_SPACE,
         .text = text,
-        .span = span,
+        .span = (cortecs_span_t){
+            .columns = length,
+            .lines = 0,
+        },
     };
 }
