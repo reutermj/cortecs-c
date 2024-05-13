@@ -84,6 +84,7 @@ void cortecs_lexer_test_if(void) {
 }
 
 void cortecs_lexer_test_name_one_char(void) {
+    // Tests lexing of all strings matching [a-z_]
     char str[2] = {0};
     for (uint32_t i = 0; i < CORTECS_LEXER_NAME_FIRST_CHAR_MAX; i++) {
         str[0] = cortecs_lexer_name_first_char(i);
@@ -92,11 +93,13 @@ void cortecs_lexer_test_name_one_char(void) {
 }
 
 void cortecs_lexer_test_name_two_char(void) {
+    // Tests lexing of all strings matching [a-z_][a-zA-Z0-9_]
     char str[3] = {0};
     for (uint32_t i = 0; i < CORTECS_LEXER_NAME_FIRST_CHAR_MAX; i++) {
         str[0] = cortecs_lexer_name_first_char(i);
         for (uint32_t j = 0; j < CORTECS_LEXER_NAME_VALID_CHAR_MAX; j++) {
             str[1] = cortecs_lexer_name_valid_char(j);
+            // filter out keywords
             if (strncmp(str, "if", 2) == 0) {
                 continue;
             }
@@ -106,6 +109,7 @@ void cortecs_lexer_test_name_two_char(void) {
 }
 
 void cortecs_lexer_test_name_three_char(void) {
+    // Tests lexing of all strings matching [a-z_][a-zA-Z0-9_]{2}
     char str[4] = {0};
     for (uint32_t i = 0; i < CORTECS_LEXER_NAME_FIRST_CHAR_MAX; i++) {
         str[0] = cortecs_lexer_name_first_char(i);
@@ -113,6 +117,7 @@ void cortecs_lexer_test_name_three_char(void) {
             str[1] = cortecs_lexer_name_valid_char(j);
             for (uint32_t k = 0; k < CORTECS_LEXER_NAME_VALID_CHAR_MAX; k++) {
                 str[2] = cortecs_lexer_name_valid_char(k);
+                // filter out keywords
                 if (strncmp(str, "let", 3) == 0) {
                     continue;
                 }
@@ -122,13 +127,16 @@ void cortecs_lexer_test_name_three_char(void) {
     }
 }
 
-void cortecs_lexer_test_name(void) {
+void cortecs_lexer_test_name_fuzz_single_token(void) {
+    // Tests lexing of random strings matching [a-z_][a-zA-Z0-9_]*
     for (int i = 0; i < 1000; i++) {
         cortecs_lexer_token_t token = cortecs_lexer_fuzz_name();
         cortecs_lexer_test(token.text, 0, token.text, token.tag);
         free(token.text);
     }
+}
 
+void cortecs_lexer_test_name(void) {
     cortecs_lexer_test("a", 0, "a", CORTECS_LEXER_TAG_NAME);
     cortecs_lexer_test("asdf", 0, "asdf", CORTECS_LEXER_TAG_NAME);
     cortecs_lexer_test("a123", 0, "a123", CORTECS_LEXER_TAG_NAME);
@@ -139,6 +147,7 @@ void cortecs_lexer_test_name(void) {
 }
 
 void cortecs_lexer_test_type_one_char(void) {
+    // Tests lexing of all strings matching [A-Z]
     char str[2] = {0};
     for (uint32_t i = 0; i < CORTECS_LEXER_TYPE_FIRST_CHAR_MAX; i++) {
         str[0] = cortecs_lexer_type_first_char(i);
@@ -147,6 +156,7 @@ void cortecs_lexer_test_type_one_char(void) {
 }
 
 void cortecs_lexer_test_type_two_char(void) {
+    // Tests lexing of all strings matching [A-Z][a-zA-Z0-9_]
     char str[3] = {0};
     for (uint32_t i = 0; i < CORTECS_LEXER_TYPE_FIRST_CHAR_MAX; i++) {
         str[0] = cortecs_lexer_type_first_char(i);
@@ -158,6 +168,7 @@ void cortecs_lexer_test_type_two_char(void) {
 }
 
 void cortecs_lexer_test_type_three_char(void) {
+    // Tests lexing of all strings matching [A-Z][a-zA-Z0-9_]{2}
     char str[4] = {0};
     for (uint32_t i = 0; i < CORTECS_LEXER_TYPE_FIRST_CHAR_MAX; i++) {
         str[0] = cortecs_lexer_type_first_char(i);
@@ -171,13 +182,16 @@ void cortecs_lexer_test_type_three_char(void) {
     }
 }
 
-void cortecs_lexer_test_type(void) {
+void cortecs_lexer_test_type_fuzz_single_token(void) {
+    // Tests lexing of random strings matching [A-Z][a-zA-Z0-9_]*
     for (int i = 0; i < 1000; i++) {
         cortecs_lexer_token_t token = cortecs_lexer_fuzz_type();
         cortecs_lexer_test(token.text, 0, token.text, token.tag);
         free(token.text);
     }
+}
 
+void cortecs_lexer_test_type(void) {
     cortecs_lexer_test("A", 0, "A", CORTECS_LEXER_TAG_TYPE);
     cortecs_lexer_test("Asdf", 0, "Asdf", CORTECS_LEXER_TAG_TYPE);
     cortecs_lexer_test("A123", 0, "A123", CORTECS_LEXER_TAG_TYPE);
@@ -224,11 +238,13 @@ int main() {
     RUN_TEST(cortecs_lexer_test_name_one_char);
     RUN_TEST(cortecs_lexer_test_name_two_char);
     RUN_TEST(cortecs_lexer_test_name_three_char);
+    RUN_TEST(cortecs_lexer_test_name_fuzz_single_token);
     RUN_TEST(cortecs_lexer_test_name);
 
     RUN_TEST(cortecs_lexer_test_type_one_char);
     RUN_TEST(cortecs_lexer_test_type_two_char);
     RUN_TEST(cortecs_lexer_test_type_three_char);
+    RUN_TEST(cortecs_lexer_test_type_fuzz_single_token);
     RUN_TEST(cortecs_lexer_test_type);
 
     RUN_TEST(cortecs_lexer_test_space);
