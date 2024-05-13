@@ -215,23 +215,23 @@ void cortecs_lexer_test_new_line(void) {
 
 int main() {
     UNITY_BEGIN();
-    // RUN_TEST(cortecs_lexer_test_int);
-    // RUN_TEST(cortecs_lexer_test_function);
-    // RUN_TEST(cortecs_lexer_test_let);
-    // RUN_TEST(cortecs_lexer_test_return);
-    // RUN_TEST(cortecs_lexer_test_if);
+    RUN_TEST(cortecs_lexer_test_int);
+    RUN_TEST(cortecs_lexer_test_function);
+    RUN_TEST(cortecs_lexer_test_let);
+    RUN_TEST(cortecs_lexer_test_return);
+    RUN_TEST(cortecs_lexer_test_if);
 
-    // RUN_TEST(cortecs_lexer_test_name_one_char);
-    // RUN_TEST(cortecs_lexer_test_name_two_char);
-    // RUN_TEST(cortecs_lexer_test_name_three_char);
-    // RUN_TEST(cortecs_lexer_test_name);
+    RUN_TEST(cortecs_lexer_test_name_one_char);
+    RUN_TEST(cortecs_lexer_test_name_two_char);
+    RUN_TEST(cortecs_lexer_test_name_three_char);
+    RUN_TEST(cortecs_lexer_test_name);
 
-    // RUN_TEST(cortecs_lexer_test_type_one_char);
-    // RUN_TEST(cortecs_lexer_test_type_two_char);
-    // RUN_TEST(cortecs_lexer_test_type_three_char);
-    // RUN_TEST(cortecs_lexer_test_type);
+    RUN_TEST(cortecs_lexer_test_type_one_char);
+    RUN_TEST(cortecs_lexer_test_type_two_char);
+    RUN_TEST(cortecs_lexer_test_type_three_char);
+    RUN_TEST(cortecs_lexer_test_type);
 
-    // RUN_TEST(cortecs_lexer_test_space);
+    RUN_TEST(cortecs_lexer_test_space);
     RUN_TEST(cortecs_lexer_test_new_line);
 
     return UNITY_END();
