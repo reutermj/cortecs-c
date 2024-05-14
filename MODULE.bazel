@@ -1,5 +1,5 @@
 "Contains code related to the Cortecs programming language"
-module(name = "cortecs", version = "2024.05.13")
+module(name = "cortecs", version = "2024.05.14")
 
 git_repository = use_repo_rule("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 
