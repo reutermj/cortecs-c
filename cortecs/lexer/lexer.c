@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
+#include <tokens.h>
 
 static cortecs_lexer_result_t construct_result(cortecs_lexer_tag_t tag, char *text, uint32_t start, uint32_t end, cortecs_span_t span) {
     char *token = calloc(end - start + 1, sizeof(char));
@@ -19,27 +20,40 @@ static cortecs_lexer_result_t construct_result(cortecs_lexer_tag_t tag, char *te
     };
 }
 
-static cortecs_lexer_result_t lex_float(char *text, uint32_t start, uint32_t end) {
-    //([0-9]*\.[0-9]+) | ([0-9]+\.[0-9]*)
+static cortecs_lexer_result_t lex_float_or_dot(char *text, uint32_t start, uint32_t end) {
+    // \. | ([0-9]*\.[0-9]+) | ([0-9]+\.[0-9]*)
+    // This function is only entered after lexing the '.'
+    // Case 1: '.' is the first character of the token. in which case, this
+    // token could be either the dot operator if no digits follow or a float if digits follow.
+    // Case 2: '.' appeared after a string of digits. In which case, this token must be a float.
     while (true) {
         char c = text[end];
         if (c == 0) {
             break;
         }
 
-        if (!isdigit(c)) {
-            break;
+        if (isdigit(c)) {
+            end++;
+            continue;
         }
 
-        end++;
+        break;
+    }
+
+    uint32_t length = end - start;
+    cortecs_lexer_tag_t tag;
+    if (length == 1) {
+        tag = CORTECS_LEXER_TAG_DOT;
+    } else {
+        tag = CORTECS_LEXER_TAG_FLOAT;
     }
 
     cortecs_span_t span = {
         .lines = 0,
-        .columns = end - start,
+        .columns = length,
     };
 
-    return construct_result(CORTECS_LEXER_TAG_INT, text, start, end, span);
+    return construct_result(tag, text, start, end, span);
 }
 
 static cortecs_lexer_result_t lex_int(char *text, uint32_t start) {
@@ -52,14 +66,15 @@ static cortecs_lexer_result_t lex_int(char *text, uint32_t start) {
         }
 
         if (c == '.') {
-            return lex_float(text, start, end + 1);
+            return lex_float_or_dot(text, start, end + 1);
         }
 
-        if (!isdigit(c)) {
-            break;
+        if (isdigit(c)) {
+            end++;
+            continue;
         }
 
-        end++;
+        break;
     }
 
     cortecs_span_t span = {
@@ -121,15 +136,12 @@ static cortecs_lexer_result_t lex_whitespace(char *text, uint32_t start) {
             break;
         }
 
-        if (!isspace(c)) {
-            break;
+        if (isspace(c) && c != '\n') {
+            end++;
+            continue;
         }
 
-        if (c == '\n') {
-            break;
-        }
-
-        end++;
+        break;
     }
 
     cortecs_span_t span = {
@@ -190,7 +202,7 @@ cortecs_lexer_result_t cortecs_lexer_next(char *text, uint32_t start) {
     }
 
     if (c == '.') {
-        return lex_float(text, start, start + 1);
+        return lex_float_or_dot(text, start, start + 1);
     }
 
     if (c == '\n') {

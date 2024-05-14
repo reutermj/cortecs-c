@@ -55,6 +55,19 @@ void cortecs_lexer_test_int(void) {
     cortecs_lexer_test("asdf 123 qwer", 5, "123", CORTECS_LEXER_TAG_INT);
 }
 
+void cortecs_lexer_test_float(void) {
+    cortecs_lexer_test("1.", 0, "1.", CORTECS_LEXER_TAG_FLOAT);
+    cortecs_lexer_test(".1", 0, ".1", CORTECS_LEXER_TAG_FLOAT);
+    cortecs_lexer_test("123.", 0, "123.", CORTECS_LEXER_TAG_FLOAT);
+    cortecs_lexer_test(".123", 0, ".123", CORTECS_LEXER_TAG_FLOAT);
+    cortecs_lexer_test("123. asdf", 0, "123.", CORTECS_LEXER_TAG_FLOAT);
+    cortecs_lexer_test(".123 asdf", 0, ".123", CORTECS_LEXER_TAG_FLOAT);
+    cortecs_lexer_test("asdf 123.", 5, "123.", CORTECS_LEXER_TAG_FLOAT);
+    cortecs_lexer_test("asdf .123", 5, ".123", CORTECS_LEXER_TAG_FLOAT);
+    cortecs_lexer_test("asdf 123. qwer", 5, "123.", CORTECS_LEXER_TAG_FLOAT);
+    cortecs_lexer_test("asdf .123 qwer", 5, ".123", CORTECS_LEXER_TAG_FLOAT);
+}
+
 void cortecs_lexer_test_function(void) {
     cortecs_lexer_test("function", 0, "function", CORTECS_LEXER_TAG_FUNCTION);
     cortecs_lexer_test("asdf function", 5, "function", CORTECS_LEXER_TAG_FUNCTION);
@@ -230,6 +243,7 @@ void cortecs_lexer_test_new_line(void) {
 int main() {
     UNITY_BEGIN();
     RUN_TEST(cortecs_lexer_test_int);
+    RUN_TEST(cortecs_lexer_test_float);
     RUN_TEST(cortecs_lexer_test_function);
     RUN_TEST(cortecs_lexer_test_let);
     RUN_TEST(cortecs_lexer_test_return);

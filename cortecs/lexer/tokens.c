@@ -10,6 +10,8 @@ const char *cortecs_lexer_tag_to_string(cortecs_lexer_tag_t tag) {
             return "type";
         case CORTECS_LEXER_TAG_INT:
             return "int";
+        case CORTECS_LEXER_TAG_FLOAT:
+            return "float";
         case CORTECS_LEXER_TAG_SPACE:
             return "space";
         case CORTECS_LEXER_TAG_NEW_LINE:
@@ -22,6 +24,8 @@ const char *cortecs_lexer_tag_to_string(cortecs_lexer_tag_t tag) {
             return "return";
         case CORTECS_LEXER_TAG_IF:
             return "if";
+        case CORTECS_LEXER_TAG_DOT:
+            return "dot";
         case CORTECS_LEXER_TAG_INVALID:
             return "invalid";
     }
