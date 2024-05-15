@@ -1,5 +1,20 @@
 #include "util.h"
 
+char cortecs_lexer_space_char(uint32_t i) {
+    switch (i % CORTECS_LEXER_SPACE_CHAR_MAX) {
+        case 0:
+            return ' ';
+        case 1:
+            return '\t';
+        case 2:
+            return '\r';
+        case 3:
+            return '\v';
+        default:
+            return '\f';
+    }
+}
+
 char cortecs_lexer_name_first_char(uint32_t i) {
     uint32_t j = i % CORTECS_LEXER_NAME_FIRST_CHAR_MAX;
     if (j < 26) {
