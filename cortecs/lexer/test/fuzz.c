@@ -61,18 +61,7 @@ cortecs_lexer_token_t cortecs_lexer_fuzz_space() {
 
     char *text = calloc(length + 1, sizeof(char));
     for (int i = 0; i < length; i++) {
-        switch (rand() % 6) {
-            case 0:
-                text[i] = ' ';
-            case 1:
-                text[i] = '\t';
-            case 2:
-                text[i] = '\r';
-            case 3:
-                text[i] = '\v';
-            default:
-                text[i] = '\f';
-        }
+        text[i] = cortecs_lexer_space_char(rand());
     }
 
     return (cortecs_lexer_token_t){
