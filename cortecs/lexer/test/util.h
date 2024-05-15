@@ -2,6 +2,9 @@
 #define CORTECS_LEXER_TEST_UTIL_H
 
 #include <stdint.h>
+#include <tokens.h>
+
+void cortecs_lexer_test(char *in, uint32_t offset, char *gold, cortecs_lexer_tag_t tag);
 
 #define CORTECS_LEXER_SPACE_CHAR_MAX 5
 char cortecs_lexer_space_char(uint32_t i);
