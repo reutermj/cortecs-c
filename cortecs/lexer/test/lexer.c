@@ -98,43 +98,64 @@ void cortecs_lexer_test_if(void) {
 
 void cortecs_lexer_test_name_one_char(void) {
     // Tests lexing of all strings matching [a-z_]
-    char str[2] = {0};
+    // terminated by an invalid name char
+    char in[2] = {0};
+    char gold[2] = {0};
     for (uint32_t i = 0; i < CORTECS_LEXER_NAME_FIRST_CHAR_MAX; i++) {
-        str[0] = cortecs_lexer_name_first_char(i);
-        cortecs_lexer_test(str, 0, str, CORTECS_LEXER_TAG_NAME);
+        in[0] = cortecs_lexer_name_first_char(i);
+        gold[0] = in[0];
+        for (uint32_t a = 0; a < CORTECS_LEXER_NAME_TYPE_FINALIZER_CHAR_MAX; a++) {
+            in[1] = cortecs_lexer_name_type_finalizer_char(a);
+            cortecs_lexer_test(in, 0, gold, CORTECS_LEXER_TAG_NAME);
+        }
     }
 }
 
 void cortecs_lexer_test_name_two_char(void) {
     // Tests lexing of all strings matching [a-z_][a-zA-Z0-9_]
-    char str[3] = {0};
+    // terminated by an invalid name char
+    char in[3] = {0};
+    char gold[3] = {0};
     for (uint32_t i = 0; i < CORTECS_LEXER_NAME_FIRST_CHAR_MAX; i++) {
-        str[0] = cortecs_lexer_name_first_char(i);
+        in[0] = cortecs_lexer_name_first_char(i);
+        gold[0] = in[0];
         for (uint32_t j = 0; j < CORTECS_LEXER_NAME_VALID_CHAR_MAX; j++) {
-            str[1] = cortecs_lexer_name_valid_char(j);
+            in[1] = cortecs_lexer_name_valid_char(j);
+            gold[1] = in[1];
             // filter out keywords
-            if (strncmp(str, "if", 2) == 0) {
+            if (strncmp(in, "if", 2) == 0) {
                 continue;
             }
-            cortecs_lexer_test(str, 0, str, CORTECS_LEXER_TAG_NAME);
+            for (uint32_t a = 0; a < CORTECS_LEXER_NAME_TYPE_FINALIZER_CHAR_MAX; a++) {
+                in[2] = cortecs_lexer_name_type_finalizer_char(a);
+                cortecs_lexer_test(in, 0, gold, CORTECS_LEXER_TAG_NAME);
+            }
         }
     }
 }
 
 void cortecs_lexer_test_name_three_char(void) {
     // Tests lexing of all strings matching [a-z_][a-zA-Z0-9_]{2}
-    char str[4] = {0};
+    // terminated by an invalid name char
+    char in[4] = {0};
+    char gold[4] = {0};
     for (uint32_t i = 0; i < CORTECS_LEXER_NAME_FIRST_CHAR_MAX; i++) {
-        str[0] = cortecs_lexer_name_first_char(i);
+        in[0] = cortecs_lexer_name_first_char(i);
+        gold[0] = in[0];
         for (uint32_t j = 0; j < CORTECS_LEXER_NAME_VALID_CHAR_MAX; j++) {
-            str[1] = cortecs_lexer_name_valid_char(j);
+            in[1] = cortecs_lexer_name_valid_char(j);
+            gold[1] = in[1];
             for (uint32_t k = 0; k < CORTECS_LEXER_NAME_VALID_CHAR_MAX; k++) {
-                str[2] = cortecs_lexer_name_valid_char(k);
+                in[2] = cortecs_lexer_name_valid_char(k);
+                gold[2] = in[2];
                 // filter out keywords
-                if (strncmp(str, "let", 3) == 0) {
+                if (strncmp(in, "let", 3) == 0) {
                     continue;
                 }
-                cortecs_lexer_test(str, 0, str, CORTECS_LEXER_TAG_NAME);
+                for (uint32_t a = 0; a < CORTECS_LEXER_NAME_TYPE_FINALIZER_CHAR_MAX; a++) {
+                    in[3] = cortecs_lexer_name_type_finalizer_char(a);
+                    cortecs_lexer_test(in, 0, gold, CORTECS_LEXER_TAG_NAME);
+                }
             }
         }
     }
@@ -161,35 +182,56 @@ void cortecs_lexer_test_name(void) {
 
 void cortecs_lexer_test_type_one_char(void) {
     // Tests lexing of all strings matching [A-Z]
-    char str[2] = {0};
+    // terminated by an invalid type char
+    char in[2] = {0};
+    char gold[2] = {0};
     for (uint32_t i = 0; i < CORTECS_LEXER_TYPE_FIRST_CHAR_MAX; i++) {
-        str[0] = cortecs_lexer_type_first_char(i);
-        cortecs_lexer_test(str, 0, str, CORTECS_LEXER_TAG_TYPE);
+        in[0] = cortecs_lexer_type_first_char(i);
+        gold[0] = in[0];
+        for (uint32_t a = 0; a < CORTECS_LEXER_NAME_TYPE_FINALIZER_CHAR_MAX; a++) {
+            in[1] = cortecs_lexer_name_type_finalizer_char(a);
+            cortecs_lexer_test(in, 0, gold, CORTECS_LEXER_TAG_TYPE);
+        }
     }
 }
 
 void cortecs_lexer_test_type_two_char(void) {
     // Tests lexing of all strings matching [A-Z][a-zA-Z0-9_]
-    char str[3] = {0};
+    // terminated by an invalid type char
+    char in[3] = {0};
+    char gold[3] = {0};
     for (uint32_t i = 0; i < CORTECS_LEXER_TYPE_FIRST_CHAR_MAX; i++) {
-        str[0] = cortecs_lexer_type_first_char(i);
+        in[0] = cortecs_lexer_type_first_char(i);
+        gold[0] = in[0];
         for (uint32_t j = 0; j < CORTECS_LEXER_TYPE_VALID_CHAR_MAX; j++) {
-            str[1] = cortecs_lexer_type_valid_char(j);
-            cortecs_lexer_test(str, 0, str, CORTECS_LEXER_TAG_TYPE);
+            in[1] = cortecs_lexer_type_valid_char(j);
+            gold[1] = in[1];
+            for (uint32_t a = 0; a < CORTECS_LEXER_NAME_TYPE_FINALIZER_CHAR_MAX; a++) {
+                in[2] = cortecs_lexer_name_type_finalizer_char(a);
+                cortecs_lexer_test(in, 0, gold, CORTECS_LEXER_TAG_TYPE);
+            }
         }
     }
 }
 
 void cortecs_lexer_test_type_three_char(void) {
     // Tests lexing of all strings matching [A-Z][a-zA-Z0-9_]{2}
-    char str[4] = {0};
+    // terminated by an invalid type char
+    char in[4] = {0};
+    char gold[4] = {0};
     for (uint32_t i = 0; i < CORTECS_LEXER_TYPE_FIRST_CHAR_MAX; i++) {
-        str[0] = cortecs_lexer_type_first_char(i);
+        in[0] = cortecs_lexer_type_first_char(i);
+        gold[0] = in[0];
         for (uint32_t j = 0; j < CORTECS_LEXER_TYPE_VALID_CHAR_MAX; j++) {
-            str[1] = cortecs_lexer_type_valid_char(j);
+            in[1] = cortecs_lexer_type_valid_char(j);
+            gold[1] = in[1];
             for (uint32_t k = 0; k < CORTECS_LEXER_TYPE_VALID_CHAR_MAX; k++) {
-                str[2] = cortecs_lexer_type_valid_char(k);
-                cortecs_lexer_test(str, 0, str, CORTECS_LEXER_TAG_TYPE);
+                in[2] = cortecs_lexer_type_valid_char(k);
+                gold[2] = in[2];
+                for (uint32_t a = 0; a < CORTECS_LEXER_NAME_TYPE_FINALIZER_CHAR_MAX; a++) {
+                    in[3] = cortecs_lexer_name_type_finalizer_char(a);
+                    cortecs_lexer_test(in, 0, gold, CORTECS_LEXER_TAG_TYPE);
+                }
             }
         }
     }

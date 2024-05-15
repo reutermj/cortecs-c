@@ -15,6 +15,21 @@ char cortecs_lexer_space_char(uint32_t i) {
     }
 }
 
+char cortecs_lexer_name_type_finalizer_char(uint32_t i) {
+    uint32_t j = i % CORTECS_LEXER_NAME_TYPE_FINALIZER_CHAR_MAX;
+    if (j < CORTECS_LEXER_SPACE_CHAR_MAX) {
+        return cortecs_lexer_space_char(j);
+    }
+
+    j -= CORTECS_LEXER_SPACE_CHAR_MAX;
+
+    if (j == 0) {
+        return '\n';
+    }
+
+    return 0;
+}
+
 char cortecs_lexer_name_first_char(uint32_t i) {
     uint32_t j = i % CORTECS_LEXER_NAME_FIRST_CHAR_MAX;
     if (j < 26) {
