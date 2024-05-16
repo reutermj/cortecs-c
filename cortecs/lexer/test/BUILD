@@ -9,6 +9,7 @@ cc_test(
     ]),
     features = ["treat_warnings_as_errors"],
     deps = [
+        "//common",
         "//cortecs/lexer",
         "@unity",
     ],

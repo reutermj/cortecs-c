@@ -66,6 +66,26 @@ void cortecs_lexer_test_if(void) {
     cortecs_lexer_test("asdf if 123", 5, "if", CORTECS_LEXER_TAG_IF);
 }
 
+bool lexer_text_name_skip(char *token, uint32_t length) {
+    if (length == 2 && strncmp(token, "if", 2) == 0) {
+        return true;
+    }
+
+    if (length == 3 && strncmp(token, "let", 3) == 0) {
+        return true;
+    }
+
+    if (length == 6 && strncmp(token, "return", 6) == 0) {
+        return true;
+    }
+
+    if (length == 8 && strncmp(token, "function", 8) == 0) {
+        return true;
+    }
+
+    return false;
+}
+
 void lexer_test_name_exhaustive(void) {
     // Exhaustive test of short type tokens
     cortecs_lexer_exhaustive_config_t config = {
@@ -75,6 +95,7 @@ void lexer_test_name_exhaustive(void) {
         .num_other_chars = CORTECS_LEXER_NAME_VALID_CHAR_MAX,
         .get_finalizer_char = &cortecs_lexer_name_type_finalizer_char,
         .num_finalizer_char = CORTECS_LEXER_NAME_TYPE_FINALIZER_CHAR_MAX,
+        .should_skip_token = &lexer_text_name_skip,
         .tag = CORTECS_LEXER_TAG_NAME,
     };
     cortecs_lexer_exhaustive_test(config);
@@ -108,6 +129,7 @@ void lexer_test_type_exhaustive(void) {
         .num_other_chars = CORTECS_LEXER_TYPE_VALID_CHAR_MAX,
         .get_finalizer_char = &cortecs_lexer_name_type_finalizer_char,
         .num_finalizer_char = CORTECS_LEXER_NAME_TYPE_FINALIZER_CHAR_MAX,
+        .should_skip_token = &cortecs_lexer_exhaustive_never_skip,
         .tag = CORTECS_LEXER_TAG_TYPE,
     };
     cortecs_lexer_exhaustive_test(config);
