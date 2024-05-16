@@ -154,6 +154,21 @@ void cortecs_lexer_test_type(void) {
     cortecs_lexer_test("qwer Asdf 123", 5, "Asdf", CORTECS_LEXER_TAG_TYPE);
 }
 
+void lexer_test_space_exhaustive(void) {
+    // Exhaustive test of short type tokens
+    cortecs_lexer_exhaustive_config_t config = {
+        .get_first_char = &cortecs_lexer_space_char,
+        .num_first_char = CORTECS_LEXER_SPACE_CHAR_MAX,
+        .get_other_chars = &cortecs_lexer_space_char,
+        .num_other_chars = CORTECS_LEXER_SPACE_CHAR_MAX,
+        .get_finalizer_char = &cortecs_lexer_name_valid_char,  // todo create a better function for this
+        .num_finalizer_char = CORTECS_LEXER_NAME_VALID_CHAR_MAX,
+        .should_skip_token = &cortecs_lexer_exhaustive_never_skip,
+        .tag = CORTECS_LEXER_TAG_SPACE,
+    };
+    cortecs_lexer_exhaustive_test(config);
+}
+
 void cortecs_lexer_test_space(void) {
     for (int i = 0; i < 1000; i++) {
         cortecs_lexer_token_t token = cortecs_lexer_fuzz_space();
@@ -197,6 +212,7 @@ int main() {
     RUN_TEST(cortecs_lexer_test_type_fuzz_single_token);
     RUN_TEST(cortecs_lexer_test_type);
 
+    RUN_TEST(lexer_test_space_exhaustive);
     RUN_TEST(cortecs_lexer_test_space);
     RUN_TEST(cortecs_lexer_test_new_line);
 
