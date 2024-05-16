@@ -1,5 +1,6 @@
 #include "exhaustive.h"
 
+#include <common.h>
 #include <stdlib.h>
 
 #include "util.h"
@@ -13,19 +14,7 @@ typedef struct {
 
 void lexer_test_gen(cortecs_lexer_exhaustive_config_t config, cortecs_lexer_exhaustive_state_t state, int index) {
     if (index == state.length) {
-        if (state.length == 2 && strncmp(state.gold, "if", 2) == 0) {
-            return;
-        }
-
-        if (state.length == 3 && strncmp(state.gold, "let", 3) == 0) {
-            return;
-        }
-
-        if (state.length == 6 && strncmp(state.gold, "return", 6) == 0) {
-            return;
-        }
-
-        if (state.length == 8 && strncmp(state.gold, "function", 8) == 0) {
+        if (config.should_skip_token(state.gold, state.length)) {
             return;
         }
 
@@ -72,4 +61,10 @@ void cortecs_lexer_exhaustive_test(cortecs_lexer_exhaustive_config_t config) {
     }
     free(state.in);
     free(state.gold);
+}
+
+bool cortecs_lexer_exhaustive_never_skip(char *string, uint32_t length) {
+    UNUSED(string);
+    UNUSED(length);
+    return false;
 }
