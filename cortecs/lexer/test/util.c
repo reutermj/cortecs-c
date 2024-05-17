@@ -1,47 +1,5 @@
 #include "util.h"
 
-#include <common.h>
-#include <lexer.h>
-#include <stdlib.h>
-#include <unity.h>
-
-bool cortecs_lexer_test_never_skip(char *string, uint32_t length) {
-    UNUSED(string);
-    UNUSED(length);
-    return false;
-}
-
-void cortecs_lexer_test(char *in, uint32_t offset, char *gold, cortecs_lexer_tag_t tag) {
-    cortecs_lexer_result_t result = cortecs_lexer_next(in, offset);
-
-    int target_length = strlen(gold);
-    cortecs_span_t gold_span = {
-        .lines = 0,
-        .columns = 0,
-    };
-    for (uint32_t i = 0;; i++) {
-        char c = gold[i];
-        if (c == 0) {
-            break;
-        }
-
-        if (c == '\n') {
-            gold_span.columns = 0;
-            gold_span.lines = 1;
-            break;
-        } else {
-            gold_span.columns++;
-        }
-    }
-
-    TEST_ASSERT_EQUAL_INT32(offset + target_length, result.start);
-    TEST_ASSERT_EQUAL_INT32(gold_span.lines, result.token.span.lines);
-    TEST_ASSERT_EQUAL_INT32(gold_span.columns, result.token.span.columns);
-    TEST_ASSERT_TRUE(result.token.tag == tag);
-    TEST_ASSERT_TRUE(strncmp(gold, result.token.text, strlen(gold)) == 0);
-    free(result.token.text);
-}
-
 char cortecs_lexer_space_char(uint32_t i) {
     switch (i % CORTECS_LEXER_SPACE_CHAR_MAX) {
         case 0:
