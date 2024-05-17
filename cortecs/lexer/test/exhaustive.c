@@ -1,6 +1,5 @@
 #include "exhaustive.h"
 
-#include <common.h>
 #include <stdlib.h>
 
 #include "util.h"
@@ -12,7 +11,7 @@ typedef struct {
     int offset;
 } cortecs_lexer_exhaustive_state_t;
 
-void lexer_test_gen(cortecs_lexer_exhaustive_config_t config, cortecs_lexer_exhaustive_state_t state, int index) {
+static void lexer_test_exhaustive_run(cortecs_lexer_test_config_t config, cortecs_lexer_exhaustive_state_t state, int index) {
     if (index == state.length) {
         if (config.should_skip_token(state.gold, state.length)) {
             return;
@@ -40,11 +39,11 @@ void lexer_test_gen(cortecs_lexer_exhaustive_config_t config, cortecs_lexer_exha
         char c = get_char(i);
         state.in[state.offset + index] = c;
         state.gold[index] = c;
-        lexer_test_gen(config, state, index + 1);
+        lexer_test_exhaustive_run(config, state, index + 1);
     }
 }
 
-void cortecs_lexer_exhaustive_test(cortecs_lexer_exhaustive_config_t config) {
+void cortecs_lexer_test_exhaustive(cortecs_lexer_test_config_t config) {
     // These constants were chosen to finish the test in a reasonable amount of time.
     const uint32_t max_offset = 5;
     const uint32_t max_length = 5;
@@ -56,15 +55,9 @@ void cortecs_lexer_exhaustive_test(cortecs_lexer_exhaustive_config_t config) {
         for (uint32_t offset = 0; offset <= max_offset; offset++) {
             state.length = length;
             state.offset = offset;
-            lexer_test_gen(config, state, 0);
+            lexer_test_exhaustive_run(config, state, 0);
         }
     }
     free(state.in);
     free(state.gold);
-}
-
-bool cortecs_lexer_exhaustive_never_skip(char *string, uint32_t length) {
-    UNUSED(string);
-    UNUSED(length);
-    return false;
 }

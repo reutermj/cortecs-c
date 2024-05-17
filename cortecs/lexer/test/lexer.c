@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <tokens.h>
 #include <unity.h>
 
@@ -10,6 +11,7 @@
 #include "util.h"
 
 void setUp() {
+    srand(time(NULL));
     // required for unity
 }
 
@@ -66,7 +68,7 @@ void cortecs_lexer_test_if(void) {
     cortecs_lexer_test("asdf if 123", 5, "if", CORTECS_LEXER_TAG_IF);
 }
 
-bool lexer_text_name_skip(char *token, uint32_t length) {
+static bool lexer_text_name_skip(char *token, uint32_t length) {
     if (length == 2 && strncmp(token, "if", 2) == 0) {
         return true;
     }
@@ -86,9 +88,9 @@ bool lexer_text_name_skip(char *token, uint32_t length) {
     return false;
 }
 
-void lexer_test_name_exhaustive(void) {
+static void lexer_test_name(void) {
     // Exhaustive test of short type tokens
-    cortecs_lexer_exhaustive_config_t config = {
+    cortecs_lexer_test_config_t config = {
         .get_first_char = &cortecs_lexer_name_first_char,
         .num_first_char = CORTECS_LEXER_NAME_FIRST_CHAR_MAX,
         .get_other_chars = &cortecs_lexer_name_valid_char,
@@ -98,90 +100,40 @@ void lexer_test_name_exhaustive(void) {
         .should_skip_token = &lexer_text_name_skip,
         .tag = CORTECS_LEXER_TAG_NAME,
     };
-    cortecs_lexer_exhaustive_test(config);
+    cortecs_lexer_test_exhaustive(config);
+    cortecs_lexer_test_fuzz(config);
 }
 
-void cortecs_lexer_test_name_fuzz_single_token(void) {
-    // Tests lexing of random strings matching [a-z_][a-zA-Z0-9_]*
-    for (int i = 0; i < 1000; i++) {
-        cortecs_lexer_token_t token = cortecs_lexer_fuzz_name();
-        cortecs_lexer_test(token.text, 0, token.text, token.tag);
-        free(token.text);
-    }
-}
-
-void cortecs_lexer_test_name(void) {
-    cortecs_lexer_test("a", 0, "a", CORTECS_LEXER_TAG_NAME);
-    cortecs_lexer_test("asdf", 0, "asdf", CORTECS_LEXER_TAG_NAME);
-    cortecs_lexer_test("a123", 0, "a123", CORTECS_LEXER_TAG_NAME);
-    cortecs_lexer_test("a123_b456", 0, "a123_b456", CORTECS_LEXER_TAG_NAME);
-    cortecs_lexer_test("123 asdf", 4, "asdf", CORTECS_LEXER_TAG_NAME);
-    cortecs_lexer_test("asdf 123", 0, "asdf", CORTECS_LEXER_TAG_NAME);
-    cortecs_lexer_test("qwer asdf 123", 5, "asdf", CORTECS_LEXER_TAG_NAME);
-}
-
-void lexer_test_type_exhaustive(void) {
+static void lexer_test_type(void) {
     // Exhaustive test of short type tokens
-    cortecs_lexer_exhaustive_config_t config = {
+    cortecs_lexer_test_config_t config = {
         .get_first_char = &cortecs_lexer_type_first_char,
         .num_first_char = CORTECS_LEXER_TYPE_FIRST_CHAR_MAX,
         .get_other_chars = &cortecs_lexer_type_valid_char,
         .num_other_chars = CORTECS_LEXER_TYPE_VALID_CHAR_MAX,
         .get_finalizer_char = &cortecs_lexer_name_type_finalizer_char,
         .num_finalizer_char = CORTECS_LEXER_NAME_TYPE_FINALIZER_CHAR_MAX,
-        .should_skip_token = &cortecs_lexer_exhaustive_never_skip,
+        .should_skip_token = &cortecs_lexer_test_never_skip,
         .tag = CORTECS_LEXER_TAG_TYPE,
     };
-    cortecs_lexer_exhaustive_test(config);
+    cortecs_lexer_test_exhaustive(config);
+    cortecs_lexer_test_fuzz(config);
 }
 
-void cortecs_lexer_test_type_fuzz_single_token(void) {
-    // Tests lexing of random strings matching [A-Z][a-zA-Z0-9_]*
-    for (int i = 0; i < 1000; i++) {
-        cortecs_lexer_token_t token = cortecs_lexer_fuzz_type();
-        cortecs_lexer_test(token.text, 0, token.text, token.tag);
-        free(token.text);
-    }
-}
-
-void cortecs_lexer_test_type(void) {
-    cortecs_lexer_test("A", 0, "A", CORTECS_LEXER_TAG_TYPE);
-    cortecs_lexer_test("Asdf", 0, "Asdf", CORTECS_LEXER_TAG_TYPE);
-    cortecs_lexer_test("A123", 0, "A123", CORTECS_LEXER_TAG_TYPE);
-    cortecs_lexer_test("A123_b456", 0, "A123_b456", CORTECS_LEXER_TAG_TYPE);
-    cortecs_lexer_test("123 Asdf", 4, "Asdf", CORTECS_LEXER_TAG_TYPE);
-    cortecs_lexer_test("Asdf 123", 0, "Asdf", CORTECS_LEXER_TAG_TYPE);
-    cortecs_lexer_test("qwer Asdf 123", 5, "Asdf", CORTECS_LEXER_TAG_TYPE);
-}
-
-void lexer_test_space_exhaustive(void) {
+static void lexer_test_space(void) {
     // Exhaustive test of short type tokens
-    cortecs_lexer_exhaustive_config_t config = {
+    cortecs_lexer_test_config_t config = {
         .get_first_char = &cortecs_lexer_space_char,
         .num_first_char = CORTECS_LEXER_SPACE_CHAR_MAX,
         .get_other_chars = &cortecs_lexer_space_char,
         .num_other_chars = CORTECS_LEXER_SPACE_CHAR_MAX,
         .get_finalizer_char = &cortecs_lexer_name_valid_char,  // todo create a better function for this
         .num_finalizer_char = CORTECS_LEXER_NAME_VALID_CHAR_MAX,
-        .should_skip_token = &cortecs_lexer_exhaustive_never_skip,
+        .should_skip_token = &cortecs_lexer_test_never_skip,
         .tag = CORTECS_LEXER_TAG_SPACE,
     };
-    cortecs_lexer_exhaustive_test(config);
-}
-
-void cortecs_lexer_test_space(void) {
-    for (int i = 0; i < 1000; i++) {
-        cortecs_lexer_token_t token = cortecs_lexer_fuzz_space();
-        cortecs_lexer_test(token.text, 0, token.text, token.tag);
-        free(token.text);
-    }
-
-    cortecs_lexer_test(" ", 0, " ", CORTECS_LEXER_TAG_SPACE);
-    cortecs_lexer_test("\t", 0, "\t", CORTECS_LEXER_TAG_SPACE);
-    cortecs_lexer_test("  \t  ", 0, "  \t  ", CORTECS_LEXER_TAG_SPACE);
-    cortecs_lexer_test("  \t\t  123", 0, "  \t\t  ", CORTECS_LEXER_TAG_SPACE);
-    cortecs_lexer_test("asdf  \t", 4, "  \t", CORTECS_LEXER_TAG_SPACE);
-    cortecs_lexer_test("asdf  \t123", 4, "  \t", CORTECS_LEXER_TAG_SPACE);
+    cortecs_lexer_test_exhaustive(config);
+    cortecs_lexer_test_fuzz(config);
 }
 
 void cortecs_lexer_test_new_line(void) {
@@ -204,16 +156,10 @@ int main() {
     RUN_TEST(cortecs_lexer_test_return);
     RUN_TEST(cortecs_lexer_test_if);
 
-    RUN_TEST(lexer_test_name_exhaustive);
-    RUN_TEST(cortecs_lexer_test_name_fuzz_single_token);
-    RUN_TEST(cortecs_lexer_test_name);
+    RUN_TEST(lexer_test_name);
+    RUN_TEST(lexer_test_type);
+    RUN_TEST(lexer_test_space);
 
-    RUN_TEST(lexer_test_type_exhaustive);
-    RUN_TEST(cortecs_lexer_test_type_fuzz_single_token);
-    RUN_TEST(cortecs_lexer_test_type);
-
-    RUN_TEST(lexer_test_space_exhaustive);
-    RUN_TEST(cortecs_lexer_test_space);
     RUN_TEST(cortecs_lexer_test_new_line);
 
     return UNITY_END();
