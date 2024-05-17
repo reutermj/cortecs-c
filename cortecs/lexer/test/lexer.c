@@ -6,8 +6,7 @@
 #include <tokens.h>
 #include <unity.h>
 
-#include "exhaustive.h"
-#include "fuzz.h"
+#include "tests.h"
 #include "util.h"
 
 void setUp() {
