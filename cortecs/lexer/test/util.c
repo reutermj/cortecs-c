@@ -1,8 +1,15 @@
 #include "util.h"
 
+#include <common.h>
 #include <lexer.h>
 #include <stdlib.h>
 #include <unity.h>
+
+bool cortecs_lexer_test_never_skip(char *string, uint32_t length) {
+    UNUSED(string);
+    UNUSED(length);
+    return false;
+}
 
 void cortecs_lexer_test(char *in, uint32_t offset, char *gold, cortecs_lexer_tag_t tag) {
     cortecs_lexer_result_t result = cortecs_lexer_next(in, offset);
