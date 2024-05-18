@@ -18,12 +18,29 @@ void tearDown() {
     // required for unity
 }
 
+#define CORTECS_LEXER_INT_CHAR_MAX 10
+
+cortecs_lexer_test_result_t lexer_test_int_next(cortecs_lexer_test_state_t state, uint32_t entropy) {
+    return (cortecs_lexer_test_result_t){
+        .next_state = 0,
+        .next_char = '0' + entropy % CORTECS_LEXER_INT_CHAR_MAX,
+    };
+}
+
+uint32_t lexer_test_int_max_entropy(uint32_t state) {
+    UNUSED(state);
+    return CORTECS_LEXER_INT_CHAR_MAX;
+}
+
 void cortecs_lexer_test_int(void) {
-    cortecs_lexer_test("1", 0, "1", CORTECS_LEXER_TAG_INT);
-    cortecs_lexer_test("123", 0, "123", CORTECS_LEXER_TAG_INT);
-    cortecs_lexer_test("123 asdf", 0, "123", CORTECS_LEXER_TAG_INT);
-    cortecs_lexer_test("asdf 123", 5, "123", CORTECS_LEXER_TAG_INT);
-    cortecs_lexer_test("asdf 123 qwer", 5, "123", CORTECS_LEXER_TAG_INT);
+    cortecs_lexer_test_config_t stm = {
+        .next = &lexer_test_int_next,
+        .should_skip_token = &cortecs_lexer_test_never_skip,
+        .state_max_entropy = &lexer_test_int_max_entropy,
+        .tag = CORTECS_LEXER_TAG_INT,
+    };
+    cortecs_lexer_test_fuzz(stm);
+    cortecs_lexer_test_exhaustive(stm);
 }
 
 void cortecs_lexer_test_float(void) {
