@@ -6,10 +6,19 @@
 #include <tokens.h>
 
 typedef struct {
-    char (*get_first_char)(uint32_t);
-    int num_first_char;
-    char (*get_other_chars)(uint32_t);
-    int num_other_chars;
+    uint32_t state;
+    uint32_t index;
+    uint32_t length;
+} cortecs_lexer_test_state_t;
+
+typedef struct {
+    char next_char;
+    uint32_t next_state;
+} cortecs_lexer_test_result_t;
+
+typedef struct {
+    cortecs_lexer_test_result_t (*next)(cortecs_lexer_test_state_t, uint32_t);
+    uint32_t (*state_max_entropy)(uint32_t);
     char (*get_finalizer_char)(uint32_t);
     int num_finalizer_char;
     bool (*should_skip_token)(char *, uint32_t);

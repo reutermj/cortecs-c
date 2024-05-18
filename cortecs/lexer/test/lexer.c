@@ -1,3 +1,4 @@
+#include <common.h>
 #include <lexer.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -87,52 +88,99 @@ static bool lexer_text_name_skip(char *token, uint32_t length) {
     return false;
 }
 
+cortecs_lexer_test_result_t lexer_test_name_next(cortecs_lexer_test_state_t state, uint32_t entropy) {
+    if (state.state == 0) {
+        return (cortecs_lexer_test_result_t){
+            .next_char = cortecs_lexer_name_first_char(entropy),
+            .next_state = 1,
+        };
+    }
+
+    return (cortecs_lexer_test_result_t){
+        .next_char = cortecs_lexer_name_valid_char(entropy),
+        .next_state = 1,
+    };
+}
+
+uint32_t lexer_test_name_max_entropy(uint32_t state) {
+    if (state == 0) {
+        return CORTECS_LEXER_NAME_FIRST_CHAR_MAX;
+    }
+
+    return CORTECS_LEXER_NAME_VALID_CHAR_MAX;
+}
+
 static void lexer_test_name(void) {
-    // Exhaustive test of short type tokens
-    cortecs_lexer_test_config_t config = {
-        .get_first_char = &cortecs_lexer_name_first_char,
-        .num_first_char = CORTECS_LEXER_NAME_FIRST_CHAR_MAX,
-        .get_other_chars = &cortecs_lexer_name_valid_char,
-        .num_other_chars = CORTECS_LEXER_NAME_VALID_CHAR_MAX,
-        .get_finalizer_char = &cortecs_lexer_name_type_finalizer_char,
+    cortecs_lexer_test_config_t stm = {
+        .next = &lexer_test_name_next,
+        .get_finalizer_char = &cortecs_lexer_name_type_finalizer_char,  // todo create a better function for this
         .num_finalizer_char = CORTECS_LEXER_NAME_TYPE_FINALIZER_CHAR_MAX,
         .should_skip_token = &lexer_text_name_skip,
+        .state_max_entropy = &lexer_test_name_max_entropy,
         .tag = CORTECS_LEXER_TAG_NAME,
     };
-    cortecs_lexer_test_exhaustive(config);
-    cortecs_lexer_test_fuzz(config);
+    cortecs_lexer_test_fuzz(stm);
+    cortecs_lexer_test_exhaustive(stm);
+}
+
+cortecs_lexer_test_result_t lexer_test_type_next(cortecs_lexer_test_state_t state, uint32_t entropy) {
+    if (state.state == 0) {
+        return (cortecs_lexer_test_result_t){
+            .next_char = cortecs_lexer_type_first_char(entropy),
+            .next_state = 1,
+        };
+    }
+
+    return (cortecs_lexer_test_result_t){
+        .next_char = cortecs_lexer_type_valid_char(entropy),
+        .next_state = 1,
+    };
+}
+
+uint32_t lexer_test_type_max_entropy(uint32_t state) {
+    if (state == 0) {
+        return CORTECS_LEXER_TYPE_FIRST_CHAR_MAX;
+    }
+
+    return CORTECS_LEXER_TYPE_VALID_CHAR_MAX;
 }
 
 static void lexer_test_type(void) {
-    // Exhaustive test of short type tokens
-    cortecs_lexer_test_config_t config = {
-        .get_first_char = &cortecs_lexer_type_first_char,
-        .num_first_char = CORTECS_LEXER_TYPE_FIRST_CHAR_MAX,
-        .get_other_chars = &cortecs_lexer_type_valid_char,
-        .num_other_chars = CORTECS_LEXER_TYPE_VALID_CHAR_MAX,
-        .get_finalizer_char = &cortecs_lexer_name_type_finalizer_char,
+    cortecs_lexer_test_config_t stm = {
+        .next = &lexer_test_type_next,
+        .get_finalizer_char = &cortecs_lexer_name_type_finalizer_char,  // todo create a better function for this
         .num_finalizer_char = CORTECS_LEXER_NAME_TYPE_FINALIZER_CHAR_MAX,
         .should_skip_token = &cortecs_lexer_test_never_skip,
+        .state_max_entropy = &lexer_test_type_max_entropy,
         .tag = CORTECS_LEXER_TAG_TYPE,
     };
-    cortecs_lexer_test_exhaustive(config);
-    cortecs_lexer_test_fuzz(config);
+    cortecs_lexer_test_fuzz(stm);
+    cortecs_lexer_test_exhaustive(stm);
+}
+
+cortecs_lexer_test_result_t lexer_test_space_next(cortecs_lexer_test_state_t state, uint32_t entropy) {
+    return (cortecs_lexer_test_result_t){
+        .next_char = cortecs_lexer_space_char(entropy),
+        .next_state = 0,
+    };
+}
+
+uint32_t lexer_test_space_max_entropy(uint32_t state) {
+    UNUSED(state);
+    return CORTECS_LEXER_SPACE_CHAR_MAX;
 }
 
 static void lexer_test_space(void) {
-    // Exhaustive test of short type tokens
-    cortecs_lexer_test_config_t config = {
-        .get_first_char = &cortecs_lexer_space_char,
-        .num_first_char = CORTECS_LEXER_SPACE_CHAR_MAX,
-        .get_other_chars = &cortecs_lexer_space_char,
-        .num_other_chars = CORTECS_LEXER_SPACE_CHAR_MAX,
+    cortecs_lexer_test_config_t stm = {
+        .next = &lexer_test_space_next,
         .get_finalizer_char = &cortecs_lexer_name_valid_char,  // todo create a better function for this
         .num_finalizer_char = CORTECS_LEXER_NAME_VALID_CHAR_MAX,
         .should_skip_token = &cortecs_lexer_test_never_skip,
+        .state_max_entropy = &lexer_test_space_max_entropy,
         .tag = CORTECS_LEXER_TAG_SPACE,
     };
-    cortecs_lexer_test_exhaustive(config);
-    cortecs_lexer_test_fuzz(config);
+    cortecs_lexer_test_fuzz(stm);
+    cortecs_lexer_test_exhaustive(stm);
 }
 
 void cortecs_lexer_test_new_line(void) {
@@ -148,6 +196,9 @@ void cortecs_lexer_test_new_line(void) {
 
 int main() {
     UNITY_BEGIN();
+
+    RUN_TEST(lexer_test_space);
+
     RUN_TEST(cortecs_lexer_test_int);
     RUN_TEST(cortecs_lexer_test_float);
     RUN_TEST(cortecs_lexer_test_function);
@@ -155,9 +206,8 @@ int main() {
     RUN_TEST(cortecs_lexer_test_return);
     RUN_TEST(cortecs_lexer_test_if);
 
-    RUN_TEST(lexer_test_name);
     RUN_TEST(lexer_test_type);
-    RUN_TEST(lexer_test_space);
+    RUN_TEST(lexer_test_name);
 
     RUN_TEST(cortecs_lexer_test_new_line);
 
