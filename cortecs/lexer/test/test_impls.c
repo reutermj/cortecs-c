@@ -1,4 +1,4 @@
-#include "tests.h"
+#include "test_impls.h"
 
 #include <common.h>
 #include <lexer.h>
@@ -61,7 +61,7 @@ void cortecs_lexer_test_fuzz(cortecs_lexer_test_config_t config) {
 
                     break;
                 }
-                in[offset + length] = config.get_finalizer_char(rand());
+                in[offset + length] = 0;
                 cortecs_lexer_test(in, offset, gold, config.tag);
                 free(in);
                 free(gold);
@@ -84,10 +84,9 @@ static void lexer_test_exhaustive_run(cortecs_lexer_test_config_t config, cortec
             return;
         }
 
-        for (uint32_t i = 0; i < config.num_finalizer_char; i++) {
-            state.in[state.offset + index] = config.get_finalizer_char(i);
-            cortecs_lexer_test(state.in, state.offset, state.gold, config.tag);
-        }
+        state.in[state.offset + index] = 0;
+        state.gold[index] = 0;
+        cortecs_lexer_test(state.in, state.offset, state.gold, config.tag);
 
         return;
     }
@@ -123,7 +122,7 @@ void cortecs_lexer_test_exhaustive(cortecs_lexer_test_config_t config) {
         .in = calloc(max_length + max_offset + 1, sizeof(char)),
         .gold = calloc(max_length + 1, sizeof(char)),
     };
-    for (uint32_t length = 1; length < max_length; length++) {
+    for (uint32_t length = 1; length <= max_length; length++) {
         for (uint32_t offset = 0; offset <= max_offset; offset++) {
             state.length = length;
             state.offset = offset;
