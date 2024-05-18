@@ -42,12 +42,17 @@ void cortecs_lexer_test_fuzz(cortecs_lexer_test_config_t config) {
             for (int times = 0; times < 100; times++) {
                 char *in = calloc(offset + length + 1, sizeof(char));
                 char *gold = calloc(length + 1, sizeof(char));
+                cortecs_lexer_test_state_t state = {
+                    .state = 0,
+                    .length = length,
+                };
                 while (true) {
-                    in[offset] = config.get_first_char(rand());
-                    gold[0] = in[offset];
-                    for (int i = 1; i < length; i++) {
-                        in[offset + i] = config.get_other_chars(rand());
-                        gold[i] = in[offset + i];
+                    for (uint32_t i = 0; i < length; i++) {
+                        state.index = i;
+                        cortecs_lexer_test_result_t result = config.next(state, rand());
+                        state.state = result.next_state;
+                        in[offset + i] = result.next_char;
+                        gold[i] = result.next_char;
                     }
 
                     if (config.should_skip_token(gold, length)) {
@@ -70,9 +75,10 @@ typedef struct {
     char *gold;
     int length;
     int offset;
-} cortecs_lexer_exhaustive_state_t;
+    int state;
+} cortecs_lexer_exhaustive_state_stm_t;
 
-static void lexer_test_exhaustive_run(cortecs_lexer_test_config_t config, cortecs_lexer_exhaustive_state_t state, int index) {
+static void lexer_test_exhaustive_run(cortecs_lexer_test_config_t config, cortecs_lexer_exhaustive_state_stm_t state, int index) {
     if (index == state.length) {
         if (config.should_skip_token(state.gold, state.length)) {
             return;
@@ -86,21 +92,26 @@ static void lexer_test_exhaustive_run(cortecs_lexer_test_config_t config, cortec
         return;
     }
 
-    int num_chars;
-    char (*get_char)(uint32_t);
-    if (index == 0) {
-        num_chars = config.num_first_char;
-        get_char = config.get_first_char;
-    } else {
-        num_chars = config.num_other_chars;
-        get_char = config.get_other_chars;
-    }
+    cortecs_lexer_test_state_t test_state = {
+        .state = state.state,
+        .index = index,
+        .length = state.length,
+    };
 
+    int num_chars = config.state_max_entropy(0);
     for (uint32_t i = 0; i < num_chars; i++) {
-        char c = get_char(i);
-        state.in[state.offset + index] = c;
-        state.gold[index] = c;
-        lexer_test_exhaustive_run(config, state, index + 1);
+        cortecs_lexer_test_result_t result = config.next(test_state, i);
+        state.in[state.offset + index] = result.next_char;
+        state.gold[index] = result.next_char;
+
+        cortecs_lexer_exhaustive_state_stm_t next_state = {
+            .in = state.in,
+            .gold = state.gold,
+            .length = state.length,
+            .offset = state.offset,
+            .state = result.next_state,
+        };
+        lexer_test_exhaustive_run(config, next_state, index + 1);
     }
 }
 
@@ -108,7 +119,7 @@ void cortecs_lexer_test_exhaustive(cortecs_lexer_test_config_t config) {
     // These constants were chosen to finish the test in a reasonable amount of time.
     const uint32_t max_offset = 5;
     const uint32_t max_length = 5;
-    cortecs_lexer_exhaustive_state_t state = {
+    cortecs_lexer_exhaustive_state_stm_t state = {
         .in = calloc(max_length + max_offset + 1, sizeof(char)),
         .gold = calloc(max_length + 1, sizeof(char)),
     };
