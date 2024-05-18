@@ -19,8 +19,6 @@ typedef struct {
 typedef struct {
     cortecs_lexer_test_result_t (*next)(cortecs_lexer_test_state_t, uint32_t);
     uint32_t (*state_max_entropy)(uint32_t);
-    char (*get_finalizer_char)(uint32_t);
-    int num_finalizer_char;
     bool (*should_skip_token)(char *, uint32_t);
     cortecs_lexer_tag_t tag;
 } cortecs_lexer_test_config_t;

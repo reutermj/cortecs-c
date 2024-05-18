@@ -7,8 +7,7 @@
 #include <tokens.h>
 #include <unity.h>
 
-#include "tests.h"
-#include "util.h"
+#include "test_impls.h"
 
 void setUp() {
     srand(time(NULL));
@@ -88,18 +87,30 @@ static bool lexer_text_name_skip(char *token, uint32_t length) {
     return false;
 }
 
-cortecs_lexer_test_result_t lexer_test_name_next(cortecs_lexer_test_state_t state, uint32_t entropy) {
-    if (state.state == 0) {
-        return (cortecs_lexer_test_result_t){
-            .next_char = cortecs_lexer_name_first_char(entropy),
-            .next_state = 1,
-        };
-    }
+#define CORTECS_LEXER_NAME_FIRST_CHAR_MAX 27
+#define CORTECS_LEXER_NAME_VALID_CHAR_MAX 53
 
-    return (cortecs_lexer_test_result_t){
-        .next_char = cortecs_lexer_name_valid_char(entropy),
+cortecs_lexer_test_result_t lexer_test_name_next(cortecs_lexer_test_state_t state, uint32_t entropy) {
+    cortecs_lexer_test_result_t result = {
         .next_state = 1,
     };
+
+    uint32_t i;
+    if (state.state == 0) {
+        i = entropy % CORTECS_LEXER_NAME_FIRST_CHAR_MAX;
+    } else {
+        i = entropy % CORTECS_LEXER_NAME_VALID_CHAR_MAX;
+    }
+
+    if (i < 26) {
+        result.next_char = 'a' + i;
+    } else if (i < CORTECS_LEXER_NAME_FIRST_CHAR_MAX) {
+        result.next_char = '_';
+    } else {
+        result.next_char = 'A' + (i - CORTECS_LEXER_NAME_FIRST_CHAR_MAX);
+    }
+
+    return result;
 }
 
 uint32_t lexer_test_name_max_entropy(uint32_t state) {
@@ -113,8 +124,6 @@ uint32_t lexer_test_name_max_entropy(uint32_t state) {
 static void lexer_test_name(void) {
     cortecs_lexer_test_config_t stm = {
         .next = &lexer_test_name_next,
-        .get_finalizer_char = &cortecs_lexer_name_type_finalizer_char,  // todo create a better function for this
-        .num_finalizer_char = CORTECS_LEXER_NAME_TYPE_FINALIZER_CHAR_MAX,
         .should_skip_token = &lexer_text_name_skip,
         .state_max_entropy = &lexer_test_name_max_entropy,
         .tag = CORTECS_LEXER_TAG_NAME,
@@ -123,18 +132,30 @@ static void lexer_test_name(void) {
     cortecs_lexer_test_exhaustive(stm);
 }
 
-cortecs_lexer_test_result_t lexer_test_type_next(cortecs_lexer_test_state_t state, uint32_t entropy) {
-    if (state.state == 0) {
-        return (cortecs_lexer_test_result_t){
-            .next_char = cortecs_lexer_type_first_char(entropy),
-            .next_state = 1,
-        };
-    }
+#define CORTECS_LEXER_TYPE_FIRST_CHAR_MAX 26
+#define CORTECS_LEXER_TYPE_VALID_CHAR_MAX 53
 
-    return (cortecs_lexer_test_result_t){
-        .next_char = cortecs_lexer_type_valid_char(entropy),
+cortecs_lexer_test_result_t lexer_test_type_next(cortecs_lexer_test_state_t state, uint32_t entropy) {
+    cortecs_lexer_test_result_t result = {
         .next_state = 1,
     };
+
+    uint32_t i;
+    if (state.state == 0) {
+        i = entropy % CORTECS_LEXER_TYPE_FIRST_CHAR_MAX;
+    } else {
+        i = entropy % CORTECS_LEXER_TYPE_VALID_CHAR_MAX;
+    }
+
+    if (i < CORTECS_LEXER_TYPE_FIRST_CHAR_MAX) {
+        result.next_char = 'A' + i;
+    } else if (i < CORTECS_LEXER_TYPE_FIRST_CHAR_MAX + 26) {
+        result.next_char = 'a' + (i - CORTECS_LEXER_TYPE_FIRST_CHAR_MAX);
+    } else {
+        result.next_char = '_';
+    }
+
+    return result;
 }
 
 uint32_t lexer_test_type_max_entropy(uint32_t state) {
@@ -148,8 +169,6 @@ uint32_t lexer_test_type_max_entropy(uint32_t state) {
 static void lexer_test_type(void) {
     cortecs_lexer_test_config_t stm = {
         .next = &lexer_test_type_next,
-        .get_finalizer_char = &cortecs_lexer_name_type_finalizer_char,  // todo create a better function for this
-        .num_finalizer_char = CORTECS_LEXER_NAME_TYPE_FINALIZER_CHAR_MAX,
         .should_skip_token = &cortecs_lexer_test_never_skip,
         .state_max_entropy = &lexer_test_type_max_entropy,
         .tag = CORTECS_LEXER_TAG_TYPE,
@@ -158,11 +177,25 @@ static void lexer_test_type(void) {
     cortecs_lexer_test_exhaustive(stm);
 }
 
+#define CORTECS_LEXER_SPACE_CHAR_MAX 5
+
 cortecs_lexer_test_result_t lexer_test_space_next(cortecs_lexer_test_state_t state, uint32_t entropy) {
-    return (cortecs_lexer_test_result_t){
-        .next_char = cortecs_lexer_space_char(entropy),
+    cortecs_lexer_test_result_t result = {
         .next_state = 0,
     };
+    switch (entropy % CORTECS_LEXER_SPACE_CHAR_MAX) {
+        case 0:
+            result.next_char = ' ';
+        case 1:
+            result.next_char = '\t';
+        case 2:
+            result.next_char = '\r';
+        case 3:
+            result.next_char = '\v';
+        default:
+            result.next_char = '\f';
+    }
+    return result;
 }
 
 uint32_t lexer_test_space_max_entropy(uint32_t state) {
@@ -173,8 +206,6 @@ uint32_t lexer_test_space_max_entropy(uint32_t state) {
 static void lexer_test_space(void) {
     cortecs_lexer_test_config_t stm = {
         .next = &lexer_test_space_next,
-        .get_finalizer_char = &cortecs_lexer_name_valid_char,  // todo create a better function for this
-        .num_finalizer_char = CORTECS_LEXER_NAME_VALID_CHAR_MAX,
         .should_skip_token = &cortecs_lexer_test_never_skip,
         .state_max_entropy = &lexer_test_space_max_entropy,
         .tag = CORTECS_LEXER_TAG_SPACE,
