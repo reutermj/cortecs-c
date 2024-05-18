@@ -21,6 +21,7 @@ typedef struct {
     uint32_t (*state_max_entropy)(uint32_t);
     bool (*should_skip_token)(char *, uint32_t);
     cortecs_lexer_tag_t tag;
+    uint32_t min_length;
 } cortecs_lexer_test_config_t;
 
 void cortecs_lexer_test(char *in, uint32_t offset, char *gold, cortecs_lexer_tag_t tag);

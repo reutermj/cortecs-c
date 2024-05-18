@@ -28,6 +28,9 @@ void cortecs_lexer_test(char *in, uint32_t offset, char *gold, cortecs_lexer_tag
         }
     }
 
+    if (offset + target_length != result.start) {
+        printf("hello world\n");
+    }
     TEST_ASSERT_EQUAL_INT32(offset + target_length, result.start);
     TEST_ASSERT_EQUAL_INT32(gold_span.lines, result.token.span.lines);
     TEST_ASSERT_EQUAL_INT32(gold_span.columns, result.token.span.columns);
@@ -37,7 +40,14 @@ void cortecs_lexer_test(char *in, uint32_t offset, char *gold, cortecs_lexer_tag
 }
 
 void cortecs_lexer_test_fuzz(cortecs_lexer_test_config_t config) {
-    for (uint32_t length = 5; length < 100; length++) {
+    uint32_t start_length;
+    if (config.min_length > 5) {
+        start_length = config.min_length;
+    } else {
+        start_length = 5;
+    }
+
+    for (uint32_t length = start_length; length < 100; length++) {
         for (uint32_t offset = 0; offset < 100; offset++) {
             for (int times = 0; times < 100; times++) {
                 char *in = calloc(offset + length + 1, sizeof(char));
@@ -115,6 +125,13 @@ static void lexer_test_exhaustive_run(cortecs_lexer_test_config_t config, cortec
 }
 
 void cortecs_lexer_test_exhaustive(cortecs_lexer_test_config_t config) {
+    uint32_t start_length;
+    if (config.min_length > 1) {
+        start_length = config.min_length;
+    } else {
+        start_length = 1;
+    }
+
     // These constants were chosen to finish the test in a reasonable amount of time.
     const uint32_t max_offset = 5;
     const uint32_t max_length = 5;
@@ -122,7 +139,7 @@ void cortecs_lexer_test_exhaustive(cortecs_lexer_test_config_t config) {
         .in = calloc(max_length + max_offset + 1, sizeof(char)),
         .gold = calloc(max_length + 1, sizeof(char)),
     };
-    for (uint32_t length = 1; length <= max_length; length++) {
+    for (uint32_t length = start_length; length <= max_length; length++) {
         for (uint32_t offset = 0; offset <= max_offset; offset++) {
             state.length = length;
             state.offset = offset;
