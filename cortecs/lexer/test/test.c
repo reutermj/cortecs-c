@@ -43,39 +43,101 @@ void cortecs_lexer_test_int(void) {
 }
 
 cortecs_lexer_test_result_t lexer_test_float_next(cortecs_lexer_test_state_t state, uint32_t entropy) {
-    if (state.state == 0) {
-        if (state.index == state.length - 1) {
+    switch (state.state) {
+        case 0: {
+            // generate either a '.' or digit
+            uint32_t i = entropy % 11;
+            if (i == 10) {
+                uint32_t next_state;
+                if (state.index != 0 && state.index == state.length - 2) {
+                    // the dot is the second to last character (and not the first).
+                    // transition to a state that can generate either a digit or double suffix
+                    next_state = 2;
+                } else {
+                    // otherwise transition to a state that only generates a digit
+                    next_state = 1;
+                }
+
+                return (cortecs_lexer_test_result_t){
+                    .next_char = '.',
+                    .next_state = next_state,
+                };
+            }
+
+            uint32_t next_state;
+            if (state.index == state.length - 2) {
+                // this digit is the second to last character and no '.' has been generated
+                // transition to a state that only generates the '.'
+                next_state = 3;
+            } else {
+                // otherwise stay in this state
+                next_state = 0;
+            }
+
             return (cortecs_lexer_test_result_t){
-                .next_char = '.',
-                .next_state = 1,
+                .next_char = '0' + i,
+                .next_state = next_state,
             };
         }
+        case 1: {
+            // generate a digit
+            uint32_t next_state;
+            if (state.index == state.length - 2) {
+                // this digit is the second to last character.
+                // transition to a state that can generate either a digit or double suffix
+                next_state = 2;
+            } else {
+                // otherwise transition to a state that only generates a digit
+                next_state = 1;
+            }
 
-        uint32_t i = entropy % 11;
-        if (i == 10) {
             return (cortecs_lexer_test_result_t){
-                .next_char = '.',
-                .next_state = 1,
+                .next_char = '0' + entropy % 10,
+                .next_state = next_state,
             };
         }
-
-        return (cortecs_lexer_test_result_t){
-            .next_char = '0' + i,
-            .next_state = 0,
-        };
-    } else {
-        return (cortecs_lexer_test_result_t){
-            .next_char = '0' + entropy % 10,
-            .next_state = 1,
-        };
+        case 2: {
+            // generate either a digit or double suffx
+            uint32_t i = entropy % 12;
+            switch (i) {
+                case 10: {
+                    return (cortecs_lexer_test_result_t){
+                        .next_char = 'd',
+                    };
+                }
+                case 11: {
+                    return (cortecs_lexer_test_result_t){
+                        .next_char = 'D',
+                    };
+                }
+                default: {
+                    return (cortecs_lexer_test_result_t){
+                        .next_char = '0' + i,
+                    };
+                }
+            }
+        }
+        default: {
+            // state 3
+            // generate a dot
+            // this is the last character in the token
+            return (cortecs_lexer_test_result_t){
+                .next_char = '.',
+            };
+        }
     }
 }
 
 uint32_t lexer_test_float_max_entropy(uint32_t state) {
-    if (state == 0) {
-        return 11;
-    } else {
-        return 10;
+    switch (state) {
+        case 0:
+            return 11;
+        case 1:
+            return 10;
+        case 2:
+            return 12;
+        default:
+            return 1;
     }
 }
 

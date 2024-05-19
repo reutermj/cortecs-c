@@ -20,12 +20,40 @@ static cortecs_lexer_result_t construct_result(cortecs_lexer_tag_t tag, char *te
     };
 }
 
-static cortecs_lexer_result_t lex_float_or_dot(char *text, uint32_t start, uint32_t end) {
-    // \. | ([0-9]*\.[0-9]+) | ([0-9]+\.[0-9]*)
-    // This function is only entered after lexing the '.'
-    // Case 1: '.' is the first character of the token. in which case, this
-    // token could be either the dot operator if no digits follow or a float if digits follow.
-    // Case 2: '.' appeared after a string of digits. In which case, this token must be a float.
+static cortecs_lexer_result_t lex_float_bad(char *text, uint32_t start, uint32_t end) {
+    while (true) {
+        char c = text[end];
+        if (c == 0) {
+            break;
+        }
+
+        if (isalnum(c) || c == '_') {
+            end++;
+            continue;
+        }
+
+        break;
+    }
+
+    cortecs_span_t span = {
+        .lines = 0,
+        .columns = end - start,
+    };
+
+    return construct_result(CORTECS_LEXER_TAG_FLOAT, text, start, end, span);
+}
+
+static cortecs_lexer_result_t lex_float(char *text, uint32_t start, uint32_t end) {
+    // (\d+\.\d*[dD]?) | (\.\d+[dD]?)
+    // lhs case:
+    //   * this function is called by lex_int.
+    //   * the double suffix can immediately follow the dot.
+    //     * lex_int immediately calls this function lexing the dot
+    // rhs case:
+    //   * this function is called by lex_dot.
+    //   * there must be a digit before the double suffix.
+    //     * this condition is guaranteed by lex_dot
+
     while (true) {
         char c = text[end];
         if (c == 0) {
@@ -37,23 +65,39 @@ static cortecs_lexer_result_t lex_float_or_dot(char *text, uint32_t start, uint3
             continue;
         }
 
+        if (c == 'd' || c == 'D') {
+            end++;
+            break;
+        }
+
         break;
     }
 
-    uint32_t length = end - start;
-    cortecs_lexer_tag_t tag;
-    if (length == 1) {
-        tag = CORTECS_LEXER_TAG_DOT;
-    } else {
-        tag = CORTECS_LEXER_TAG_FLOAT;
+    char c = text[end];
+    if (isalnum(c) || c == '_') {
+        return lex_float_bad(text, start, end + 1);
     }
 
     cortecs_span_t span = {
         .lines = 0,
-        .columns = length,
+        .columns = end - start,
     };
 
-    return construct_result(tag, text, start, end, span);
+    return construct_result(CORTECS_LEXER_TAG_FLOAT, text, start, end, span);
+}
+
+static cortecs_lexer_result_t lex_dot(char *text, uint32_t start) {
+    if (isdigit(text[start + 1])) {
+        // the token is a float literal matching \.\d+[dD]?
+        return lex_float(text, start, start + 2);
+    }
+
+    cortecs_span_t span = {
+        .lines = 0,
+        .columns = 1,
+    };
+
+    return construct_result(CORTECS_LEXER_TAG_DOT, text, start, start + 1, span);
 }
 
 static cortecs_lexer_result_t lex_int(char *text, uint32_t start) {
@@ -66,7 +110,8 @@ static cortecs_lexer_result_t lex_int(char *text, uint32_t start) {
         }
 
         if (c == '.') {
-            return lex_float_or_dot(text, start, end + 1);
+            // the token is a float literal matching \d+\.\d*[dD]?
+            return lex_float(text, start, end + 1);
         }
 
         if (isdigit(c)) {
@@ -202,7 +247,7 @@ cortecs_lexer_result_t cortecs_lexer_next(char *text, uint32_t start) {
     }
 
     if (c == '.') {
-        return lex_float_or_dot(text, start, start + 1);
+        return lex_dot(text, start);
     }
 
     if (c == '\n') {
