@@ -28,11 +28,31 @@ void cortecs_lexer_test(char *in, uint32_t offset, char *gold, cortecs_lexer_tag
         }
     }
 
+    if (offset + target_length != result.start) {
+        NOOP;
+    }
     TEST_ASSERT_EQUAL_INT32(offset + target_length, result.start);
+
+    if (gold_span.lines != result.token.span.lines) {
+        NOOP;
+    }
     TEST_ASSERT_EQUAL_INT32(gold_span.lines, result.token.span.lines);
+
+    if (gold_span.columns != result.token.span.columns) {
+        NOOP;
+    }
     TEST_ASSERT_EQUAL_INT32(gold_span.columns, result.token.span.columns);
+
+    if (result.token.tag != tag) {
+        NOOP;
+    }
     TEST_ASSERT_TRUE(result.token.tag == tag);
-    TEST_ASSERT_TRUE(strncmp(gold, result.token.text, strlen(gold)) == 0);
+
+    int isDifferent = strncmp(gold, result.token.text, strlen(gold));
+    if (isDifferent) {
+        NOOP;
+    }
+    TEST_ASSERT_TRUE(!isDifferent);
     free(result.token.text);
 }
 
