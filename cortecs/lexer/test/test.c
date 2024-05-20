@@ -391,15 +391,17 @@ cortecs_lexer_test_result_t lexer_test_name_next(cortecs_lexer_test_state_t stat
     if (state.state == 0) {
         i = entropy % 27;
     } else {
-        i = entropy % 53;
+        i = entropy % 63;
     }
 
     if (i < 26) {
         result.next_char = 'a' + i;
     } else if (i == 26) {
         result.next_char = '_';
-    } else {
+    } else if (i < 53) {
         result.next_char = 'A' + (i - 27);
+    } else {
+        result.next_char = '0' + (i - 53);
     }
 
     return result;
@@ -434,15 +436,17 @@ cortecs_lexer_test_result_t lexer_test_type_next(cortecs_lexer_test_state_t stat
     if (state.state == 0) {
         i = entropy % 26;
     } else {
-        i = entropy % 53;
+        i = entropy % 63;
     }
 
     if (i < 26) {
         result.next_char = 'A' + i;
     } else if (i == 26) {
         result.next_char = '_';
-    } else {
+    } else if (i < 53) {
         result.next_char = 'a' + (i - 27);
+    } else {
+        result.next_char = '0' + (i - 53);
     }
 
     return result;
