@@ -42,6 +42,183 @@ void cortecs_lexer_test_int(void) {
     cortecs_lexer_test_exhaustive(stm);
 }
 
+cortecs_lexer_test_result_t lexer_test_bad_float_next(cortecs_lexer_test_state_t state, uint32_t entropy) {
+    switch (state.state) {
+        case 0: {
+            // generate either a '.' or digit
+            uint32_t i = entropy % 11;
+            if (i == 10) {
+                uint32_t next_state;
+                if (state.index == 0) {
+                    // the dot is the first character.
+                    // transition to a state that only generates a digit
+                    // (\.\d+[a-ce-zA-CE-Z_][a-zA-Z0-9_]*) | (\.\d+[dD][a-zA-Z0-9_]+)
+                    next_state = 1;
+                } else {
+                    // otherwise transition to a state that can generate digits, letters, or underscore
+                    // (\d+\.\d*[a-ce-zA-CE-Z_][a-zA-Z0-9_]*) | (\d+\.\d*[dD][a-zA-Z0-9_]+)
+                    next_state = 2;
+                }
+
+                return (cortecs_lexer_test_result_t){
+                    .next_char = '.',
+                    .next_state = next_state,
+                };
+            }
+
+            uint32_t next_state;
+            if (state.index == state.length - 3) {
+                // this digit is the second to last character and no '.' has been generated
+                // transition to a state that only generates the '.' then to a state
+                // that generates a bad suffix
+                // (\d+\.[a-ce-zA-CE-Z_])
+                next_state = 4;
+            } else {
+                // otherwise stay in this state
+                // (\d+\.\d*[a-ce-zA-CE-Z_][a-zA-Z0-9_]*) | (\d+\.\d*[dD][a-zA-Z0-9_]+)
+                next_state = 0;
+            }
+
+            return (cortecs_lexer_test_result_t){
+                .next_char = '0' + i,
+                .next_state = next_state,
+            };
+        }
+        case 1: {
+            // generate a digit. second character of one of the following:
+            // (\.\d+[a-ce-zA-CE-Z_][a-zA-Z0-9_]*) | (\.\d+[dD][a-zA-Z0-9_]+)
+            uint32_t next_state;
+            if (state.index == state.length - 2) {
+                // this digit is the second to last character.
+                // transition to a state that generates a bad suffix
+                // (\.\d[a-ce-zA-CE-Z_])
+                next_state = 5;
+            } else {
+                // otherwise transition to a state that can generate a digit, letter, or underscore
+                // (\.\d+[a-ce-zA-CE-Z_][a-zA-Z0-9_]*) | (\.\d+[dD][a-zA-Z0-9_]+)
+                next_state = 2;
+            }
+
+            return (cortecs_lexer_test_result_t){
+                .next_char = '0' + entropy % 10,
+                .next_state = next_state,
+            };
+        }
+        case 2: {
+            // generate a digit, letter, or underscore
+            // this state always comes after the dot has been generated
+            uint32_t i = entropy % 63;
+            char next_char;
+            uint32_t next_state;
+
+            if (i < 10) {
+                next_char = '0' + i;
+                if (state.index == state.length - 2) {
+                    next_state = 5;
+                } else {
+                    next_state = 2;
+                }
+            } else if (i < 36) {
+                next_char = 'a' + (i - 10);
+                next_state = 3;
+            } else if (i < 62) {
+                next_char = 'A' + (i - 36);
+                next_state = 3;
+            } else {
+                next_char = '_';
+                next_state = 3;
+            }
+
+            return (cortecs_lexer_test_result_t){
+                .next_char = next_char,
+                .next_state = next_state,
+            };
+        }
+        case 3: {
+            // Already constructed a bad float token.
+            // now just need to generate chars until desired length
+            // generates [0-9a-zA-Z_]
+            uint32_t i = entropy % 63;
+            char next_char;
+
+            if (i < 10) {
+                next_char = '0' + i;
+            } else if (i < 36) {
+                next_char = 'a' + (i - 10);
+            } else if (i < 62) {
+                next_char = 'A' + (i - 36);
+            } else {
+                next_char = '_';
+            }
+
+            return (cortecs_lexer_test_result_t){
+                .next_char = next_char,
+                .next_state = 3,
+            };
+        }
+        case 4: {
+            // generate a dot then transition to a state that generates a bad suffix
+            // this is the second last character in the token
+            // (\d+\.[a-ce-zA-CE-Z_])
+            return (cortecs_lexer_test_result_t){
+                .next_char = '.',
+                .next_state = 5,
+            };
+        }
+        default: {
+            // generates the last character in a token that matches
+            // (\d+\.\d*[a-ce-zA-CE-Z_]) | (\.\d+[a-ce-zA-CE-Z_])
+            uint32_t i = entropy % 51;
+            char next_char;
+
+            if (i < 3) {
+                next_char = 'a' + i;
+            } else if (i < 25) {
+                next_char = 'e' + (i - 3);
+            } else if (i < 28) {
+                next_char = 'A' + (i - 25);
+            } else if (i < 50) {
+                next_char = 'E' + (i - 28);
+            } else {
+                next_char = '_';
+            }
+
+            return (cortecs_lexer_test_result_t){
+                .next_char = next_char,
+            };
+        }
+    }
+}
+
+uint32_t lexer_test_bad_float_max_entropy(uint32_t state) {
+    switch (state) {
+        case 0:
+            return 11;
+        case 1:
+            return 10;
+        case 2:
+            return 63;
+        case 3:
+            return 63;
+        case 4:
+            return 1;
+        default:
+            return 51;
+    }
+}
+
+void cortecs_lexer_test_bad_float(void) {
+    cortecs_lexer_test_config_t stm = {
+        .next = &lexer_test_bad_float_next,
+        .should_skip_token = &cortecs_lexer_test_never_skip,
+        .state_max_entropy = &lexer_test_bad_float_max_entropy,
+        .tag = CORTECS_LEXER_TAG_BAD_FLOAT,
+        .min_length = 3,
+    };
+    cortecs_lexer_test_fuzz(stm);
+    cortecs_lexer_test_exhaustive(stm);
+}
+
 cortecs_lexer_test_result_t lexer_test_float_next(cortecs_lexer_test_state_t state, uint32_t entropy) {
     switch (state.state) {
         case 0: {
@@ -49,8 +226,12 @@ cortecs_lexer_test_result_t lexer_test_float_next(cortecs_lexer_test_state_t sta
             uint32_t i = entropy % 11;
             if (i == 10) {
                 uint32_t next_state;
-                if (state.index != 0 && state.index == state.length - 2) {
-                    // the dot is the second to last character (and not the first).
+                if (state.index == 0) {
+                    // the dot is the first character.
+                    // transition to a state that only generates a digit
+                    next_state = 1;
+                } else if (state.index == state.length - 2) {
+                    // the dot is the second to last character.
                     // transition to a state that can generate either a digit or double suffix
                     next_state = 2;
                 } else {
@@ -341,6 +522,8 @@ int main() {
 
     RUN_TEST(cortecs_lexer_test_int);
     RUN_TEST(cortecs_lexer_test_float);
+    RUN_TEST(cortecs_lexer_test_bad_float);
+
     RUN_TEST(cortecs_lexer_test_function);
     RUN_TEST(cortecs_lexer_test_let);
     RUN_TEST(cortecs_lexer_test_return);
