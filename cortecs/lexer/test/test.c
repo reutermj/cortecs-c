@@ -412,7 +412,7 @@ uint32_t lexer_test_name_max_entropy(uint32_t state) {
         return 27;
     }
 
-    return 53;
+    return 63;
 }
 
 static void lexer_test_name(void) {
@@ -457,7 +457,7 @@ uint32_t lexer_test_type_max_entropy(uint32_t state) {
         return 26;
     }
 
-    return 53;
+    return 63;
 }
 
 static void lexer_test_type(void) {
