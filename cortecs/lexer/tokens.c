@@ -12,6 +12,8 @@ const char *cortecs_lexer_tag_to_string(cortecs_lexer_tag_t tag) {
             return "int";
         case CORTECS_LEXER_TAG_FLOAT:
             return "float";
+        case CORTECS_LEXER_TAG_BAD_FLOAT:
+            return "bad_float";
         case CORTECS_LEXER_TAG_SPACE:
             return "space";
         case CORTECS_LEXER_TAG_NEW_LINE:

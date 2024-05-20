@@ -21,6 +21,7 @@ static cortecs_lexer_result_t construct_result(cortecs_lexer_tag_t tag, char *te
 }
 
 static cortecs_lexer_result_t lex_float_bad(char *text, uint32_t start, uint32_t end) {
+    // (\d+\.\d*[a-ce-zA-CE-Z_][a-zA-Z0-9_]*) | (\.\d+[a-ce-zA-CE-Z_][a-zA-Z0-9_]*) | (\d+\.\d*[dD][a-zA-Z0-9_]+) | (\.\d+[dD][a-zA-Z0-9_]+)
     while (true) {
         char c = text[end];
         if (c == 0) {
@@ -40,7 +41,7 @@ static cortecs_lexer_result_t lex_float_bad(char *text, uint32_t start, uint32_t
         .columns = end - start,
     };
 
-    return construct_result(CORTECS_LEXER_TAG_FLOAT, text, start, end, span);
+    return construct_result(CORTECS_LEXER_TAG_BAD_FLOAT, text, start, end, span);
 }
 
 static cortecs_lexer_result_t lex_float(char *text, uint32_t start, uint32_t end) {
@@ -68,6 +69,10 @@ static cortecs_lexer_result_t lex_float(char *text, uint32_t start, uint32_t end
         if (c == 'd' || c == 'D') {
             end++;
             break;
+        }
+
+        if (isalpha(c) || c == '_') {
+            return lex_float_bad(text, start, end + 1);
         }
 
         break;
