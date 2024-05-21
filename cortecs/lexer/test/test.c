@@ -19,15 +19,82 @@ void tearDown() {
 }
 
 cortecs_lexer_test_result_t lexer_test_int_next(cortecs_lexer_test_state_t state, uint32_t entropy) {
-    return (cortecs_lexer_test_result_t){
-        .next_state = 0,
-        .next_char = '0' + entropy % 10,
-    };
+    switch (state.state) {
+        case 0: {
+            uint32_t next_state;
+            if (state.index == state.length - 2) {
+                // if this is the second to last char, transition to a state
+                // that can only generate digits and signed suffixes
+                next_state = 2;
+            } else if (state.index == state.length - 3) {
+                // if this is the second to last char, transition to a state
+                // that can generate digits and unsigned suffixes
+                next_state = 1;
+            } else {
+                // otherwise stay in this state and only generate digits
+                next_state = 0;
+            }
+
+            return (cortecs_lexer_test_result_t){
+                .next_state = next_state,
+                .next_char = '0' + entropy % 10,
+            };
+        }
+        case 1: {
+            uint32_t i = entropy % 12;
+            char next_char;
+
+            switch (i) {
+                case 10:
+                    next_char = 'u';
+                case 11:
+                    next_char = 'U';
+                default:
+                    next_char = '0' + entropy % 10;
+            }
+
+            return (cortecs_lexer_test_result_t){
+                .next_state = 2,
+                .next_char = next_char,
+            };
+        }
+        default: {
+            uint32_t i = entropy % 16;
+            char next_char;
+
+            switch (i) {
+                case 10:
+                    next_char = 'b';
+                case 11:
+                    next_char = 'B';
+                case 12:
+                    next_char = 's';
+                case 13:
+                    next_char = 'S';
+                case 14:
+                    next_char = 'l';
+                case 15:
+                    next_char = 'L';
+                default:
+                    next_char = '0' + entropy % 10;
+            }
+
+            return (cortecs_lexer_test_result_t){
+                .next_char = next_char,
+            };
+        }
+    }
 }
 
 uint32_t lexer_test_int_max_entropy(uint32_t state) {
-    UNUSED(state);
-    return 10;
+    switch (state) {
+        case 0:
+            return 10;
+        case 1:
+            return 12;
+        default:
+            return 16;
+    }
 }
 
 void cortecs_lexer_test_int(void) {
