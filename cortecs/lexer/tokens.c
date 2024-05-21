@@ -10,6 +10,8 @@ const char *cortecs_lexer_tag_to_string(cortecs_lexer_tag_t tag) {
             return "type";
         case CORTECS_LEXER_TAG_INT:
             return "int";
+        case CORTECS_LEXER_TAG_BAD_INT:
+            return "bad_int";
         case CORTECS_LEXER_TAG_FLOAT:
             return "float";
         case CORTECS_LEXER_TAG_BAD_FLOAT:

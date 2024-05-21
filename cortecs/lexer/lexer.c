@@ -105,8 +105,31 @@ static cortecs_lexer_result_t lex_dot(char *text, uint32_t start) {
     return construct_result(CORTECS_LEXER_TAG_DOT, text, start, start + 1, span);
 }
 
+static cortecs_lexer_result_t lex_int_bad(char *text, uint32_t start, uint32_t end) {
+    while (true) {
+        char c = text[end];
+        if (c == 0) {
+            break;
+        }
+
+        if (isalnum(c) || c == '_') {
+            end++;
+            continue;
+        }
+
+        break;
+    }
+
+    cortecs_span_t span = {
+        .lines = 0,
+        .columns = end - start,
+    };
+
+    return construct_result(CORTECS_LEXER_TAG_BAD_INT, text, start, end, span);
+}
+
 static cortecs_lexer_result_t lex_int(char *text, uint32_t start) {
-    // [0-9]+
+    // [0-9]+([uU]?[bBsSlL])?
     uint32_t end = start + 1;
     while (true) {
         char c = text[end];
@@ -124,7 +147,28 @@ static cortecs_lexer_result_t lex_int(char *text, uint32_t start) {
             continue;
         }
 
+        if (c == 'b' || c == 'B' || c == 's' || c == 'S' || c == 'l' || c == 'L') {
+            end++;
+            break;
+        }
+
+        if (c == 'u' || c == 'U') {
+            end++;
+            c = text[end];
+            if (c == 'b' || c == 'B' || c == 's' || c == 'S' || c == 'l' || c == 'L') {
+                end++;
+                break;
+            } else {
+                return lex_int_bad(text, start, end);
+            }
+        }
+
         break;
+    }
+
+    char c = text[end];
+    if (isalnum(c) || c == '_') {
+        return lex_int_bad(text, start, end + 1);
     }
 
     cortecs_span_t span = {
