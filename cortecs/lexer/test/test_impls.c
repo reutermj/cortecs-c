@@ -3,9 +3,10 @@
 #include <common.h>
 #include <lexer.h>
 #include <stdlib.h>
+#include <tokens.h>
 #include <unity.h>
 
-void cortecs_lexer_test(char *in, uint32_t offset, char *gold, cortecs_lexer_tag_t tag) {
+uint32_t cortecs_lexer_test(char *in, uint32_t offset, char *gold, cortecs_lexer_tag_t tag) {
     cortecs_lexer_result_t result = cortecs_lexer_next(in, offset);
 
     int target_length = strlen(gold);
@@ -54,6 +55,8 @@ void cortecs_lexer_test(char *in, uint32_t offset, char *gold, cortecs_lexer_tag
     }
     TEST_ASSERT_TRUE(!isDifferent);
     free(result.token.text);
+
+    return result.start;
 }
 
 void cortecs_lexer_test_fuzz(cortecs_lexer_test_config_t config) {
@@ -69,11 +72,11 @@ void cortecs_lexer_test_fuzz(cortecs_lexer_test_config_t config) {
             for (int times = 0; times < 100; times++) {
                 char *in = calloc(offset + length + 1, sizeof(char));
                 char *gold = calloc(length + 1, sizeof(char));
-                cortecs_lexer_test_state_t state = {
-                    .state = 0,
-                    .length = length,
-                };
                 while (true) {
+                    cortecs_lexer_test_state_t state = {
+                        .state = 0,
+                        .length = length,
+                    };
                     for (uint32_t i = 0; i < length; i++) {
                         state.index = i;
                         cortecs_lexer_test_result_t result = config.next(state, rand());
@@ -95,6 +98,59 @@ void cortecs_lexer_test_fuzz(cortecs_lexer_test_config_t config) {
             }
         }
     }
+}
+
+typedef struct {
+    char *gold;
+    cortecs_lexer_tag_t tag;
+} lexer_fuzz_case_t;
+
+void cortecs_lexer_test_fuzz_multi(cortecs_lexer_test_fuzz_config_t config) {
+    char *in = calloc(10150, sizeof(char));
+    lexer_fuzz_case_t cases[10000];
+
+    int num_cases = 0;
+    uint32_t curr_config = 0;
+    uint32_t offset = 0;
+    while (offset < 10000) {
+        cortecs_lexer_test_config_t next_config = config.configs[curr_config];
+        uint32_t length = rand() % 100 + next_config.min_length;
+        char *gold = calloc(length + 1, sizeof(char));
+        while (true) {
+            cortecs_lexer_test_state_t state = {
+                .state = 0,
+                .length = length,
+            };
+            for (uint32_t i = 0; i < length; i++) {
+                state.index = i;
+                cortecs_lexer_test_result_t result = next_config.next(state, rand());
+                state.state = result.next_state;
+                in[offset + i] = result.next_char;
+                gold[i] = result.next_char;
+            }
+
+            if (next_config.should_skip_token(gold, length)) {
+                state.state = 0;
+                continue;
+            }
+
+            cases[num_cases].gold = gold;
+            cases[num_cases].tag = next_config.tag;
+            num_cases++;
+            curr_config = config.valid_next_token[curr_config][rand() % config.lengths[curr_config]];
+
+            break;
+        }
+        offset += length;
+    }
+
+    uint32_t start = 0;
+    for (int i = 0; i < num_cases; i++) {
+        lexer_fuzz_case_t gold = cases[i];
+        start = cortecs_lexer_test(in, start, gold.gold, gold.tag);
+    }
+
+    free(in);
 }
 
 typedef struct {

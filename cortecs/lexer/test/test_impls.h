@@ -1,5 +1,5 @@
-#ifndef CORTECS_LEXER_TEST_TEST_H
-#define CORTECS_LEXER_TEST_TEST_H
+#ifndef CORTECS_LEXER_TEST_TEST_IMPLS_H
+#define CORTECS_LEXER_TEST_TEST_IMPLS_H
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -24,8 +24,15 @@ typedef struct {
     uint32_t min_length;
 } cortecs_lexer_test_config_t;
 
-void cortecs_lexer_test(char *in, uint32_t offset, char *gold, cortecs_lexer_tag_t tag);
+typedef struct {
+    cortecs_lexer_test_config_t *configs;
+    uint32_t **valid_next_token;
+    uint32_t *lengths;
+} cortecs_lexer_test_fuzz_config_t;
+
+uint32_t cortecs_lexer_test(char *in, uint32_t offset, char *gold, cortecs_lexer_tag_t tag);
 void cortecs_lexer_test_fuzz(cortecs_lexer_test_config_t config);
+void cortecs_lexer_test_fuzz_multi(cortecs_lexer_test_fuzz_config_t config);
 void cortecs_lexer_test_exhaustive(cortecs_lexer_test_config_t config);
 bool cortecs_lexer_test_never_skip(char *, uint32_t);
 
