@@ -14,4 +14,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - run: bazel test //...
+      - run: bazel coverage --instrumentation_filter //cortecs/... --combined_report=lcov //...
+      - run: echo "COVERAGE_DAT=$(bazel info output_path)/_coverage/_coverage_report.dat" >> $GITHUB_ENV
+      - run: echo $COVERAGE_DAT
+      - uses: codecov/codecov-action@v4
+        with:
+          fail_ci_if_error: true # optional (default = false)
+          files: "./bazel-out/_coverage/_coverage_report.dat"
+          token: ${{ secrets.CODECOV_TOKEN }} # required
+          verbose: true # optional (default = false)
