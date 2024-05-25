@@ -446,40 +446,97 @@ static cortecs_lexer_test_result_t lexer_test_int_next(cortecs_lexer_test_state_
         case 1: {
             uint32_t i = entropy % 12;
             char next_char;
+            uint32_t next_state;
 
             switch (i) {
-                case 10:
+                case 10: {
                     next_char = 'u';
-                case 11:
+                    next_state = 3;
+                    break;
+                }
+                case 11: {
                     next_char = 'U';
-                default:
+                    next_state = 3;
+                    break;
+                }
+                default: {
                     next_char = '0' + entropy % 10;
+                    next_state = 2;
+                }
             }
 
             return (cortecs_lexer_test_result_t){
-                .next_state = 2,
+                .next_state = next_state,
                 .next_char = next_char,
             };
         }
-        default: {
+        case 2: {
             uint32_t i = entropy % 16;
             char next_char;
 
             switch (i) {
-                case 10:
+                case 10: {
                     next_char = 'b';
-                case 11:
+                    break;
+                }
+                case 11: {
                     next_char = 'B';
-                case 12:
+                    break;
+                }
+                case 12: {
                     next_char = 's';
-                case 13:
+                    break;
+                }
+                case 13: {
                     next_char = 'S';
-                case 14:
+                    break;
+                }
+                case 14: {
                     next_char = 'l';
-                case 15:
+                    break;
+                }
+                case 15: {
                     next_char = 'L';
-                default:
+                    break;
+                }
+                default: {
                     next_char = '0' + entropy % 10;
+                }
+            }
+
+            return (cortecs_lexer_test_result_t){
+                .next_char = next_char,
+            };
+        }
+        default: {
+            uint32_t i = entropy % 6;
+            char next_char;
+
+            switch (i) {
+                case 0: {
+                    next_char = 'b';
+                    break;
+                }
+                case 1: {
+                    next_char = 'B';
+                    break;
+                }
+                case 2: {
+                    next_char = 's';
+                    break;
+                }
+                case 3: {
+                    next_char = 'S';
+                    break;
+                }
+                case 4: {
+                    next_char = 'l';
+                    break;
+                }
+                default: {
+                    next_char = 'L';
+                    break;
+                }
             }
 
             return (cortecs_lexer_test_result_t){
@@ -495,8 +552,10 @@ static uint32_t lexer_test_int_max_entropy(uint32_t state) {
             return 10;
         case 1:
             return 12;
-        default:
+        case 2:
             return 16;
+        default:
+            return 6;
     }
 }
 
