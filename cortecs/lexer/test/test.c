@@ -10,6 +10,12 @@
 #include "test_configs.h"
 #include "test_impls.h"
 
+static void lexer_test_empty_input(void) {
+    cortecs_lexer_test("", 0, "", CORTECS_LEXER_TAG_INVALID);
+    cortecs_lexer_test("asdf", 4, "", CORTECS_LEXER_TAG_INVALID);
+    cortecs_lexer_test("asdf123", 7, "", CORTECS_LEXER_TAG_INVALID);
+}
+
 static void lexer_test_float(void) {
     cortecs_lexer_test_exhaustive(cortecs_lexer_test_float_config);
     cortecs_lexer_test_fuzz(cortecs_lexer_test_float_config);
@@ -146,6 +152,7 @@ void cortecs_lexer_test_multi_token_fuzz(void) {
 
 int main() {
     UNITY_BEGIN();
+    RUN_TEST(lexer_test_empty_input);
     RUN_TEST(cortecs_lexer_test_multi_token_fuzz);
 
     RUN_TEST(lexer_test_space);
