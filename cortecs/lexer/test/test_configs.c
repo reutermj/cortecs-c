@@ -663,3 +663,36 @@ cortecs_lexer_test_config_t cortecs_lexer_test_bad_int_config = {
     .tag = CORTECS_LEXER_TAG_BAD_INT,
     .min_length = 2,
 };
+
+static cortecs_lexer_test_result_t lexer_test_invalid_next(cortecs_lexer_test_state_t state, uint32_t entropy) {
+    cortecs_lexer_test_result_t result = {
+        .next_state = 0,
+    };
+
+    uint32_t j = entropy % 155;
+
+    if (j < 9) {
+        // control codes 0-8
+        result.next_char = (char)j;
+    } else if (j < 26) {
+        // control codes 14-31
+        result.next_char = (char)((j - 9) + 14);
+    } else {
+        // everything else 127-255
+        result.next_char = (char)((j - 26) + 127);
+    }
+    return result;
+}
+
+static uint32_t lexer_test_invalid_max_entropy(uint32_t state) {
+    UNUSED(state);
+    return 155;
+}
+
+cortecs_lexer_test_config_t cortecs_lexer_test_invalid_config = {
+    .next = &lexer_test_invalid_next,
+    .should_skip_token = &cortecs_lexer_test_never_skip,
+    .state_max_entropy = &lexer_test_invalid_max_entropy,
+    .tag = CORTECS_LEXER_TAG_INVALID,
+    .min_length = 1,
+};
