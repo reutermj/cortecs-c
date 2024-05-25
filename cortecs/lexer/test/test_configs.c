@@ -68,13 +68,13 @@ static cortecs_lexer_test_result_t lexer_test_name_next(cortecs_lexer_test_state
     }
 
     if (i < 26) {
-        result.next_char = 'a' + i;
+        result.next_char = (char)('a' + i);
     } else if (i == 26) {
         result.next_char = '_';
     } else if (i < 53) {
-        result.next_char = 'A' + (i - 27);
+        result.next_char = (char)('A' + (i - 27));
     } else {
-        result.next_char = '0' + (i - 53);
+        result.next_char = (char)('0' + (i - 53));
     }
 
     return result;
@@ -109,13 +109,13 @@ static cortecs_lexer_test_result_t lexer_test_type_next(cortecs_lexer_test_state
     }
 
     if (i < 26) {
-        result.next_char = 'A' + i;
+        result.next_char = (char)('A' + i);
     } else if (i == 26) {
         result.next_char = '_';
     } else if (i < 53) {
-        result.next_char = 'a' + (i - 27);
+        result.next_char = (char)('a' + (i - 27));
     } else {
-        result.next_char = '0' + (i - 53);
+        result.next_char = (char)('0' + (i - 53));
     }
 
     return result;
@@ -144,11 +144,7 @@ static cortecs_lexer_test_result_t lexer_test_float_next(cortecs_lexer_test_stat
             uint32_t i = entropy % 11;
             if (i == 10) {
                 uint32_t next_state;
-                if (state.index == 0) {
-                    // the dot is the first character.
-                    // transition to a state that only generates a digit
-                    next_state = 1;
-                } else if (state.index == state.length - 2) {
+                if (state.index == state.length - 2) {
                     // the dot is the second to last character.
                     // transition to a state that can generate either a digit or double suffix
                     next_state = 2;
@@ -174,7 +170,7 @@ static cortecs_lexer_test_result_t lexer_test_float_next(cortecs_lexer_test_stat
             }
 
             return (cortecs_lexer_test_result_t){
-                .next_char = '0' + i,
+                .next_char = (char)('0' + i),
                 .next_state = next_state,
             };
         }
@@ -191,7 +187,7 @@ static cortecs_lexer_test_result_t lexer_test_float_next(cortecs_lexer_test_stat
             }
 
             return (cortecs_lexer_test_result_t){
-                .next_char = '0' + entropy % 10,
+                .next_char = (char)('0' + entropy % 10),
                 .next_state = next_state,
             };
         }
@@ -211,7 +207,7 @@ static cortecs_lexer_test_result_t lexer_test_float_next(cortecs_lexer_test_stat
                 }
                 default: {
                     return (cortecs_lexer_test_result_t){
-                        .next_char = '0' + i,
+                        .next_char = (char)('0' + i),
                     };
                 }
             }
@@ -286,7 +282,7 @@ static cortecs_lexer_test_result_t lexer_test_bad_float_next(cortecs_lexer_test_
             }
 
             return (cortecs_lexer_test_result_t){
-                .next_char = '0' + i,
+                .next_char = (char)('0' + i),
                 .next_state = next_state,
             };
         }
@@ -306,7 +302,7 @@ static cortecs_lexer_test_result_t lexer_test_bad_float_next(cortecs_lexer_test_
             }
 
             return (cortecs_lexer_test_result_t){
-                .next_char = '0' + entropy % 10,
+                .next_char = (char)('0' + entropy % 10),
                 .next_state = next_state,
             };
         }
@@ -318,17 +314,17 @@ static cortecs_lexer_test_result_t lexer_test_bad_float_next(cortecs_lexer_test_
             uint32_t next_state;
 
             if (i < 10) {
-                next_char = '0' + i;
+                next_char = (char)('0' + i);
                 if (state.index == state.length - 2) {
                     next_state = 5;
                 } else {
                     next_state = 2;
                 }
             } else if (i < 36) {
-                next_char = 'a' + (i - 10);
+                next_char = (char)('a' + (i - 10));
                 next_state = 3;
             } else if (i < 62) {
-                next_char = 'A' + (i - 36);
+                next_char = (char)('A' + (i - 36));
                 next_state = 3;
             } else {
                 next_char = '_';
@@ -348,11 +344,11 @@ static cortecs_lexer_test_result_t lexer_test_bad_float_next(cortecs_lexer_test_
             char next_char;
 
             if (i < 10) {
-                next_char = '0' + i;
+                next_char = (char)('0' + i);
             } else if (i < 36) {
-                next_char = 'a' + (i - 10);
+                next_char = (char)('a' + (i - 10));
             } else if (i < 62) {
-                next_char = 'A' + (i - 36);
+                next_char = (char)('A' + (i - 36));
             } else {
                 next_char = '_';
             }
@@ -378,13 +374,13 @@ static cortecs_lexer_test_result_t lexer_test_bad_float_next(cortecs_lexer_test_
             char next_char;
 
             if (i < 3) {
-                next_char = 'a' + i;
+                next_char = (char)('a' + i);
             } else if (i < 25) {
-                next_char = 'e' + (i - 3);
+                next_char = (char)('e' + (i - 3));
             } else if (i < 28) {
-                next_char = 'A' + (i - 25);
+                next_char = (char)('A' + (i - 25));
             } else if (i < 50) {
-                next_char = 'E' + (i - 28);
+                next_char = (char)('E' + (i - 28));
             } else {
                 next_char = '_';
             }
@@ -403,7 +399,6 @@ static uint32_t lexer_test_bad_float_max_entropy(uint32_t state) {
         case 1:
             return 10;
         case 2:
-            return 63;
         case 3:
             return 63;
         case 4:
@@ -440,7 +435,7 @@ static cortecs_lexer_test_result_t lexer_test_int_next(cortecs_lexer_test_state_
 
             return (cortecs_lexer_test_result_t){
                 .next_state = next_state,
-                .next_char = '0' + entropy % 10,
+                .next_char = (char)('0' + entropy % 10),
             };
         }
         case 1: {
@@ -460,7 +455,7 @@ static cortecs_lexer_test_result_t lexer_test_int_next(cortecs_lexer_test_state_
                     break;
                 }
                 default: {
-                    next_char = '0' + entropy % 10;
+                    next_char = (char)('0' + entropy % 10);
                     next_state = 2;
                 }
             }
@@ -500,7 +495,7 @@ static cortecs_lexer_test_result_t lexer_test_int_next(cortecs_lexer_test_state_
                     break;
                 }
                 default: {
-                    next_char = '0' + entropy % 10;
+                    next_char = (char)('0' + entropy);
                 }
             }
 
@@ -583,7 +578,7 @@ static cortecs_lexer_test_result_t lexer_test_bad_int_next(cortecs_lexer_test_st
 
             return (cortecs_lexer_test_result_t){
                 .next_state = next_state,
-                .next_char = '0' + entropy % 10,
+                .next_char = (char)('0' + entropy % 10),
             };
         }
         case 1: {
@@ -592,7 +587,7 @@ static cortecs_lexer_test_result_t lexer_test_bad_int_next(cortecs_lexer_test_st
             uint32_t next_state;
 
             if (i < 10) {
-                next_char = '0' + i;
+                next_char = (char)('0' + i);
                 if (state.index == state.length - 2) {
                     // this digit is the second to last charater.
                     // transition to a state that produces invalid unisigned suffixes
@@ -603,7 +598,7 @@ static cortecs_lexer_test_result_t lexer_test_bad_int_next(cortecs_lexer_test_st
                     next_state = 1;
                 }
             } else if (i < 30) {
-                next_char = 'a' + (i - 10);
+                next_char = (char)('a' + (i - 10));
                 next_state = 2;
             } else if (i == 30) {
                 next_char = 'u';
@@ -618,10 +613,10 @@ static cortecs_lexer_test_result_t lexer_test_bad_int_next(cortecs_lexer_test_st
                     next_state = 2;
                 }
             } else if (i < 36) {
-                next_char = 'v' + (i - 31);
+                next_char = (char)('v' + (i - 31));
                 next_state = 2;
             } else if (i < 56) {
-                next_char = 'A' + (i - 36);
+                next_char = (char)('A' + (i - 36));
                 next_state = 2;
             } else if (i == 56) {
                 next_char = 'U';
@@ -636,7 +631,7 @@ static cortecs_lexer_test_result_t lexer_test_bad_int_next(cortecs_lexer_test_st
                     next_state = 2;
                 }
             } else if (i < 62) {
-                next_char = 'V' + (i - 57);
+                next_char = (char)('V' + (i - 57));
                 next_state = 2;
             } else {
                 next_char = '_';
@@ -655,11 +650,11 @@ static cortecs_lexer_test_result_t lexer_test_bad_int_next(cortecs_lexer_test_st
             char next_char;
 
             if (i < 10) {
-                next_char = '0' + i;
+                next_char = (char)('0' + i);
             } else if (i < 36) {
-                next_char = 'a' + (i - 10);
+                next_char = (char)('a' + (i - 10));
             } else if (i < 62) {
-                next_char = 'A' + (i - 36);
+                next_char = (char)('A' + (i - 36));
             } else {
                 next_char = '_';
             }
@@ -678,19 +673,19 @@ static cortecs_lexer_test_result_t lexer_test_bad_int_next(cortecs_lexer_test_st
             if (i == 0) {
                 next_char = 'a';
             } else if (i < 10) {
-                next_char = 'c' + (i - 1);
+                next_char = (char)('c' + (i - 1));
             } else if (i < 16) {
-                next_char = 'm' + (i - 10);
+                next_char = (char)('m' + (i - 10));
             } else if (i < 23) {
-                next_char = 't' + (i - 16);
+                next_char = (char)('t' + (i - 16));
             } else if (i == 23) {
                 next_char = 'A';
             } else if (i < 33) {
-                next_char = 'C' + (i - 24);
+                next_char = (char)('C' + (i - 24));
             } else if (i < 39) {
-                next_char = 'M' + (i - 33);
+                next_char = (char)('M' + (i - 33));
             } else if (i < 46) {
-                next_char = 'T' + (i - 39);
+                next_char = (char)('T' + (i - 39));
             } else {
                 next_char = '_';
             }
@@ -707,7 +702,6 @@ static uint32_t lexer_test_bad_int_max_entropy(uint32_t state) {
         case 0:
             return 10;
         case 1:
-            return 63;
         case 2:
             return 63;
         default:
