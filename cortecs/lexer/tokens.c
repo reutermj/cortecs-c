@@ -33,5 +33,5 @@ const char *cortecs_lexer_tag_to_string(cortecs_lexer_tag_t tag) {
         case CORTECS_LEXER_TAG_INVALID:
             return "invalid";
     }
-    assert(false);
+    return "unknown";
 }
