@@ -20,7 +20,7 @@ jobs:
       - uses: codecov/codecov-action@v4
         with:
           fail_ci_if_error: true # optional (default = false)
-          files: "./bazel-out/_coverage/_coverage_report.dat"
+          files: "$COVERAGE_DAT"
           token: ${{ secrets.CODECOV_TOKEN }} # required
           verbose: true # optional (default = false)
           override_branch: main
