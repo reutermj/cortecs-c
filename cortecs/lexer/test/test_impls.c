@@ -9,7 +9,7 @@
 uint32_t cortecs_lexer_test(char *in, uint32_t offset, char *gold, cortecs_lexer_tag_t tag) {
     cortecs_lexer_result_t result = cortecs_lexer_next(in, offset);
 
-    int target_length = strlen(gold);
+    int target_length = (int)strnlen(gold, 256);
     cortecs_span_t gold_span = {
         .lines = 0,
         .columns = 0,
@@ -156,9 +156,9 @@ void cortecs_lexer_test_fuzz_multi(cortecs_lexer_test_fuzz_config_t config) {
 typedef struct {
     char *in;
     char *gold;
-    int length;
-    int offset;
-    int state;
+    uint32_t length;
+    uint32_t offset;
+    uint32_t state;
 } cortecs_lexer_exhaustive_state_stm_t;
 
 static void lexer_test_exhaustive_run(cortecs_lexer_test_config_t config, cortecs_lexer_exhaustive_state_stm_t state, int index) {
@@ -180,7 +180,7 @@ static void lexer_test_exhaustive_run(cortecs_lexer_test_config_t config, cortec
         .length = state.length,
     };
 
-    int num_chars = config.state_max_entropy(0);
+    uint32_t num_chars = config.state_max_entropy(0);
     for (uint32_t i = 0; i < num_chars; i++) {
         cortecs_lexer_test_result_t result = config.next(test_state, i);
         state.in[state.offset + index] = result.next_char;

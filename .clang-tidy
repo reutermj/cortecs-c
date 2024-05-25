@@ -1,0 +1,9 @@
+UseColor: true
+
+Checks: >
+    bugprone-*,
+    google-*,
+    performance-*,
+    -clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling,
+
+WarningsAsErrors: "*"
