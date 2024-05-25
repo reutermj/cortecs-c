@@ -284,7 +284,7 @@ cortecs_lexer_result_t cortecs_lexer_next(char *text, uint32_t start) {
             .lines = 0,
             .columns = 0,
         };
-        return construct_result(CORTECS_LEXER_TAG_INVALID, "", 0, 0, span);
+        return construct_result(CORTECS_LEXER_TAG_INVALID, "", start, start, span);
     }
 
     if (isalpha(c) || c == '_') {
