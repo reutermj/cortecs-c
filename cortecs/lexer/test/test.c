@@ -1,4 +1,5 @@
 #include <common.h>
+#include <ctype.h>
 #include <lexer.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -97,6 +98,14 @@ void cortecs_lexer_test_new_line(void) {
     cortecs_lexer_test("asdf\n\n123", 4, "\n", CORTECS_LEXER_TAG_NEW_LINE);
 }
 
+static void lexer_test_invalid(void) {
+    // currently not running exhaustiveness testing because it takes way too long
+    // maybe reenable them if I ever decide it's worth the effort to change test
+    // implementations for this case
+    // cortecs_lexer_test_exhaustive(cortecs_lexer_test_invalid_config);
+    cortecs_lexer_test_fuzz(cortecs_lexer_test_invalid_config);
+}
+
 void cortecs_lexer_test_multi_token_fuzz(void) {
     cortecs_lexer_test_config_t configs[] = {
         cortecs_lexer_test_space_config,
@@ -170,6 +179,8 @@ int main() {
     RUN_TEST(lexer_test_bad_int);
     RUN_TEST(lexer_test_float);
     RUN_TEST(lexer_test_bad_float);
+
+    RUN_TEST(lexer_test_invalid);
 
     RUN_TEST(cortecs_lexer_test_function);
     RUN_TEST(cortecs_lexer_test_let);

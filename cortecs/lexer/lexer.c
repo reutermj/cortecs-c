@@ -254,15 +254,7 @@ static cortecs_lexer_result_t lex_invalid(char *text, uint32_t start) {
             break;
         }
 
-        if (isalnum(c)) {
-            break;
-        }
-
-        if (isspace(c)) {
-            break;
-        }
-
-        if (c == '.') {
+        if (isprint(c) || isspace(c)) {
             break;
         }
 
