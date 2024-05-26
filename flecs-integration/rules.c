@@ -9,7 +9,7 @@ typedef struct {
     uint32_t id;
 } someid;
 
-const int num_entities = 10000;
+const uint32_t num_entities = 10000;
 ECS_COMPONENT_DECLARE(someid);
 
 typedef struct {
@@ -37,7 +37,7 @@ test_ancestor_traversal_gold_t test_ancestor_traversal_init_gold(ecs_world_t *wo
 
     // Construct descendancies matrix
     gold.descendancies = calloc(num_entities, sizeof(bool *));
-    for (int i = 0; i < num_entities; i++) {
+    for (uint32_t i = 0; i < num_entities; i++) {
         gold.descendancies[i] = calloc(num_entities, sizeof(bool));
     }
     for (uint32_t child = 1; child < num_entities; child++) {
@@ -84,7 +84,7 @@ static void test_ancestor_traversal() {
 
     // Setup test output
     bool **out_descendancies = calloc(num_entities, sizeof(bool *));
-    for (int i = 0; i < num_entities; i++) {
+    for (uint32_t i = 0; i < num_entities; i++) {
         out_descendancies[i] = calloc(num_entities, sizeof(bool));
     }
 
@@ -103,14 +103,14 @@ static void test_ancestor_traversal() {
     }
 
     // Compare gold and out descendancies matricies
-    for (int i = 0; i < num_entities; i++) {
-        for (int j = 0; j < num_entities; j++) {
+    for (uint32_t i = 0; i < num_entities; i++) {
+        for (uint32_t j = 0; j < num_entities; j++) {
             TEST_ASSERT_EQUAL(gold.descendancies[i][j], out_descendancies[i][j]);
         }
     }
 
     // Test cleanup
-    for (int i = 0; i < num_entities; i++) {
+    for (uint32_t i = 0; i < num_entities; i++) {
         free(gold.descendancies[i]);
         free(out_descendancies[i]);
     }
