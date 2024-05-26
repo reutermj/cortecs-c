@@ -23,12 +23,8 @@ static cortecs_lexer_result_t construct_result(cortecs_lexer_tag_t tag, char *te
 static cortecs_lexer_result_t lex_float_bad(char *text, uint32_t start, uint32_t end) {
     // (\d+\.\d*[a-ce-zA-CE-Z_][a-zA-Z0-9_]*) | (\.\d+[a-ce-zA-CE-Z_][a-zA-Z0-9_]*) | (\d+\.\d*[dD][a-zA-Z0-9_]+) | (\.\d+[dD][a-zA-Z0-9_]+)
     while (true) {
-        char c = text[end];
-        if (c == 0) {
-            break;
-        }
-
-        if (isalnum(c) || c == '_') {
+        char current_char = text[end];
+        if (isalnum(current_char) || current_char == '_') {
             end++;
             continue;
         }
@@ -56,30 +52,26 @@ static cortecs_lexer_result_t lex_float(char *text, uint32_t start, uint32_t end
     //     * this condition is guaranteed by lex_dot
 
     while (true) {
-        char c = text[end];
-        if (c == 0) {
-            break;
-        }
-
-        if (isdigit(c)) {
+        char current_char = text[end];
+        if (isdigit(current_char)) {
             end++;
             continue;
         }
 
-        if (c == 'd' || c == 'D') {
+        if (current_char == 'd' || current_char == 'D') {
             end++;
             break;
         }
 
-        if (isalpha(c) || c == '_') {
+        if (isalpha(current_char) || current_char == '_') {
             return lex_float_bad(text, start, end + 1);
         }
 
         break;
     }
 
-    char c = text[end];
-    if (isalnum(c) || c == '_') {
+    char current_char = text[end];
+    if (isalnum(current_char) || current_char == '_') {
         return lex_float_bad(text, start, end + 1);
     }
 
@@ -107,12 +99,12 @@ static cortecs_lexer_result_t lex_dot(char *text, uint32_t start) {
 
 static cortecs_lexer_result_t lex_int_bad(char *text, uint32_t start, uint32_t end) {
     while (true) {
-        char c = text[end];
-        if (c == 0) {
+        char current_char = text[end];
+        if (current_char == 0) {
             break;
         }
 
-        if (isalnum(c) || c == '_') {
+        if (isalnum(current_char) || current_char == '_') {
             end++;
             continue;
         }
@@ -132,42 +124,42 @@ static cortecs_lexer_result_t lex_int(char *text, uint32_t start) {
     // [0-9]+([uU]?[bBsSlL])?
     uint32_t end = start + 1;
     while (true) {
-        char c = text[end];
-        if (c == 0) {
+        char current_char = text[end];
+        if (current_char == 0) {
             break;
         }
 
-        if (c == '.') {
+        if (current_char == '.') {
             // the token is a float literal matching \d+\.\d*[dD]?
             return lex_float(text, start, end + 1);
         }
 
-        if (isdigit(c)) {
+        if (isdigit(current_char)) {
             end++;
             continue;
         }
 
-        if (c == 'b' || c == 'B' || c == 's' || c == 'S' || c == 'l' || c == 'L') {
+        if (current_char == 'b' || current_char == 'B' || current_char == 's' || current_char == 'S' || current_char == 'l' || current_char == 'L') {
             end++;
             break;
         }
 
-        if (c == 'u' || c == 'U') {
+        if (current_char == 'u' || current_char == 'U') {
             end++;
-            c = text[end];
-            if (c == 'b' || c == 'B' || c == 's' || c == 'S' || c == 'l' || c == 'L') {
+            current_char = text[end];
+            if (current_char == 'b' || current_char == 'B' || current_char == 's' || current_char == 'S' || current_char == 'l' || current_char == 'L') {
                 end++;
                 break;
-            } else {
-                return lex_int_bad(text, start, end);
             }
+
+            return lex_int_bad(text, start, end);
         }
 
         break;
     }
 
-    char c = text[end];
-    if (isalnum(c) || c == '_') {
+    char current_char = text[end];
+    if (isalnum(current_char) || current_char == '_') {
         return lex_int_bad(text, start, end + 1);
     }
 
@@ -183,12 +175,12 @@ static cortecs_lexer_result_t lex_name(char *text, uint32_t start) {
     // [a-zA-Z][a-zA-Z0-9_]*
     uint32_t end = start + 1;
     while (true) {
-        char c = text[end];
-        if (c == 0) {
+        char current_char = text[end];
+        if (current_char == 0) {
             break;
         }
 
-        if (isalnum(c) || c == '_') {
+        if (isalnum(current_char) || current_char == '_') {
             end++;
             continue;
         }
@@ -225,12 +217,12 @@ static cortecs_lexer_result_t lex_whitespace(char *text, uint32_t start) {
     // [\ \t\r\f\v]+
     uint32_t end = start + 1;
     while (true) {
-        char c = text[end];
-        if (c == 0) {
+        char current_char = text[end];
+        if (current_char == 0) {
             break;
         }
 
-        if (isspace(c) && c != '\n') {
+        if (isspace(current_char) && current_char != '\n') {
             end++;
             continue;
         }
@@ -249,12 +241,12 @@ static cortecs_lexer_result_t lex_whitespace(char *text, uint32_t start) {
 static cortecs_lexer_result_t lex_invalid(char *text, uint32_t start) {
     uint32_t end = start + 1;
     while (true) {
-        char c = text[end];
-        if (c == 0) {
+        char current_char = text[end];
+        if (current_char == 0) {
             break;
         }
 
-        if (isprint(c) || isspace(c)) {
+        if (isprint(current_char) || isspace(current_char)) {
             break;
         }
 
@@ -270,8 +262,8 @@ static cortecs_lexer_result_t lex_invalid(char *text, uint32_t start) {
 }
 
 cortecs_lexer_result_t cortecs_lexer_next(char *text, uint32_t start) {
-    char c = text[start];
-    if (c == 0) {
+    char current_char = text[start];
+    if (current_char == 0) {
         cortecs_span_t span = {
             .lines = 0,
             .columns = 0,
@@ -279,19 +271,19 @@ cortecs_lexer_result_t cortecs_lexer_next(char *text, uint32_t start) {
         return construct_result(CORTECS_LEXER_TAG_INVALID, "", start, start, span);
     }
 
-    if (isalpha(c) || c == '_') {
+    if (isalpha(current_char) || current_char == '_') {
         return lex_name(text, start);
     }
 
-    if (isdigit(c)) {
+    if (isdigit(current_char)) {
         return lex_int(text, start);
     }
 
-    if (c == '.') {
+    if (current_char == '.') {
         return lex_dot(text, start);
     }
 
-    if (c == '\n') {
+    if (current_char == '\n') {
         cortecs_span_t span = {
             .lines = 1,
             .columns = 0,
@@ -300,7 +292,7 @@ cortecs_lexer_result_t cortecs_lexer_next(char *text, uint32_t start) {
         return construct_result(CORTECS_LEXER_TAG_NEW_LINE, text, start, start + 1, span);
     }
 
-    if (isspace(c)) {
+    if (isspace(current_char)) {
         return lex_whitespace(text, start);
     }
 

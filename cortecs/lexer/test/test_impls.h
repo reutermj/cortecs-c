@@ -19,7 +19,7 @@ typedef struct {
 typedef struct {
     cortecs_lexer_test_result_t (*next)(cortecs_lexer_test_state_t, uint32_t);
     uint32_t (*state_max_entropy)(uint32_t);
-    bool (*should_skip_token)(char *, uint32_t);
+    bool (*should_skip_token)(const char *, uint32_t);
     cortecs_lexer_tag_t tag;
     uint32_t min_length;
 } cortecs_lexer_test_config_t;
@@ -30,10 +30,10 @@ typedef struct {
     uint32_t *lengths;
 } cortecs_lexer_test_fuzz_config_t;
 
-uint32_t cortecs_lexer_test(char *in, uint32_t offset, char *gold, cortecs_lexer_tag_t tag);
+uint32_t cortecs_lexer_test(char *input, uint32_t offset, char *gold, cortecs_lexer_tag_t tag);
 void cortecs_lexer_test_fuzz(cortecs_lexer_test_config_t config);
 void cortecs_lexer_test_fuzz_multi(cortecs_lexer_test_fuzz_config_t config);
 void cortecs_lexer_test_exhaustive(cortecs_lexer_test_config_t config);
-bool cortecs_lexer_test_never_skip(char *, uint32_t);
+bool cortecs_lexer_test_never_skip(const char *, uint32_t);
 
 #endif

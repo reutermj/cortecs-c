@@ -2,8 +2,9 @@ UseColor: true
 
 Checks: >
     bugprone-*,
-    google-*,
-    performance-*,
+    misc-include-cleaner,
+    readability-*,
+    -readability-magic-numbers,
     -clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling,
 
 WarningsAsErrors: "*"
