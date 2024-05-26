@@ -1,6 +1,7 @@
 #include "test_configs.h"
 
 #include <common.h>
+#include <ctype.h>
 
 static cortecs_lexer_test_result_t lexer_test_space_next(cortecs_lexer_test_state_t state, uint32_t entropy) {
     cortecs_lexer_test_result_t result = {
@@ -35,7 +36,7 @@ cortecs_lexer_test_config_t cortecs_lexer_test_space_config = {
     .min_length = 1,
 };
 
-static bool lexer_text_name_skip(char *token, uint32_t length) {
+static bool lexer_text_name_skip(const char *token, uint32_t length) {
     if (length == 2 && strncmp(token, "if", 2) == 0) {
         return true;
     }
@@ -55,37 +56,26 @@ static bool lexer_text_name_skip(char *token, uint32_t length) {
     return false;
 }
 
-static cortecs_lexer_test_result_t lexer_test_name_next(cortecs_lexer_test_state_t state, uint32_t entropy) {
-    cortecs_lexer_test_result_t result = {
-        .next_state = 1,
-    };
-
-    uint32_t i;
-    if (state.state == 0) {
-        i = entropy % 27;
-    } else {
-        i = entropy % 63;
-    }
-
-    if (i < 26) {
-        result.next_char = (char)('a' + i);
-    } else if (i == 26) {
-        result.next_char = '_';
-    } else if (i < 53) {
-        result.next_char = (char)('A' + (i - 27));
-    } else {
-        result.next_char = (char)('0' + (i - 53));
-    }
-
-    return result;
-}
+static const char lexer_test_name_lookup[] = {
+    'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+    '_',
+    'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+    '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
 
 static uint32_t lexer_test_name_max_entropy(uint32_t state) {
     if (state == 0) {
         return 27;
     }
 
-    return 63;
+    return sizeof(lexer_test_name_lookup) / sizeof(char);
+}
+
+static cortecs_lexer_test_result_t lexer_test_name_next(cortecs_lexer_test_state_t state, uint32_t entropy) {
+    entropy = entropy % lexer_test_name_max_entropy(state.state);
+    return (cortecs_lexer_test_result_t){
+        .next_char = lexer_test_name_lookup[entropy],
+        .next_state = 1,
+    };
 }
 
 cortecs_lexer_test_config_t cortecs_lexer_test_name_config = {
@@ -96,37 +86,26 @@ cortecs_lexer_test_config_t cortecs_lexer_test_name_config = {
     .min_length = 1,
 };
 
-static cortecs_lexer_test_result_t lexer_test_type_next(cortecs_lexer_test_state_t state, uint32_t entropy) {
-    cortecs_lexer_test_result_t result = {
-        .next_state = 1,
-    };
-
-    uint32_t i;
-    if (state.state == 0) {
-        i = entropy % 26;
-    } else {
-        i = entropy % 63;
-    }
-
-    if (i < 26) {
-        result.next_char = (char)('A' + i);
-    } else if (i == 26) {
-        result.next_char = '_';
-    } else if (i < 53) {
-        result.next_char = (char)('a' + (i - 27));
-    } else {
-        result.next_char = (char)('0' + (i - 53));
-    }
-
-    return result;
-}
+static const char lexer_test_type_lookup[] = {
+    'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+    '_',
+    'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+    '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
 
 static uint32_t lexer_test_type_max_entropy(uint32_t state) {
     if (state == 0) {
         return 26;
     }
 
-    return 63;
+    return sizeof(lexer_test_type_lookup) / sizeof(char);
+}
+
+static cortecs_lexer_test_result_t lexer_test_type_next(cortecs_lexer_test_state_t state, uint32_t entropy) {
+    entropy = entropy % lexer_test_type_max_entropy(state.state);
+    return (cortecs_lexer_test_result_t){
+        .next_char = lexer_test_type_lookup[entropy],
+        .next_state = 1,
+    };
 }
 
 cortecs_lexer_test_config_t cortecs_lexer_test_type_config = {
@@ -137,12 +116,35 @@ cortecs_lexer_test_config_t cortecs_lexer_test_type_config = {
     .min_length = 1,
 };
 
+static const char lexer_test_float_lookup[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'd', 'D'};
+
+static uint32_t lexer_test_float_max_entropy(uint32_t state) {
+    switch (state) {
+        case 0: {
+            const uint32_t num_digits_or_dot = 11;
+            return num_digits_or_dot;
+        }
+        case 1: {
+            const uint32_t num_digits = 10;
+            return num_digits;
+        }
+        case 2: {
+            const uint32_t num_digits_or_suffix = 12;
+            return num_digits_or_suffix;
+        }
+        default: {
+            const uint32_t only_dot = 12;
+            return only_dot;
+        }
+    }
+}
+
 static cortecs_lexer_test_result_t lexer_test_float_next(cortecs_lexer_test_state_t state, uint32_t entropy) {
+    entropy = entropy % lexer_test_float_max_entropy(state.state);
     switch (state.state) {
         case 0: {
             // generate either a '.' or digit
-            uint32_t i = entropy % 11;
-            if (i == 10) {
+            if (entropy == 10) {
                 uint32_t next_state;
                 if (state.index != 0 && state.index == state.length - 2) {
                     // the dot is the second to last character but not the first character
@@ -170,7 +172,7 @@ static cortecs_lexer_test_result_t lexer_test_float_next(cortecs_lexer_test_stat
             }
 
             return (cortecs_lexer_test_result_t){
-                .next_char = (char)('0' + i),
+                .next_char = lexer_test_float_lookup[entropy],
                 .next_state = next_state,
             };
         }
@@ -187,30 +189,15 @@ static cortecs_lexer_test_result_t lexer_test_float_next(cortecs_lexer_test_stat
             }
 
             return (cortecs_lexer_test_result_t){
-                .next_char = (char)('0' + entropy % 10),
+                .next_char = lexer_test_float_lookup[entropy],
                 .next_state = next_state,
             };
         }
         case 2: {
             // generate either a digit or double suffx
-            uint32_t i = entropy % 12;
-            switch (i) {
-                case 10: {
-                    return (cortecs_lexer_test_result_t){
-                        .next_char = 'd',
-                    };
-                }
-                case 11: {
-                    return (cortecs_lexer_test_result_t){
-                        .next_char = 'D',
-                    };
-                }
-                default: {
-                    return (cortecs_lexer_test_result_t){
-                        .next_char = (char)('0' + i),
-                    };
-                }
-            }
+            return (cortecs_lexer_test_result_t){
+                .next_char = lexer_test_float_lookup[entropy],
+            };
         }
         default: {
             // state 3
@@ -223,19 +210,6 @@ static cortecs_lexer_test_result_t lexer_test_float_next(cortecs_lexer_test_stat
     }
 }
 
-static uint32_t lexer_test_float_max_entropy(uint32_t state) {
-    switch (state) {
-        case 0:
-            return 11;
-        case 1:
-            return 10;
-        case 2:
-            return 12;
-        default:
-            return 1;
-    }
-}
-
 cortecs_lexer_test_config_t cortecs_lexer_test_float_config = {
     .next = &lexer_test_float_next,
     .should_skip_token = &cortecs_lexer_test_never_skip,
@@ -244,12 +218,33 @@ cortecs_lexer_test_config_t cortecs_lexer_test_float_config = {
     .min_length = 2,
 };
 
+static uint32_t lexer_test_bad_float_max_entropy(uint32_t state) {
+    switch (state) {
+        case 0:
+            return 11;
+        case 1:
+            return 10;
+        case 2:
+        case 3:
+            return 63;
+        case 4:
+            return 1;
+        default:
+            return 51;
+    }
+}
+
 static cortecs_lexer_test_result_t lexer_test_bad_float_next(cortecs_lexer_test_state_t state, uint32_t entropy) {
+    static const char any_char[] = {
+        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+        'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+        'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+        '_'};
+    entropy = entropy % lexer_test_bad_float_max_entropy(state.state);
     switch (state.state) {
         case 0: {
             // generate either a '.' or digit
-            uint32_t i = entropy % 11;
-            if (i == 10) {
+            if (entropy == 10) {
                 uint32_t next_state;
                 if (state.index == 0) {
                     // the dot is the first character.
@@ -282,7 +277,7 @@ static cortecs_lexer_test_result_t lexer_test_bad_float_next(cortecs_lexer_test_
             }
 
             return (cortecs_lexer_test_result_t){
-                .next_char = (char)('0' + i),
+                .next_char = any_char[entropy],
                 .next_state = next_state,
             };
         }
@@ -302,37 +297,26 @@ static cortecs_lexer_test_result_t lexer_test_bad_float_next(cortecs_lexer_test_
             }
 
             return (cortecs_lexer_test_result_t){
-                .next_char = (char)('0' + entropy % 10),
+                .next_char = any_char[entropy],
                 .next_state = next_state,
             };
         }
         case 2: {
             // generate a digit, letter, or underscore
             // this state always comes after the dot has been generated
-            uint32_t i = entropy % 63;
-            char next_char;
             uint32_t next_state;
-
-            if (i < 10) {
-                next_char = (char)('0' + i);
+            if (entropy < 10) {
                 if (state.index == state.length - 2) {
                     next_state = 5;
                 } else {
                     next_state = 2;
                 }
-            } else if (i < 36) {
-                next_char = (char)('a' + (i - 10));
-                next_state = 3;
-            } else if (i < 62) {
-                next_char = (char)('A' + (i - 36));
-                next_state = 3;
             } else {
-                next_char = '_';
                 next_state = 3;
             }
 
             return (cortecs_lexer_test_result_t){
-                .next_char = next_char,
+                .next_char = any_char[entropy],
                 .next_state = next_state,
             };
         }
@@ -340,21 +324,9 @@ static cortecs_lexer_test_result_t lexer_test_bad_float_next(cortecs_lexer_test_
             // Already constructed a bad float token.
             // now just need to generate chars until desired length
             // generates [0-9a-zA-Z_]
-            uint32_t i = entropy % 63;
-            char next_char;
-
-            if (i < 10) {
-                next_char = (char)('0' + i);
-            } else if (i < 36) {
-                next_char = (char)('a' + (i - 10));
-            } else if (i < 62) {
-                next_char = (char)('A' + (i - 36));
-            } else {
-                next_char = '_';
-            }
 
             return (cortecs_lexer_test_result_t){
-                .next_char = next_char,
+                .next_char = any_char[entropy],
                 .next_state = 3,
             };
         }
@@ -370,41 +342,14 @@ static cortecs_lexer_test_result_t lexer_test_bad_float_next(cortecs_lexer_test_
         default: {
             // generates the last character in a token that matches
             // (\d+\.\d*[a-ce-zA-CE-Z_]) | (\.\d+[a-ce-zA-CE-Z_])
-            uint32_t i = entropy % 51;
-            char next_char;
-
-            if (i < 3) {
-                next_char = (char)('a' + i);
-            } else if (i < 25) {
-                next_char = (char)('e' + (i - 3));
-            } else if (i < 28) {
-                next_char = (char)('A' + (i - 25));
-            } else if (i < 50) {
-                next_char = (char)('E' + (i - 28));
-            } else {
-                next_char = '_';
-            }
-
+            static const char bad_suffix[] = {
+                'a', 'b', 'c', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+                'A', 'B', 'C', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+                '_'};
             return (cortecs_lexer_test_result_t){
-                .next_char = next_char,
+                .next_char = bad_suffix[entropy],
             };
         }
-    }
-}
-
-static uint32_t lexer_test_bad_float_max_entropy(uint32_t state) {
-    switch (state) {
-        case 0:
-            return 11;
-        case 1:
-            return 10;
-        case 2:
-        case 3:
-            return 63;
-        case 4:
-            return 1;
-        default:
-            return 51;
     }
 }
 
@@ -416,7 +361,24 @@ cortecs_lexer_test_config_t cortecs_lexer_test_bad_float_config = {
     .min_length = 3,
 };
 
+static uint32_t lexer_test_int_max_entropy(uint32_t state) {
+    switch (state) {
+        case 0:
+            return 10;
+        case 1:
+            return 12;
+        case 2:
+            return 16;
+        default:
+            return 6;
+    }
+}
+
 static cortecs_lexer_test_result_t lexer_test_int_next(cortecs_lexer_test_state_t state, uint32_t entropy) {
+    static const char digits_and_signed_suffixes[] = {
+        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+        'b', 'B', 's', 'S', 'l', 'L'};
+    entropy = entropy % lexer_test_int_max_entropy(state.state);
     switch (state.state) {
         case 0: {
             uint32_t next_state;
@@ -435,122 +397,34 @@ static cortecs_lexer_test_result_t lexer_test_int_next(cortecs_lexer_test_state_
 
             return (cortecs_lexer_test_result_t){
                 .next_state = next_state,
-                .next_char = (char)('0' + entropy % 10),
+                .next_char = digits_and_signed_suffixes[entropy],
             };
         }
         case 1: {
-            uint32_t i = entropy % 12;
-            char next_char;
-            uint32_t next_state;
+            static const char digits_and_unsigned_suffixes[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'u', 'U'};
 
-            switch (i) {
-                case 10: {
-                    next_char = 'u';
-                    next_state = 3;
-                    break;
-                }
-                case 11: {
-                    next_char = 'U';
-                    next_state = 3;
-                    break;
-                }
-                default: {
-                    next_char = (char)('0' + entropy % 10);
-                    next_state = 2;
-                }
+            uint32_t next_state;
+            if (entropy < 10) {
+                next_state = 2;
+            } else {
+                next_state = 3;
             }
 
             return (cortecs_lexer_test_result_t){
                 .next_state = next_state,
-                .next_char = next_char,
+                .next_char = digits_and_unsigned_suffixes[entropy],
             };
         }
         case 2: {
-            uint32_t i = entropy % 16;
-            char next_char;
-
-            switch (i) {
-                case 10: {
-                    next_char = 'b';
-                    break;
-                }
-                case 11: {
-                    next_char = 'B';
-                    break;
-                }
-                case 12: {
-                    next_char = 's';
-                    break;
-                }
-                case 13: {
-                    next_char = 'S';
-                    break;
-                }
-                case 14: {
-                    next_char = 'l';
-                    break;
-                }
-                case 15: {
-                    next_char = 'L';
-                    break;
-                }
-                default: {
-                    next_char = (char)('0' + i);
-                }
-            }
-
             return (cortecs_lexer_test_result_t){
-                .next_char = next_char,
+                .next_char = digits_and_signed_suffixes[entropy],
             };
         }
         default: {
-            uint32_t i = entropy % 6;
-            char next_char;
-
-            switch (i) {
-                case 0: {
-                    next_char = 'b';
-                    break;
-                }
-                case 1: {
-                    next_char = 'B';
-                    break;
-                }
-                case 2: {
-                    next_char = 's';
-                    break;
-                }
-                case 3: {
-                    next_char = 'S';
-                    break;
-                }
-                case 4: {
-                    next_char = 'l';
-                    break;
-                }
-                default: {
-                    next_char = 'L';
-                    break;
-                }
-            }
-
             return (cortecs_lexer_test_result_t){
-                .next_char = next_char,
+                .next_char = digits_and_signed_suffixes[entropy + 10],
             };
         }
-    }
-}
-
-static uint32_t lexer_test_int_max_entropy(uint32_t state) {
-    switch (state) {
-        case 0:
-            return 10;
-        case 1:
-            return 12;
-        case 2:
-            return 16;
-        default:
-            return 6;
     }
 }
 
@@ -562,7 +436,25 @@ cortecs_lexer_test_config_t cortecs_lexer_test_int_config = {
     .min_length = 1,
 };
 
+static uint32_t lexer_test_bad_int_max_entropy(uint32_t state) {
+    switch (state) {
+        case 0:
+            return 10;
+        case 1:
+        case 2:
+            return 63;
+        default:
+            return 47;
+    }
+}
+
 static cortecs_lexer_test_result_t lexer_test_bad_int_next(cortecs_lexer_test_state_t state, uint32_t entropy) {
+    entropy = entropy % lexer_test_bad_int_max_entropy(state.state);
+    static const char any_char[] = {
+        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+        'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+        'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+        '_'};
     switch (state.state) {
         case 0: {
             uint32_t next_state;
@@ -582,12 +474,10 @@ static cortecs_lexer_test_result_t lexer_test_bad_int_next(cortecs_lexer_test_st
             };
         }
         case 1: {
-            uint32_t i = entropy % 63;
-            char next_char;
-            uint32_t next_state;
+            char next_char = any_char[entropy];
 
-            if (i < 10) {
-                next_char = (char)('0' + i);
+            uint32_t next_state;
+            if (isdigit(next_char)) {
                 if (state.index == state.length - 2) {
                     // this digit is the second to last charater.
                     // transition to a state that produces invalid unisigned suffixes
@@ -597,11 +487,7 @@ static cortecs_lexer_test_result_t lexer_test_bad_int_next(cortecs_lexer_test_st
                     // otherwise stay in this state
                     next_state = 1;
                 }
-            } else if (i < 30) {
-                next_char = (char)('a' + (i - 10));
-                next_state = 2;
-            } else if (i == 30) {
-                next_char = 'u';
+            } else if (next_char == 'u' || next_char == 'U') {
                 if (state.index == state.length - 2) {
                     // 'u' is the second to last charater.
                     // transition to a state that produces invalid unisigned suffixes
@@ -612,29 +498,7 @@ static cortecs_lexer_test_result_t lexer_test_bad_int_next(cortecs_lexer_test_st
                     // state that produces anything
                     next_state = 2;
                 }
-            } else if (i < 36) {
-                next_char = (char)('v' + (i - 31));
-                next_state = 2;
-            } else if (i < 56) {
-                next_char = (char)('A' + (i - 36));
-                next_state = 2;
-            } else if (i == 56) {
-                next_char = 'U';
-                if (state.index == state.length - 2) {
-                    // 'u' is the second to last charater.
-                    // transition to a state that produces invalid unisigned suffixes
-                    // matches: [0-9]+U[ac-km-rt-zAC-KM-RT-Z_]
-                    next_state = 3;
-                } else {
-                    // otherwise the token is already bad, so transition to the
-                    // state that produces anything
-                    next_state = 2;
-                }
-            } else if (i < 62) {
-                next_char = (char)('V' + (i - 57));
-                next_state = 2;
             } else {
-                next_char = '_';
                 next_state = 2;
             }
 
@@ -646,66 +510,23 @@ static cortecs_lexer_test_result_t lexer_test_bad_int_next(cortecs_lexer_test_st
         case 2: {
             // A bad int has already been generated. Generate anything
             // matches: [0-9]+(([uU][a-zA-Z_])|([ac-km-rt-zAC-KM-RT-Z_]))[a-zA-Z0-9_]*
-            uint32_t i = entropy % 63;
-            char next_char;
-
-            if (i < 10) {
-                next_char = (char)('0' + i);
-            } else if (i < 36) {
-                next_char = (char)('a' + (i - 10));
-            } else if (i < 62) {
-                next_char = (char)('A' + (i - 36));
-            } else {
-                next_char = '_';
-            }
-
             return (cortecs_lexer_test_result_t){
                 .next_state = 2,
-                .next_char = next_char,
+                .next_char = any_char[entropy],
             };
         }
         default: {
             // only generates a bad suffix for the last char
             // matches: [0-9]+[uU]?[ac-km-rt-zAC-KM-RT-Z_]
-            uint32_t i = entropy % 47;
-            char next_char;
-
-            if (i == 0) {
-                next_char = 'a';
-            } else if (i < 10) {
-                next_char = (char)('c' + (i - 1));
-            } else if (i < 16) {
-                next_char = (char)('m' + (i - 10));
-            } else if (i < 23) {
-                next_char = (char)('t' + (i - 16));
-            } else if (i == 23) {
-                next_char = 'A';
-            } else if (i < 33) {
-                next_char = (char)('C' + (i - 24));
-            } else if (i < 39) {
-                next_char = (char)('M' + (i - 33));
-            } else if (i < 46) {
-                next_char = (char)('T' + (i - 39));
-            } else {
-                next_char = '_';
-            }
+            static const char bad_suffix[] = {
+                'a', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'm', 'n', 'o', 'p', 'q', 'r', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+                'A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'M', 'N', 'O', 'P', 'Q', 'R', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+                '_'};
 
             return (cortecs_lexer_test_result_t){
-                .next_char = next_char,
+                .next_char = bad_suffix[entropy],
             };
         }
-    }
-}
-
-static uint32_t lexer_test_bad_int_max_entropy(uint32_t state) {
-    switch (state) {
-        case 0:
-            return 10;
-        case 1:
-        case 2:
-            return 63;
-        default:
-            return 47;
     }
 }
 
@@ -717,29 +538,30 @@ cortecs_lexer_test_config_t cortecs_lexer_test_bad_int_config = {
     .min_length = 2,
 };
 
+static uint32_t lexer_test_invalid_max_entropy(uint32_t state) {
+    UNUSED(state);
+    return 155;
+}
+
 static cortecs_lexer_test_result_t lexer_test_invalid_next(cortecs_lexer_test_state_t state, uint32_t entropy) {
+    entropy = entropy % lexer_test_invalid_max_entropy(state.state);
     cortecs_lexer_test_result_t result = {
         .next_state = 0,
     };
 
-    uint32_t j = entropy % 155;
+    static const char invalid_chars[] = {
+        (char)0, (char)1, (char)2, (char)3, (char)4, (char)5, (char)6, (char)7, (char)8,
+        (char)14, (char)15, (char)16, (char)17, (char)18, (char)19, (char)20, (char)21, (char)22,
+        (char)23, (char)24, (char)25, (char)26, (char)27, (char)28, (char)29, (char)30, (char)31};
 
-    if (j < 9) {
-        // control codes 0-8
-        result.next_char = (char)j;
-    } else if (j < 26) {
-        // control codes 14-31
-        result.next_char = (char)((j - 9) + 14);
+    const uint32_t invalid_chars_length = sizeof(invalid_chars) / sizeof(char);
+    if (entropy < invalid_chars_length) {
+        result.next_char = invalid_chars[entropy];
     } else {
-        // everything else 127-255
-        result.next_char = (char)((j - 26) + 127);
+        result.next_char = (char)((entropy - invalid_chars_length) + 127);
     }
-    return result;
-}
 
-static uint32_t lexer_test_invalid_max_entropy(uint32_t state) {
-    UNUSED(state);
-    return 155;
+    return result;
 }
 
 cortecs_lexer_test_config_t cortecs_lexer_test_invalid_config = {

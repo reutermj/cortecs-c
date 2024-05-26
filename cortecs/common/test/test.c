@@ -17,16 +17,16 @@ static void test_span_compare(void) {
         for (uint32_t rlines = llines + 1; rlines < 100; rlines++) {
             for (uint32_t lcolumns = 0; lcolumns < 100; lcolumns++) {
                 for (uint32_t rcolumns = 0; rcolumns < 100; rcolumns++) {
-                    cortecs_span_t left = {
+                    cortecs_span_t span1 = {
                         .lines = llines,
                         .columns = lcolumns,
                     };
-                    cortecs_span_t right = {
+                    cortecs_span_t span2 = {
                         .lines = rlines,
                         .columns = rcolumns,
                     };
-                    TEST_ASSERT_EQUAL_INT32(-1, cortecs_span_compare(left, right));
-                    TEST_ASSERT_EQUAL_INT32(1, cortecs_span_compare(right, left));
+                    TEST_ASSERT_EQUAL_INT32(-1, cortecs_span_compare(span1, span2));
+                    TEST_ASSERT_EQUAL_INT32(1, cortecs_span_compare(span2, span1));
                 }
             }
         }
@@ -35,16 +35,16 @@ static void test_span_compare(void) {
     for (uint32_t lines = 0; lines < 100; lines++) {
         for (uint32_t lcolumns = 0; lcolumns < 99; lcolumns++) {
             for (uint32_t rcolumns = lcolumns + 1; rcolumns < 100; rcolumns++) {
-                cortecs_span_t left = {
+                cortecs_span_t span1 = {
                     .lines = lines,
                     .columns = lcolumns,
                 };
-                cortecs_span_t right = {
+                cortecs_span_t span2 = {
                     .lines = lines,
                     .columns = rcolumns,
                 };
-                TEST_ASSERT_EQUAL_INT32(-1, cortecs_span_compare(left, right));
-                TEST_ASSERT_EQUAL_INT32(1, cortecs_span_compare(right, left));
+                TEST_ASSERT_EQUAL_INT32(-1, cortecs_span_compare(span1, span2));
+                TEST_ASSERT_EQUAL_INT32(1, cortecs_span_compare(span2, span1));
             }
         }
     }
