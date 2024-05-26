@@ -3,29 +3,18 @@
 #include <common.h>
 #include <ctype.h>
 
-static cortecs_lexer_test_result_t lexer_test_space_next(cortecs_lexer_test_state_t state, uint32_t entropy) {
-    cortecs_lexer_test_result_t result = {
-        .next_state = 0,
-    };
-
-    switch (entropy % 5) {
-        case 0:
-            result.next_char = ' ';
-        case 1:
-            result.next_char = '\t';
-        case 2:
-            result.next_char = '\r';
-        case 3:
-            result.next_char = '\v';
-        default:
-            result.next_char = '\f';
-    }
-    return result;
-}
-
 static uint32_t lexer_test_space_max_entropy(uint32_t state) {
     UNUSED(state);
     return 5;
+}
+
+static cortecs_lexer_test_result_t lexer_test_space_next(cortecs_lexer_test_state_t state, uint32_t entropy) {
+    entropy = entropy % lexer_test_space_max_entropy(state.state);
+    static const char space[] = {' ', '\t', '\r', '\v', '\f'};
+    return (cortecs_lexer_test_result_t){
+        .next_state = 0,
+        .next_char = space[entropy],
+    };
 }
 
 cortecs_lexer_test_config_t cortecs_lexer_test_space_config = {

@@ -161,7 +161,7 @@ typedef struct {
     uint32_t state;
 } cortecs_lexer_exhaustive_state_stm_t;
 
-static void lexer_test_exhaustive_run(cortecs_lexer_test_config_t config, cortecs_lexer_exhaustive_state_stm_t state, int index) {
+static void lexer_test_exhaustive_run(cortecs_lexer_test_config_t config, cortecs_lexer_exhaustive_state_stm_t state, uint32_t index) {
     if (index == state.length) {
         if (config.should_skip_token(state.gold, state.length)) {
             return;
