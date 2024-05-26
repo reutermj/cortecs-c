@@ -6,8 +6,8 @@
 #include <tokens.h>
 #include <unity.h>
 
-uint32_t cortecs_lexer_test(char *in, uint32_t offset, char *gold, cortecs_lexer_tag_t tag) {
-    cortecs_lexer_result_t result = cortecs_lexer_next(in, offset);
+uint32_t cortecs_lexer_test(char *input, uint32_t offset, char *gold, cortecs_lexer_tag_t tag) {
+    cortecs_lexer_result_t result = cortecs_lexer_next(input, offset);
 
     int target_length = (int)strnlen(gold, 256);
     cortecs_span_t gold_span = {
@@ -15,18 +15,18 @@ uint32_t cortecs_lexer_test(char *in, uint32_t offset, char *gold, cortecs_lexer
         .columns = 0,
     };
     for (uint32_t i = 0;; i++) {
-        char c = gold[i];
-        if (c == 0) {
+        char current_char = gold[i];
+        if (current_char == 0) {
             break;
         }
 
-        if (c == '\n') {
+        if (current_char == '\n') {
             gold_span.columns = 0;
             gold_span.lines = 1;
             break;
-        } else {
-            gold_span.columns++;
         }
+
+        gold_span.columns++;
     }
 
     if (offset + target_length != result.start) {
@@ -70,7 +70,7 @@ void cortecs_lexer_test_fuzz(cortecs_lexer_test_config_t config) {
     for (uint32_t length = start_length; length < 100; length++) {
         for (uint32_t offset = 0; offset < 100; offset++) {
             for (int times = 0; times < 100; times++) {
-                char *in = calloc(offset + length + 1, sizeof(char));
+                char *input = calloc(offset + length + 1, sizeof(char));
                 char *gold = calloc(length + 1, sizeof(char));
                 while (true) {
                     cortecs_lexer_test_state_t state = {
@@ -81,7 +81,7 @@ void cortecs_lexer_test_fuzz(cortecs_lexer_test_config_t config) {
                         state.index = i;
                         cortecs_lexer_test_result_t result = config.next(state, rand());
                         state.state = result.next_state;
-                        in[offset + i] = result.next_char;
+                        input[offset + i] = result.next_char;
                         gold[i] = result.next_char;
                     }
 
@@ -91,9 +91,9 @@ void cortecs_lexer_test_fuzz(cortecs_lexer_test_config_t config) {
 
                     break;
                 }
-                in[offset + length] = 0;
-                cortecs_lexer_test(in, offset, gold, config.tag);
-                free(in);
+                input[offset + length] = 0;
+                cortecs_lexer_test(input, offset, gold, config.tag);
+                free(input);
                 free(gold);
             }
         }
@@ -106,7 +106,7 @@ typedef struct {
 } lexer_fuzz_case_t;
 
 void cortecs_lexer_test_fuzz_multi(cortecs_lexer_test_fuzz_config_t config) {
-    char *in = calloc(10150, sizeof(char));
+    char *input = calloc(10150, sizeof(char));
     lexer_fuzz_case_t cases[10000];
 
     int num_cases = 0;
@@ -125,7 +125,7 @@ void cortecs_lexer_test_fuzz_multi(cortecs_lexer_test_fuzz_config_t config) {
                 state.index = i;
                 cortecs_lexer_test_result_t result = next_config.next(state, rand());
                 state.state = result.next_state;
-                in[offset + i] = result.next_char;
+                input[offset + i] = result.next_char;
                 gold[i] = result.next_char;
             }
 
@@ -147,10 +147,10 @@ void cortecs_lexer_test_fuzz_multi(cortecs_lexer_test_fuzz_config_t config) {
     uint32_t start = 0;
     for (int i = 0; i < num_cases; i++) {
         lexer_fuzz_case_t gold = cases[i];
-        start = cortecs_lexer_test(in, start, gold.gold, gold.tag);
+        start = cortecs_lexer_test(input, start, gold.gold, gold.tag);
     }
 
-    free(in);
+    free(input);
 }
 
 typedef struct {
@@ -223,7 +223,7 @@ void cortecs_lexer_test_exhaustive(cortecs_lexer_test_config_t config) {
     free(state.gold);
 }
 
-bool cortecs_lexer_test_never_skip(char *string, uint32_t length) {
+bool cortecs_lexer_test_never_skip(const char *string, uint32_t length) {
     UNUSED(string);
     UNUSED(length);
     return false;
