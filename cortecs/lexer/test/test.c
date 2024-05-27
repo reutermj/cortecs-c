@@ -115,42 +115,60 @@ void cortecs_lexer_test_multi_token_fuzz(void) {
         cortecs_lexer_test_bad_float_config,
         cortecs_lexer_test_int_config,
         cortecs_lexer_test_bad_int_config,
+        cortecs_lexer_test_invalid_config,
     };
 
-    uint32_t lengths[7];
-    uint32_t **matrix = calloc(7, sizeof(uint32_t *));
-    matrix[0] = calloc(6, sizeof(uint32_t));
+    uint32_t lengths[8];
+    uint32_t **matrix = calloc(8, sizeof(uint32_t *));
+    matrix[0] = calloc(7, sizeof(uint32_t));
     matrix[0][0] = 1;
     matrix[0][1] = 2;
     matrix[0][2] = 3;
     matrix[0][3] = 4;
     matrix[0][4] = 5;
     matrix[0][5] = 6;
-    lengths[0] = 6;
+    matrix[0][6] = 7;
+    lengths[0] = 7;
 
-    matrix[1] = calloc(1, sizeof(uint32_t));
+    matrix[1] = calloc(2, sizeof(uint32_t));
     matrix[1][0] = 0;
-    lengths[1] = 1;
+    matrix[1][1] = 7;
+    lengths[1] = 2;
 
-    matrix[2] = calloc(1, sizeof(uint32_t));
+    matrix[2] = calloc(2, sizeof(uint32_t));
     matrix[2][0] = 0;
-    lengths[2] = 1;
+    matrix[2][1] = 7;
+    lengths[2] = 2;
 
-    matrix[3] = calloc(1, sizeof(uint32_t));
+    matrix[3] = calloc(2, sizeof(uint32_t));
     matrix[3][0] = 0;
-    lengths[3] = 1;
+    matrix[3][1] = 7;
+    lengths[3] = 2;
 
-    matrix[4] = calloc(1, sizeof(uint32_t));
+    matrix[4] = calloc(2, sizeof(uint32_t));
     matrix[4][0] = 0;
-    lengths[4] = 1;
+    matrix[4][1] = 7;
+    lengths[4] = 2;
 
-    matrix[5] = calloc(1, sizeof(uint32_t));
+    matrix[5] = calloc(2, sizeof(uint32_t));
     matrix[5][0] = 0;
-    lengths[5] = 1;
+    matrix[5][1] = 7;
+    lengths[5] = 2;
 
-    matrix[6] = calloc(1, sizeof(uint32_t));
+    matrix[6] = calloc(2, sizeof(uint32_t));
     matrix[6][0] = 0;
-    lengths[6] = 1;
+    matrix[6][1] = 7;
+    lengths[6] = 2;
+
+    matrix[7] = calloc(7, sizeof(uint32_t));
+    matrix[7][0] = 0;
+    matrix[7][0] = 1;
+    matrix[7][0] = 2;
+    matrix[7][0] = 3;
+    matrix[7][0] = 4;
+    matrix[7][0] = 5;
+    matrix[7][0] = 6;
+    lengths[7] = 7;
 
     cortecs_lexer_test_multi_config_t config = {
         .configs = configs,
@@ -162,7 +180,7 @@ void cortecs_lexer_test_multi_token_fuzz(void) {
     cortecs_lexer_test_fuzz_multi(config);
     cortecs_lexer_test_exhaustive_two_token(config);
 
-    for (int i = 0; i < 7; i++) {
+    for (int i = 0; i < 8; i++) {
         free(matrix[i]);
     }
     free(matrix);
