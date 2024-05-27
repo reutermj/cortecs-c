@@ -22,6 +22,7 @@ typedef struct {
     bool (*should_skip_token)(const char *, uint32_t);
     cortecs_lexer_tag_t tag;
     uint32_t min_length;
+    uint32_t max_length;
 } cortecs_lexer_test_config_t;
 
 typedef struct {

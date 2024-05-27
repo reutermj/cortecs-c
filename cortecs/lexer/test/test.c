@@ -116,11 +116,12 @@ void cortecs_lexer_test_multi_token_fuzz(void) {
         cortecs_lexer_test_int_config,
         cortecs_lexer_test_bad_int_config,
         cortecs_lexer_test_invalid_config,
+        cortecs_lexer_test_new_line_config,
     };
 
-    uint32_t lengths[8];
-    uint32_t **matrix = calloc(8, sizeof(uint32_t *));
-    matrix[0] = calloc(7, sizeof(uint32_t));
+    uint32_t lengths[9];
+    uint32_t **matrix = calloc(9, sizeof(uint32_t *));
+    matrix[0] = calloc(8, sizeof(uint32_t));
     matrix[0][0] = 1;
     matrix[0][1] = 2;
     matrix[0][2] = 3;
@@ -128,47 +129,67 @@ void cortecs_lexer_test_multi_token_fuzz(void) {
     matrix[0][4] = 5;
     matrix[0][5] = 6;
     matrix[0][6] = 7;
-    lengths[0] = 7;
+    matrix[0][7] = 8;
+    lengths[0] = 8;
 
-    matrix[1] = calloc(2, sizeof(uint32_t));
+    matrix[1] = calloc(3, sizeof(uint32_t));
     matrix[1][0] = 0;
     matrix[1][1] = 7;
-    lengths[1] = 2;
+    matrix[1][2] = 8;
+    lengths[1] = 3;
 
-    matrix[2] = calloc(2, sizeof(uint32_t));
+    matrix[2] = calloc(3, sizeof(uint32_t));
     matrix[2][0] = 0;
     matrix[2][1] = 7;
-    lengths[2] = 2;
+    matrix[2][2] = 8;
+    lengths[2] = 3;
 
-    matrix[3] = calloc(2, sizeof(uint32_t));
+    matrix[3] = calloc(3, sizeof(uint32_t));
     matrix[3][0] = 0;
     matrix[3][1] = 7;
-    lengths[3] = 2;
+    matrix[3][2] = 8;
+    lengths[3] = 3;
 
-    matrix[4] = calloc(2, sizeof(uint32_t));
+    matrix[4] = calloc(3, sizeof(uint32_t));
     matrix[4][0] = 0;
     matrix[4][1] = 7;
-    lengths[4] = 2;
+    matrix[4][2] = 8;
+    lengths[4] = 3;
 
-    matrix[5] = calloc(2, sizeof(uint32_t));
+    matrix[5] = calloc(3, sizeof(uint32_t));
     matrix[5][0] = 0;
     matrix[5][1] = 7;
-    lengths[5] = 2;
+    matrix[5][2] = 8;
+    lengths[5] = 3;
 
-    matrix[6] = calloc(2, sizeof(uint32_t));
+    matrix[6] = calloc(3, sizeof(uint32_t));
     matrix[6][0] = 0;
     matrix[6][1] = 7;
-    lengths[6] = 2;
+    matrix[6][2] = 8;
+    lengths[6] = 3;
 
-    matrix[7] = calloc(7, sizeof(uint32_t));
+    matrix[7] = calloc(8, sizeof(uint32_t));
     matrix[7][0] = 0;
-    matrix[7][0] = 1;
-    matrix[7][0] = 2;
-    matrix[7][0] = 3;
-    matrix[7][0] = 4;
-    matrix[7][0] = 5;
-    matrix[7][0] = 6;
-    lengths[7] = 7;
+    matrix[7][1] = 1;
+    matrix[7][2] = 2;
+    matrix[7][3] = 3;
+    matrix[7][4] = 4;
+    matrix[7][5] = 5;
+    matrix[7][6] = 6;
+    matrix[7][7] = 8;
+    lengths[7] = 8;
+
+    matrix[8] = calloc(9, sizeof(uint32_t));
+    matrix[8][0] = 0;
+    matrix[8][1] = 1;
+    matrix[8][2] = 2;
+    matrix[8][3] = 3;
+    matrix[8][4] = 4;
+    matrix[8][5] = 5;
+    matrix[8][6] = 6;
+    matrix[8][7] = 7;
+    matrix[8][8] = 8;
+    lengths[8] = 9;
 
     cortecs_lexer_test_multi_config_t config = {
         .configs = configs,

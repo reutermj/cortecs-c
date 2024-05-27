@@ -67,7 +67,14 @@ void cortecs_lexer_test_fuzz(cortecs_lexer_test_config_t config) {
         start_length = 5;
     }
 
-    for (uint32_t length = start_length; length < 100; length++) {
+    uint32_t max_length;
+    if (config.max_length < 100) {
+        max_length = config.max_length;
+    } else {
+        max_length = 100;
+    }
+
+    for (uint32_t length = start_length; length < max_length; length++) {
         for (uint32_t offset = 0; offset < 100; offset++) {
             for (int times = 0; times < 100; times++) {
                 char *input = calloc(offset + length + 1, sizeof(char));
@@ -106,7 +113,20 @@ typedef struct {
 } lexer_fuzz_case_t;
 
 static uint32_t lexer_test_fuzz_case(cortecs_lexer_test_config_t config, char *input, uint32_t offset, lexer_fuzz_case_t *out) {
-    uint32_t length = rand() % 100 + config.min_length;
+    uint32_t max_length;
+    if (config.max_length < 100) {
+        max_length = config.max_length;
+    } else {
+        max_length = 100;
+    }
+
+    uint32_t length;
+    if (max_length == config.min_length) {
+        length = config.min_length;
+    } else {
+        length = (rand() % (max_length - config.min_length)) + config.min_length;
+    }
+
     out->gold = calloc(length + 1, sizeof(char));
     while (true) {
         cortecs_lexer_test_state_t state = {
@@ -237,9 +257,15 @@ void cortecs_lexer_test_exhaustive(cortecs_lexer_test_config_t config) {
         start_length = 1;
     }
 
+    uint32_t max_length;
+    if (config.max_length < 5 || config.min_length > 5) {
+        max_length = config.max_length;
+    } else {
+        max_length = 5;
+    }
+
     // These constants were chosen to finish the test in a reasonable amount of time.
     const uint32_t max_offset = 5;
-    const uint32_t max_length = 5;
     cortecs_lexer_exhaustive_state_stm_t state = {
         .in = calloc(max_length + max_offset + 1, sizeof(char)),
         .gold = calloc(max_length + 1, sizeof(char)),

@@ -23,6 +23,7 @@ cortecs_lexer_test_config_t cortecs_lexer_test_space_config = {
     .state_max_entropy = &lexer_test_space_max_entropy,
     .tag = CORTECS_LEXER_TAG_SPACE,
     .min_length = 1,
+    .max_length = 0xFFFFFFFF,
 };
 
 static bool lexer_text_name_skip(const char *token, uint32_t length) {
@@ -73,6 +74,7 @@ cortecs_lexer_test_config_t cortecs_lexer_test_name_config = {
     .state_max_entropy = &lexer_test_name_max_entropy,
     .tag = CORTECS_LEXER_TAG_NAME,
     .min_length = 1,
+    .max_length = 0xFFFFFFFF,
 };
 
 static const char lexer_test_type_lookup[] = {
@@ -103,6 +105,7 @@ cortecs_lexer_test_config_t cortecs_lexer_test_type_config = {
     .state_max_entropy = &lexer_test_type_max_entropy,
     .tag = CORTECS_LEXER_TAG_TYPE,
     .min_length = 1,
+    .max_length = 0xFFFFFFFF,
 };
 
 static const char lexer_test_float_lookup[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'd', 'D'};
@@ -205,6 +208,7 @@ cortecs_lexer_test_config_t cortecs_lexer_test_float_config = {
     .state_max_entropy = &lexer_test_float_max_entropy,
     .tag = CORTECS_LEXER_TAG_FLOAT,
     .min_length = 2,
+    .max_length = 0xFFFFFFFF,
 };
 
 static uint32_t lexer_test_bad_float_max_entropy(uint32_t state) {
@@ -348,6 +352,7 @@ cortecs_lexer_test_config_t cortecs_lexer_test_bad_float_config = {
     .state_max_entropy = &lexer_test_bad_float_max_entropy,
     .tag = CORTECS_LEXER_TAG_BAD_FLOAT,
     .min_length = 3,
+    .max_length = 0xFFFFFFFF,
 };
 
 static uint32_t lexer_test_int_max_entropy(uint32_t state) {
@@ -423,6 +428,7 @@ cortecs_lexer_test_config_t cortecs_lexer_test_int_config = {
     .state_max_entropy = &lexer_test_int_max_entropy,
     .tag = CORTECS_LEXER_TAG_INT,
     .min_length = 1,
+    .max_length = 0xFFFFFFFF,
 };
 
 static uint32_t lexer_test_bad_int_max_entropy(uint32_t state) {
@@ -525,6 +531,7 @@ cortecs_lexer_test_config_t cortecs_lexer_test_bad_int_config = {
     .state_max_entropy = &lexer_test_bad_int_max_entropy,
     .tag = CORTECS_LEXER_TAG_BAD_INT,
     .min_length = 2,
+    .max_length = 0xFFFFFFFF,
 };
 
 static uint32_t lexer_test_invalid_max_entropy(uint32_t state) {
@@ -559,4 +566,27 @@ cortecs_lexer_test_config_t cortecs_lexer_test_invalid_config = {
     .state_max_entropy = &lexer_test_invalid_max_entropy,
     .tag = CORTECS_LEXER_TAG_INVALID,
     .min_length = 1,
+    .max_length = 0xFFFFFFFF,
+};
+
+static uint32_t lexer_test_new_line_max_entropy(uint32_t state) {
+    UNUSED(state);
+    return 1;
+}
+
+static cortecs_lexer_test_result_t lexer_test_new_line_next(cortecs_lexer_test_state_t state, uint32_t entropy) {
+    UNUSED(state);
+    UNUSED(entropy);
+    return (cortecs_lexer_test_result_t){
+        .next_char = '\n',
+    };
+}
+
+cortecs_lexer_test_config_t cortecs_lexer_test_new_line_config = {
+    .next = &lexer_test_new_line_next,
+    .should_skip_token = &cortecs_lexer_test_never_skip,
+    .state_max_entropy = &lexer_test_new_line_max_entropy,
+    .tag = CORTECS_LEXER_TAG_NEW_LINE,
+    .min_length = 1,
+    .max_length = 1,
 };
