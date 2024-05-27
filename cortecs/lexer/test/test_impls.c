@@ -105,7 +105,35 @@ typedef struct {
     cortecs_lexer_tag_t tag;
 } lexer_fuzz_case_t;
 
-void cortecs_lexer_test_fuzz_multi(cortecs_lexer_test_fuzz_config_t config) {
+static uint32_t lexer_test_fuzz_case(cortecs_lexer_test_config_t config, char *input, uint32_t offset, lexer_fuzz_case_t *out) {
+    uint32_t length = rand() % 100 + config.min_length;
+    out->gold = calloc(length + 1, sizeof(char));
+    while (true) {
+        cortecs_lexer_test_state_t state = {
+            .state = 0,
+            .length = length,
+        };
+        for (uint32_t i = 0; i < length; i++) {
+            state.index = i;
+            cortecs_lexer_test_result_t result = config.next(state, rand());
+            state.state = result.next_state;
+            input[offset + i] = result.next_char;
+            out->gold[i] = result.next_char;
+        }
+
+        if (config.should_skip_token(out->gold, length)) {
+            state.state = 0;
+            continue;
+        }
+
+        out->tag = config.tag;
+
+        break;
+    }
+    return length;
+}
+
+void cortecs_lexer_test_fuzz_multi(cortecs_lexer_test_multi_config_t config) {
     char *input = calloc(10150, sizeof(char));
     lexer_fuzz_case_t cases[10000];
 
@@ -114,33 +142,7 @@ void cortecs_lexer_test_fuzz_multi(cortecs_lexer_test_fuzz_config_t config) {
     uint32_t offset = 0;
     while (offset < 10000) {
         cortecs_lexer_test_config_t next_config = config.configs[curr_config];
-        uint32_t length = rand() % 100 + next_config.min_length;
-        char *gold = calloc(length + 1, sizeof(char));
-        while (true) {
-            cortecs_lexer_test_state_t state = {
-                .state = 0,
-                .length = length,
-            };
-            for (uint32_t i = 0; i < length; i++) {
-                state.index = i;
-                cortecs_lexer_test_result_t result = next_config.next(state, rand());
-                state.state = result.next_state;
-                input[offset + i] = result.next_char;
-                gold[i] = result.next_char;
-            }
-
-            if (next_config.should_skip_token(gold, length)) {
-                state.state = 0;
-                continue;
-            }
-
-            cases[num_cases].gold = gold;
-            cases[num_cases].tag = next_config.tag;
-            num_cases++;
-            curr_config = config.valid_next_token[curr_config][rand() % config.lengths[curr_config]];
-
-            break;
-        }
+        uint32_t length = lexer_test_fuzz_case(next_config, input, offset, &cases[num_cases]);
         offset += length;
     }
 
@@ -148,9 +150,37 @@ void cortecs_lexer_test_fuzz_multi(cortecs_lexer_test_fuzz_config_t config) {
     for (int i = 0; i < num_cases; i++) {
         lexer_fuzz_case_t gold = cases[i];
         start = cortecs_lexer_test(input, start, gold.gold, gold.tag);
+        free(gold.gold);
     }
 
     free(input);
+}
+
+void cortecs_lexer_test_exhaustive_two_token(cortecs_lexer_test_multi_config_t config) {
+    char input[201];
+    lexer_fuzz_case_t cases[2];
+
+    for (int times = 0; times < 1000; times++) {
+        for (uint32_t i = 0; i < config.num_configs; i++) {
+            cortecs_lexer_test_config_t first_config = config.configs[i];
+            uint32_t first_length = lexer_test_fuzz_case(first_config, input, 0, &cases[0]);
+
+            for (uint32_t j = 0; j < config.lengths[i]; j++) {
+                uint32_t second_config_index = config.valid_next_token[i][j];
+                cortecs_lexer_test_config_t second_config = config.configs[second_config_index];
+                uint32_t second_length = lexer_test_fuzz_case(second_config, input, first_length, &cases[1]);
+                input[first_length + second_length] = 0;
+
+                uint32_t start = 0;
+                for (int i = 0; i < 2; i++) {
+                    lexer_fuzz_case_t gold = cases[i];
+                    start = cortecs_lexer_test(input, start, gold.gold, gold.tag);
+                }
+                free(cases[1].gold);
+            }
+            free(cases[0].gold);
+        }
+    }
 }
 
 typedef struct {

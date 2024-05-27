@@ -152,13 +152,15 @@ void cortecs_lexer_test_multi_token_fuzz(void) {
     matrix[6][0] = 0;
     lengths[6] = 1;
 
-    cortecs_lexer_test_fuzz_config_t config = {
+    cortecs_lexer_test_multi_config_t config = {
         .configs = configs,
         .valid_next_token = matrix,
         .lengths = lengths,
+        .num_configs = sizeof(configs) / sizeof(cortecs_lexer_test_config_t),
     };
 
     cortecs_lexer_test_fuzz_multi(config);
+    cortecs_lexer_test_exhaustive_two_token(config);
 
     for (int i = 0; i < 7; i++) {
         free(matrix[i]);
@@ -186,10 +188,11 @@ static void lexer_test_tag_string(void) {
 
 int main() {
     UNITY_BEGIN();
+
+    RUN_TEST(cortecs_lexer_test_multi_token_fuzz);
     RUN_TEST(lexer_test_tag_string);
     RUN_TEST(lexer_test_empty_input);
     RUN_TEST(lexer_test_dot);
-    RUN_TEST(cortecs_lexer_test_multi_token_fuzz);
 
     RUN_TEST(lexer_test_space);
     RUN_TEST(lexer_test_name);
