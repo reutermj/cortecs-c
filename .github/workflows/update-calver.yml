@@ -4,8 +4,7 @@ on:
   schedule:
     - cron: "19 6 * * *"
 env:
-  GITHUB_TOKEN: ${{ github.token }}
-  REUTERMJ_TOKEN: ${{ secrets.REUTERMJ_TOKEN }}
+  GH_TOKEN: ${{ secrets.REUTERMJ_TOKEN }}
   # if this action start failing, you might need to update the above token
 jobs:
   update-calver:
