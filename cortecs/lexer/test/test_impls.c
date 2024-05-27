@@ -159,7 +159,7 @@ void cortecs_lexer_test_fuzz_multi(cortecs_lexer_test_multi_config_t config) {
 }
 
 void cortecs_lexer_test_exhaustive_two_token(cortecs_lexer_test_multi_config_t config) {
-    char input[201];
+    char input[250];
     lexer_fuzz_case_t cases[2];
 
     for (int times = 0; times < 1000; times++) {
