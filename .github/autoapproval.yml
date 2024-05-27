@@ -1,5 +1,4 @@
 from_owner:
   - reutermj
-  - github-actions[bot]
 required_labels: []
 apply_labels: []
