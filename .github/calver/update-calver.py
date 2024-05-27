@@ -63,5 +63,7 @@ if "Updating module version" not in head.message:
                 # Comment on the PR to initiate a merge
                 print("Kicking off trunk merge")
                 subprocess.run(['gh', 'pr', 'comment', pr_num, '--body', '/trunk merge'])
+                approve_output = subprocess.check_output(['gh', 'pr', 'review', pr_num, '--approve']).decode("utf-8")
+                print(approve_output)
 else:
     print("No new commits. Ignoring version bump")
