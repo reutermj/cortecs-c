@@ -143,7 +143,9 @@ void cortecs_lexer_test_fuzz_multi(cortecs_lexer_test_multi_config_t config) {
     while (offset < 10000) {
         cortecs_lexer_test_config_t next_config = config.configs[curr_config];
         uint32_t length = lexer_test_fuzz_case(next_config, input, offset, &cases[num_cases]);
+        num_cases++;
         offset += length;
+        curr_config = config.valid_next_token[curr_config][rand() % config.lengths[curr_config]];
     }
 
     uint32_t start = 0;
