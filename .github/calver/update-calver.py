@@ -69,7 +69,7 @@ if "Updating module version" not in head.message:
                 subprocess.run(['gh', 'pr', 'comment', pr_num, '--body', '/trunk merge'], env=base_env)
                 # Approve PR under actions bot
                 base_env["GH_TOKEN"] = base_env["GITHUB_TOKEN"]
-                approve_output = subprocess.check_output(['gh', 'pr', 'review', pr_num, '--approve'], env=base_env).decode("utf-8")
-                print(approve_output)
+                print("Approving the PR")
+                approve_output = subprocess.run(['gh', 'pr', 'review', pr_num, '--approve'], env=base_env).decode("utf-8")
 else:
     print("No new commits. Ignoring version bump")
