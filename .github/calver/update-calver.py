@@ -1,4 +1,5 @@
 import re
+import os
 from datetime import datetime
 from git import Repo
 import subprocess
@@ -48,7 +49,10 @@ if "Updating module version" not in head.message:
     # The output of this gh command is a link to the PR
     # the link contains the PR number which is used to merge the PR
     print("createing PR")
-    pr_link = subprocess.check_output(['gh', 'pr', 'create', '--title', message, '--body', 'Automatic PR for calver bump. Please ignore and have a nice day', '--base', 'main', '--head', 'version-bump/' + today_branch_formatted]).decode("utf-8")
+    base_env = os.environ.copy()
+    # Submit PR under reutermj
+    base_env["GH_TOKEN"] = base_env["REUTERMJ_TOKEN"]
+    pr_link = subprocess.check_output(['gh', 'pr', 'create', '--title', message, '--body', 'Automatic PR for calver bump. Please ignore and have a nice day', '--base', 'main', '--head', 'version-bump/' + today_branch_formatted], env=base_env).decode("utf-8")
     print(pr_link)
     for line in pr_link.splitlines():
         # Find the line with the PR number
@@ -62,8 +66,10 @@ if "Updating module version" not in head.message:
                 print("Found PR number:", pr_num)
                 # Comment on the PR to initiate a merge
                 print("Kicking off trunk merge")
-                subprocess.run(['gh', 'pr', 'comment', pr_num, '--body', '/trunk merge'])
-                approve_output = subprocess.check_output(['gh', 'pr', 'review', pr_num, '--approve']).decode("utf-8")
+                subprocess.run(['gh', 'pr', 'comment', pr_num, '--body', '/trunk merge'], env=base_env)
+                # Approve PR under actions bot
+                base_env["GH_TOKEN"] = base_env["GITHUB_TOKEN"]
+                approve_output = subprocess.check_output(['gh', 'pr', 'review', pr_num, '--approve'], env=base_env).decode("utf-8")
                 print(approve_output)
 else:
     print("No new commits. Ignoring version bump")

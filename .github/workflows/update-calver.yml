@@ -4,7 +4,8 @@ on:
   schedule:
     - cron: "*/5 * * * *"
 env:
-  GH_TOKEN: ${{ github.token }}
+  GITHUB_TOKEN: ${{ github.token }}
+  REUTERMJ_TOKEN: ${{ secrets.REUTERMJ_TOKEN }}
 jobs:
   update-calver:
     permissions: write-all
