@@ -11,5 +11,6 @@ extern cortecs_lexer_test_config_t cortecs_lexer_test_bad_float_config;
 extern cortecs_lexer_test_config_t cortecs_lexer_test_int_config;
 extern cortecs_lexer_test_config_t cortecs_lexer_test_bad_int_config;
 extern cortecs_lexer_test_config_t cortecs_lexer_test_invalid_config;
+extern cortecs_lexer_test_config_t cortecs_lexer_test_new_line_config;
 
 #endif
