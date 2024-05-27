@@ -5,14 +5,13 @@ on:
     types: [dismissed]
     
 permissions:
-  contents: read
   pull-requests: write
   
 jobs:
-  autoapproval:
+  auto-approve:
     runs-on: ubuntu-latest
-    name: Autoapproval
+    permissions:
+      pull-requests: write
+    if: github.actor == 'reutermj'
     steps:
-      - uses: dkhmelenko/autoapproval@v1.0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: hmarr/auto-approve-action@v4
