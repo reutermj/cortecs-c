@@ -171,6 +171,8 @@ static cortecs_lexer_result_t lex_int(char *text, uint32_t start) {
     return construct_result(CORTECS_LEXER_TAG_INT, text, start, end, span);
 }
 
+#define check_keyword(kw, text, len) (((len) == sizeof(kw) - 1) && strncmp(text, kw, len) == 0)
+
 static cortecs_lexer_result_t lex_name(char *text, uint32_t start) {
     // [a-zA-Z][a-zA-Z0-9_]*
     uint32_t end = start + 1;
@@ -191,13 +193,13 @@ static cortecs_lexer_result_t lex_name(char *text, uint32_t start) {
     uint32_t len = end - start;
     cortecs_lexer_tag_t tag;
 
-    if (len == 8 && strncmp(&text[start], "function", len) == 0) {
+    if (check_keyword("function", &text[start], len)) {
         tag = CORTECS_LEXER_TAG_FUNCTION;
-    } else if (len == 3 && strncmp(&text[start], "let", len) == 0) {
+    } else if (check_keyword("let", &text[start], len)) {
         tag = CORTECS_LEXER_TAG_LET;
-    } else if (len == 2 && strncmp(&text[start], "if", len) == 0) {
+    } else if (check_keyword("if", &text[start], len)) {
         tag = CORTECS_LEXER_TAG_IF;
-    } else if (len == 6 && strncmp(&text[start], "return", len) == 0) {
+    } else if (check_keyword("return", &text[start], len)) {
         tag = CORTECS_LEXER_TAG_RETURN;
     } else if (isupper(text[start])) {
         tag = CORTECS_LEXER_TAG_TYPE;

@@ -1,0 +1,9 @@
+UseColor: true
+
+Checks: >
+    bugprone-*,
+    misc-include-cleaner,
+    readability-*,
+    -clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling,
+
+WarningsAsErrors: "*"
