@@ -98,6 +98,72 @@ void cortecs_lexer_test_new_line(void) {
     cortecs_lexer_test("asdf\n\n123", 4, "\n", CORTECS_LEXER_TAG_NEW_LINE);
 }
 
+static void lexer_test_open_paren(void) {
+    cortecs_lexer_test("(", 0, "(", CORTECS_LEXER_TAG_OPEN_PAREN);
+    cortecs_lexer_test("((", 0, "(", CORTECS_LEXER_TAG_OPEN_PAREN);
+    cortecs_lexer_test("asdf(", 4, "(", CORTECS_LEXER_TAG_OPEN_PAREN);
+    cortecs_lexer_test("asdf((", 4, "(", CORTECS_LEXER_TAG_OPEN_PAREN);
+    cortecs_lexer_test("(123", 0, "(", CORTECS_LEXER_TAG_OPEN_PAREN);
+    cortecs_lexer_test("((123", 0, "(", CORTECS_LEXER_TAG_OPEN_PAREN);
+    cortecs_lexer_test("asdf(123", 4, "(", CORTECS_LEXER_TAG_OPEN_PAREN);
+    cortecs_lexer_test("asdf((123", 4, "(", CORTECS_LEXER_TAG_OPEN_PAREN);
+}
+
+static void lexer_test_close_paren(void) {
+    cortecs_lexer_test(")", 0, ")", CORTECS_LEXER_TAG_CLOSE_PAREN);
+    cortecs_lexer_test("))", 0, ")", CORTECS_LEXER_TAG_CLOSE_PAREN);
+    cortecs_lexer_test("asdf)", 4, ")", CORTECS_LEXER_TAG_CLOSE_PAREN);
+    cortecs_lexer_test("asdf))", 4, ")", CORTECS_LEXER_TAG_CLOSE_PAREN);
+    cortecs_lexer_test(")123", 0, ")", CORTECS_LEXER_TAG_CLOSE_PAREN);
+    cortecs_lexer_test("))123", 0, ")", CORTECS_LEXER_TAG_CLOSE_PAREN);
+    cortecs_lexer_test("asdf)123", 4, ")", CORTECS_LEXER_TAG_CLOSE_PAREN);
+    cortecs_lexer_test("asdf))123", 4, ")", CORTECS_LEXER_TAG_CLOSE_PAREN);
+}
+
+static void lexer_test_open_curly(void) {
+    cortecs_lexer_test("{", 0, "{", CORTECS_LEXER_TAG_OPEN_CURLY);
+    cortecs_lexer_test("{{", 0, "{", CORTECS_LEXER_TAG_OPEN_CURLY);
+    cortecs_lexer_test("asdf{", 4, "{", CORTECS_LEXER_TAG_OPEN_CURLY);
+    cortecs_lexer_test("asdf{{", 4, "{", CORTECS_LEXER_TAG_OPEN_CURLY);
+    cortecs_lexer_test("{123", 0, "{", CORTECS_LEXER_TAG_OPEN_CURLY);
+    cortecs_lexer_test("{{123", 0, "{", CORTECS_LEXER_TAG_OPEN_CURLY);
+    cortecs_lexer_test("asdf{123", 4, "{", CORTECS_LEXER_TAG_OPEN_CURLY);
+    cortecs_lexer_test("asdf{{123", 4, "{", CORTECS_LEXER_TAG_OPEN_CURLY);
+}
+
+static void lexer_test_close_curly(void) {
+    cortecs_lexer_test("}", 0, "}", CORTECS_LEXER_TAG_CLOSE_CURLY);
+    cortecs_lexer_test("}}", 0, "}", CORTECS_LEXER_TAG_CLOSE_CURLY);
+    cortecs_lexer_test("asdf}", 4, "}", CORTECS_LEXER_TAG_CLOSE_CURLY);
+    cortecs_lexer_test("asdf}}", 4, "}", CORTECS_LEXER_TAG_CLOSE_CURLY);
+    cortecs_lexer_test("}123", 0, "}", CORTECS_LEXER_TAG_CLOSE_CURLY);
+    cortecs_lexer_test("}}123", 0, "}", CORTECS_LEXER_TAG_CLOSE_CURLY);
+    cortecs_lexer_test("asdf}123", 4, "}", CORTECS_LEXER_TAG_CLOSE_CURLY);
+    cortecs_lexer_test("asdf}}123", 4, "}", CORTECS_LEXER_TAG_CLOSE_CURLY);
+}
+
+static void lexer_test_open_square(void) {
+    cortecs_lexer_test("[", 0, "[", CORTECS_LEXER_TAG_OPEN_SQUARE);
+    cortecs_lexer_test("[[", 0, "[", CORTECS_LEXER_TAG_OPEN_SQUARE);
+    cortecs_lexer_test("asdf[", 4, "[", CORTECS_LEXER_TAG_OPEN_SQUARE);
+    cortecs_lexer_test("asdf[[", 4, "[", CORTECS_LEXER_TAG_OPEN_SQUARE);
+    cortecs_lexer_test("[123", 0, "[", CORTECS_LEXER_TAG_OPEN_SQUARE);
+    cortecs_lexer_test("[[123", 0, "[", CORTECS_LEXER_TAG_OPEN_SQUARE);
+    cortecs_lexer_test("asdf[123", 4, "[", CORTECS_LEXER_TAG_OPEN_SQUARE);
+    cortecs_lexer_test("asdf[[123", 4, "[", CORTECS_LEXER_TAG_OPEN_SQUARE);
+}
+
+static void lexer_test_close_square(void) {
+    cortecs_lexer_test("]", 0, "]", CORTECS_LEXER_TAG_CLOSE_SQUARE);
+    cortecs_lexer_test("]]", 0, "]", CORTECS_LEXER_TAG_CLOSE_SQUARE);
+    cortecs_lexer_test("asdf]", 4, "]", CORTECS_LEXER_TAG_CLOSE_SQUARE);
+    cortecs_lexer_test("asdf]]", 4, "]", CORTECS_LEXER_TAG_CLOSE_SQUARE);
+    cortecs_lexer_test("]123", 0, "]", CORTECS_LEXER_TAG_CLOSE_SQUARE);
+    cortecs_lexer_test("]]123", 0, "]", CORTECS_LEXER_TAG_CLOSE_SQUARE);
+    cortecs_lexer_test("asdf]123", 4, "]", CORTECS_LEXER_TAG_CLOSE_SQUARE);
+    cortecs_lexer_test("asdf]]123", 4, "]", CORTECS_LEXER_TAG_CLOSE_SQUARE);
+}
+
 static void lexer_test_invalid(void) {
     // currently not running exhaustiveness testing because it takes way too long
     // maybe reenable them if I ever decide it's worth the effort to change test
@@ -221,6 +287,12 @@ static void lexer_test_tag_string(void) {
     TEST_ASSERT_EQUAL_MEMORY("if", cortecs_lexer_tag_to_string(CORTECS_LEXER_TAG_IF), 3);
     TEST_ASSERT_EQUAL_MEMORY("return", cortecs_lexer_tag_to_string(CORTECS_LEXER_TAG_RETURN), 7);
     TEST_ASSERT_EQUAL_MEMORY("dot", cortecs_lexer_tag_to_string(CORTECS_LEXER_TAG_DOT), 4);
+    TEST_ASSERT_EQUAL_MEMORY("open_paren", cortecs_lexer_tag_to_string(CORTECS_LEXER_TAG_OPEN_PAREN), 4);
+    TEST_ASSERT_EQUAL_MEMORY("close_paren", cortecs_lexer_tag_to_string(CORTECS_LEXER_TAG_CLOSE_PAREN), 4);
+    TEST_ASSERT_EQUAL_MEMORY("open_curly", cortecs_lexer_tag_to_string(CORTECS_LEXER_TAG_OPEN_CURLY), 4);
+    TEST_ASSERT_EQUAL_MEMORY("close_curly", cortecs_lexer_tag_to_string(CORTECS_LEXER_TAG_CLOSE_CURLY), 4);
+    TEST_ASSERT_EQUAL_MEMORY("open_square", cortecs_lexer_tag_to_string(CORTECS_LEXER_TAG_OPEN_SQUARE), 4);
+    TEST_ASSERT_EQUAL_MEMORY("close_square", cortecs_lexer_tag_to_string(CORTECS_LEXER_TAG_CLOSE_SQUARE), 4);
     TEST_ASSERT_EQUAL_MEMORY("invalid", cortecs_lexer_tag_to_string(CORTECS_LEXER_TAG_INVALID), 8);
     TEST_ASSERT_EQUAL_MEMORY("unknown", cortecs_lexer_tag_to_string((cortecs_lexer_tag_t)-1), 8);
 }
@@ -228,14 +300,23 @@ static void lexer_test_tag_string(void) {
 int main() {
     UNITY_BEGIN();
 
+    RUN_TEST(lexer_test_open_paren);
+    RUN_TEST(lexer_test_close_paren);
+    RUN_TEST(lexer_test_open_curly);
+    RUN_TEST(lexer_test_close_curly);
+    RUN_TEST(lexer_test_open_square);
+    RUN_TEST(lexer_test_close_square);
+
     RUN_TEST(cortecs_lexer_test_multi_token_fuzz);
     RUN_TEST(lexer_test_tag_string);
     RUN_TEST(lexer_test_empty_input);
     RUN_TEST(lexer_test_dot);
 
     RUN_TEST(lexer_test_space);
+
     RUN_TEST(lexer_test_name);
     RUN_TEST(lexer_test_type);
+
     RUN_TEST(lexer_test_int);
     RUN_TEST(lexer_test_bad_int);
     RUN_TEST(lexer_test_float);

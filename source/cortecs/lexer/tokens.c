@@ -30,6 +30,18 @@ const char *cortecs_lexer_tag_to_string(cortecs_lexer_tag_t tag) {
             return "if";
         case CORTECS_LEXER_TAG_DOT:
             return "dot";
+        case CORTECS_LEXER_TAG_OPEN_PAREN:
+            return "open_paren";
+        case CORTECS_LEXER_TAG_CLOSE_PAREN:
+            return "close_paren";
+        case CORTECS_LEXER_TAG_OPEN_CURLY:
+            return "open_curly";
+        case CORTECS_LEXER_TAG_CLOSE_CURLY:
+            return "close_curly";
+        case CORTECS_LEXER_TAG_OPEN_SQUARE:
+            return "open_square";
+        case CORTECS_LEXER_TAG_CLOSE_SQUARE:
+            return "close_square";
         case CORTECS_LEXER_TAG_INVALID:
             return "invalid";
     }

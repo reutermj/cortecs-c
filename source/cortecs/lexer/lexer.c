@@ -265,38 +265,52 @@ static cortecs_lexer_result_t lex_invalid(char *text, uint32_t start) {
 
 cortecs_lexer_result_t cortecs_lexer_next(char *text, uint32_t start) {
     char current_char = text[start];
-    if (current_char == 0) {
-        cortecs_span_t span = {
-            .lines = 0,
-            .columns = 0,
-        };
-        return construct_result(CORTECS_LEXER_TAG_INVALID, "", start, start, span);
+    switch (current_char) {
+        case 0: {
+            cortecs_span_t span = {
+                .lines = 0,
+                .columns = 0,
+            };
+            return construct_result(CORTECS_LEXER_TAG_INVALID, "", start, start, span);
+        }
+        case '.': {
+            return lex_dot(text, start);
+        }
+        case '\n': {
+            return construct_result(CORTECS_LEXER_TAG_NEW_LINE, text, start, start + 1, (cortecs_span_t){.lines = 1});
+        }
+        case '(': {
+            return construct_result(CORTECS_LEXER_TAG_OPEN_PAREN, text, start, start + 1, (cortecs_span_t){.columns = 1});
+        }
+        case ')': {
+            return construct_result(CORTECS_LEXER_TAG_CLOSE_PAREN, text, start, start + 1, (cortecs_span_t){.columns = 1});
+        }
+        case '{': {
+            return construct_result(CORTECS_LEXER_TAG_OPEN_CURLY, text, start, start + 1, (cortecs_span_t){.columns = 1});
+        }
+        case '}': {
+            return construct_result(CORTECS_LEXER_TAG_CLOSE_CURLY, text, start, start + 1, (cortecs_span_t){.columns = 1});
+        }
+        case '[': {
+            return construct_result(CORTECS_LEXER_TAG_OPEN_SQUARE, text, start, start + 1, (cortecs_span_t){.columns = 1});
+        }
+        case ']': {
+            return construct_result(CORTECS_LEXER_TAG_CLOSE_SQUARE, text, start, start + 1, (cortecs_span_t){.columns = 1});
+        }
+        default: {
+            if (isalpha(current_char) || current_char == '_') {
+                return lex_name(text, start);
+            }
+
+            if (isdigit(current_char)) {
+                return lex_int(text, start);
+            }
+
+            if (isspace(current_char)) {
+                return lex_whitespace(text, start);
+            }
+
+            return lex_invalid(text, start);
+        }
     }
-
-    if (isalpha(current_char) || current_char == '_') {
-        return lex_name(text, start);
-    }
-
-    if (isdigit(current_char)) {
-        return lex_int(text, start);
-    }
-
-    if (current_char == '.') {
-        return lex_dot(text, start);
-    }
-
-    if (current_char == '\n') {
-        cortecs_span_t span = {
-            .lines = 1,
-            .columns = 0,
-        };
-
-        return construct_result(CORTECS_LEXER_TAG_NEW_LINE, text, start, start + 1, span);
-    }
-
-    if (isspace(current_char)) {
-        return lex_whitespace(text, start);
-    }
-
-    return lex_invalid(text, start);
 }
