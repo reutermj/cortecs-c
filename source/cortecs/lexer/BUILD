@@ -1,11 +1,14 @@
 load("@rules_cc//cc:defs.bzl", "cc_library")
 
 cc_library(
-    name = "common",
+    name = "lexer",
     srcs = glob(["*.c"]),
     hdrs = glob(["*.h"]),
     features = ["treat_warnings_as_errors"],
     includes = ["./"],
-    visibility = ["//cortecs:__subpackages__"],
-    deps = ["@flecs"],
+    visibility = [
+        "//source/cortecs:__subpackages__",
+        "//test/cortecs:__subpackages__",
+    ],
+    deps = ["//source/cortecs/common"],
 )

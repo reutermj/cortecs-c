@@ -2,7 +2,7 @@ name: Update calver
 run-name: Update calver
 on:
   schedule:
-    - cron: "19 6 * * *"
+    - cron: "*/5 * * * *"
 env:
   GH_TOKEN: ${{ secrets.REUTERMJ_TOKEN }}
   # if this action start failing, you might need to update the above token

@@ -191,13 +191,13 @@ static cortecs_lexer_result_t lex_name(char *text, uint32_t start) {
     uint32_t len = end - start;
     cortecs_lexer_tag_t tag;
 
-    if (len == 8 && strncmp(&text[start], "function", len) == 0) {
+    if (strncmp(&text[start], "function", len) == 0) {
         tag = CORTECS_LEXER_TAG_FUNCTION;
-    } else if (len == 3 && strncmp(&text[start], "let", len) == 0) {
+    } else if (strncmp(&text[start], "let", len) == 0) {
         tag = CORTECS_LEXER_TAG_LET;
-    } else if (len == 2 && strncmp(&text[start], "if", len) == 0) {
+    } else if (strncmp(&text[start], "if", len) == 0) {
         tag = CORTECS_LEXER_TAG_IF;
-    } else if (len == 6 && strncmp(&text[start], "return", len) == 0) {
+    } else if (strncmp(&text[start], "return", len) == 0) {
         tag = CORTECS_LEXER_TAG_RETURN;
     } else if (isupper(text[start])) {
         tag = CORTECS_LEXER_TAG_TYPE;

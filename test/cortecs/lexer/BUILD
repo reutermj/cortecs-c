@@ -1,7 +1,7 @@
 load("@rules_cc//cc:defs.bzl", "cc_test")
 
 cc_test(
-    name = "test",
+    name = "lexer",
     size = "small",
     srcs = glob([
         "*.c",
@@ -9,8 +9,8 @@ cc_test(
     ]),
     features = ["treat_warnings_as_errors"],
     deps = [
-        "//common",
-        "//cortecs/lexer",
+        "//source/common",
+        "//source/cortecs/lexer",
         "@unity",
     ],
 )
