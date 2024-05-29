@@ -4,3 +4,4 @@ bazel-*
 buildifier*
 bazelisk*
 compile_commands.json
+genhtml/
