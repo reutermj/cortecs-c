@@ -242,26 +242,24 @@ static cortecs_lexer_result_t lex_whitespace(char *text, uint32_t start) {
 
 static bool is_invalid(char charater) {
     // ensure that the char is represented as unsigned [0, 255]
-    const uint32_t char_mask = 0xFF;
-    uint32_t as_uint = ((uint32_t)charater) & char_mask;
+    uint8_t as_uint = (uint8_t)charater;
 
-    const uint32_t ctrl0_min = 1;
-    const uint32_t ctrl0_max = 8;
+    const uint8_t ctrl0_min = 1;
+    const uint8_t ctrl0_max = 8;
     if (ctrl0_min <= as_uint && as_uint <= ctrl0_max) {
         return true;
     }
 
     // 9-13 are whitespace
 
-    const uint32_t ctrl1_min = 14;
-    const uint32_t ctrl1_max = 31;
+    const uint8_t ctrl1_min = 14;
+    const uint8_t ctrl1_max = 31;
     if (ctrl1_min <= as_uint && as_uint <= ctrl1_max) {
         return true;
     }
 
-    const uint32_t oob_min = 127;
-    const uint32_t oob_max = 255;
-    return oob_min <= as_uint && as_uint <= oob_max;
+    const uint8_t oob_min = 127;
+    return as_uint >= oob_min;
 }
 
 static cortecs_lexer_result_t lex_invalid(char *text, uint32_t start) {
@@ -332,7 +330,7 @@ cortecs_lexer_result_t cortecs_lexer_next(char *text, uint32_t start) {
             }
 
             // This assert is for testing to ensure that all possible characters have been covered
-            assert(is_invalid(current_char));
+            assert(is_invalid(current_char));  // LCOV_EXCL_LINE
 
             return lex_invalid(text, start);
         }
