@@ -88,80 +88,31 @@ static void lexer_test_space(void) {
 }
 
 void cortecs_lexer_test_new_line(void) {
-    cortecs_lexer_test("\n", 0, "\n", CORTECS_LEXER_TAG_NEW_LINE);
-    cortecs_lexer_test("\n\n", 0, "\n", CORTECS_LEXER_TAG_NEW_LINE);
-    cortecs_lexer_test("asdf\n", 4, "\n", CORTECS_LEXER_TAG_NEW_LINE);
-    cortecs_lexer_test("asdf\n\n", 4, "\n", CORTECS_LEXER_TAG_NEW_LINE);
-    cortecs_lexer_test("\n123", 0, "\n", CORTECS_LEXER_TAG_NEW_LINE);
-    cortecs_lexer_test("\n\n123", 0, "\n", CORTECS_LEXER_TAG_NEW_LINE);
-    cortecs_lexer_test("asdf\n123", 4, "\n", CORTECS_LEXER_TAG_NEW_LINE);
-    cortecs_lexer_test("asdf\n\n123", 4, "\n", CORTECS_LEXER_TAG_NEW_LINE);
+    cortecs_lexer_test_exhaustive(cortecs_lexer_test_new_line_config);
 }
 
 static void lexer_test_open_paren(void) {
-    cortecs_lexer_test("(", 0, "(", CORTECS_LEXER_TAG_OPEN_PAREN);
-    cortecs_lexer_test("((", 0, "(", CORTECS_LEXER_TAG_OPEN_PAREN);
-    cortecs_lexer_test("asdf(", 4, "(", CORTECS_LEXER_TAG_OPEN_PAREN);
-    cortecs_lexer_test("asdf((", 4, "(", CORTECS_LEXER_TAG_OPEN_PAREN);
-    cortecs_lexer_test("(123", 0, "(", CORTECS_LEXER_TAG_OPEN_PAREN);
-    cortecs_lexer_test("((123", 0, "(", CORTECS_LEXER_TAG_OPEN_PAREN);
-    cortecs_lexer_test("asdf(123", 4, "(", CORTECS_LEXER_TAG_OPEN_PAREN);
-    cortecs_lexer_test("asdf((123", 4, "(", CORTECS_LEXER_TAG_OPEN_PAREN);
+    cortecs_lexer_test_exhaustive(cortecs_lexer_test_open_paren_config);
 }
 
 static void lexer_test_close_paren(void) {
-    cortecs_lexer_test(")", 0, ")", CORTECS_LEXER_TAG_CLOSE_PAREN);
-    cortecs_lexer_test("))", 0, ")", CORTECS_LEXER_TAG_CLOSE_PAREN);
-    cortecs_lexer_test("asdf)", 4, ")", CORTECS_LEXER_TAG_CLOSE_PAREN);
-    cortecs_lexer_test("asdf))", 4, ")", CORTECS_LEXER_TAG_CLOSE_PAREN);
-    cortecs_lexer_test(")123", 0, ")", CORTECS_LEXER_TAG_CLOSE_PAREN);
-    cortecs_lexer_test("))123", 0, ")", CORTECS_LEXER_TAG_CLOSE_PAREN);
-    cortecs_lexer_test("asdf)123", 4, ")", CORTECS_LEXER_TAG_CLOSE_PAREN);
-    cortecs_lexer_test("asdf))123", 4, ")", CORTECS_LEXER_TAG_CLOSE_PAREN);
+    cortecs_lexer_test_exhaustive(cortecs_lexer_test_close_paren_config);
 }
 
 static void lexer_test_open_curly(void) {
-    cortecs_lexer_test("{", 0, "{", CORTECS_LEXER_TAG_OPEN_CURLY);
-    cortecs_lexer_test("{{", 0, "{", CORTECS_LEXER_TAG_OPEN_CURLY);
-    cortecs_lexer_test("asdf{", 4, "{", CORTECS_LEXER_TAG_OPEN_CURLY);
-    cortecs_lexer_test("asdf{{", 4, "{", CORTECS_LEXER_TAG_OPEN_CURLY);
-    cortecs_lexer_test("{123", 0, "{", CORTECS_LEXER_TAG_OPEN_CURLY);
-    cortecs_lexer_test("{{123", 0, "{", CORTECS_LEXER_TAG_OPEN_CURLY);
-    cortecs_lexer_test("asdf{123", 4, "{", CORTECS_LEXER_TAG_OPEN_CURLY);
-    cortecs_lexer_test("asdf{{123", 4, "{", CORTECS_LEXER_TAG_OPEN_CURLY);
+    cortecs_lexer_test_exhaustive(cortecs_lexer_test_open_curly_config);
 }
 
 static void lexer_test_close_curly(void) {
-    cortecs_lexer_test("}", 0, "}", CORTECS_LEXER_TAG_CLOSE_CURLY);
-    cortecs_lexer_test("}}", 0, "}", CORTECS_LEXER_TAG_CLOSE_CURLY);
-    cortecs_lexer_test("asdf}", 4, "}", CORTECS_LEXER_TAG_CLOSE_CURLY);
-    cortecs_lexer_test("asdf}}", 4, "}", CORTECS_LEXER_TAG_CLOSE_CURLY);
-    cortecs_lexer_test("}123", 0, "}", CORTECS_LEXER_TAG_CLOSE_CURLY);
-    cortecs_lexer_test("}}123", 0, "}", CORTECS_LEXER_TAG_CLOSE_CURLY);
-    cortecs_lexer_test("asdf}123", 4, "}", CORTECS_LEXER_TAG_CLOSE_CURLY);
-    cortecs_lexer_test("asdf}}123", 4, "}", CORTECS_LEXER_TAG_CLOSE_CURLY);
+    cortecs_lexer_test_exhaustive(cortecs_lexer_test_close_curly_config);
 }
 
 static void lexer_test_open_square(void) {
-    cortecs_lexer_test("[", 0, "[", CORTECS_LEXER_TAG_OPEN_SQUARE);
-    cortecs_lexer_test("[[", 0, "[", CORTECS_LEXER_TAG_OPEN_SQUARE);
-    cortecs_lexer_test("asdf[", 4, "[", CORTECS_LEXER_TAG_OPEN_SQUARE);
-    cortecs_lexer_test("asdf[[", 4, "[", CORTECS_LEXER_TAG_OPEN_SQUARE);
-    cortecs_lexer_test("[123", 0, "[", CORTECS_LEXER_TAG_OPEN_SQUARE);
-    cortecs_lexer_test("[[123", 0, "[", CORTECS_LEXER_TAG_OPEN_SQUARE);
-    cortecs_lexer_test("asdf[123", 4, "[", CORTECS_LEXER_TAG_OPEN_SQUARE);
-    cortecs_lexer_test("asdf[[123", 4, "[", CORTECS_LEXER_TAG_OPEN_SQUARE);
+    cortecs_lexer_test_exhaustive(cortecs_lexer_test_open_square_config);
 }
 
 static void lexer_test_close_square(void) {
-    cortecs_lexer_test("]", 0, "]", CORTECS_LEXER_TAG_CLOSE_SQUARE);
-    cortecs_lexer_test("]]", 0, "]", CORTECS_LEXER_TAG_CLOSE_SQUARE);
-    cortecs_lexer_test("asdf]", 4, "]", CORTECS_LEXER_TAG_CLOSE_SQUARE);
-    cortecs_lexer_test("asdf]]", 4, "]", CORTECS_LEXER_TAG_CLOSE_SQUARE);
-    cortecs_lexer_test("]123", 0, "]", CORTECS_LEXER_TAG_CLOSE_SQUARE);
-    cortecs_lexer_test("]]123", 0, "]", CORTECS_LEXER_TAG_CLOSE_SQUARE);
-    cortecs_lexer_test("asdf]123", 4, "]", CORTECS_LEXER_TAG_CLOSE_SQUARE);
-    cortecs_lexer_test("asdf]]123", 4, "]", CORTECS_LEXER_TAG_CLOSE_SQUARE);
+    cortecs_lexer_test_exhaustive(cortecs_lexer_test_close_square_config);
 }
 
 static void lexer_test_invalid(void) {
@@ -183,18 +134,30 @@ void cortecs_lexer_test_multi_token_fuzz(void) {
         cortecs_lexer_test_bad_float_config,
         cortecs_lexer_test_int_config,
         cortecs_lexer_test_bad_int_config,
+        cortecs_lexer_test_open_paren_config,
+        cortecs_lexer_test_close_paren_config,
+        cortecs_lexer_test_open_curly_config,
+        cortecs_lexer_test_close_curly_config,
+        cortecs_lexer_test_open_square_config,
+        cortecs_lexer_test_close_square_config,
     };
 
-    bool **transition_to = calloc(9, sizeof(bool *));
-    transition_to[0] = (bool[]){0, 1, 1, 1, 1, 1, 1, 1, 1};
-    transition_to[1] = (bool[]){1, 1, 1, 1, 1, 1, 1, 1, 1};
-    transition_to[2] = (bool[]){1, 1, 0, 1, 1, 1, 1, 1, 1};
-    transition_to[3] = (bool[]){1, 1, 1, 0, 0, 0, 0, 0, 0};
-    transition_to[4] = (bool[]){1, 1, 1, 0, 0, 0, 0, 0, 0};
-    transition_to[5] = (bool[]){1, 1, 1, 0, 0, 0, 0, 0, 0};
-    transition_to[6] = (bool[]){1, 1, 1, 0, 0, 0, 0, 0, 0};
-    transition_to[7] = (bool[]){1, 1, 1, 0, 0, 0, 0, 0, 0};
-    transition_to[8] = (bool[]){1, 1, 1, 0, 0, 0, 0, 0, 0};
+    bool **transition_to = calloc(15, sizeof(bool *));
+    transition_to[0] = (bool[]){0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+    transition_to[1] = (bool[]){1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+    transition_to[2] = (bool[]){1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+    transition_to[3] = (bool[]){1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1};
+    transition_to[4] = (bool[]){1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1};
+    transition_to[5] = (bool[]){1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1};
+    transition_to[6] = (bool[]){1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1};
+    transition_to[7] = (bool[]){1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1};
+    transition_to[8] = (bool[]){1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1};
+    transition_to[9] = (bool[]){1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+    transition_to[10] = (bool[]){1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+    transition_to[11] = (bool[]){1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+    transition_to[12] = (bool[]){1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+    transition_to[13] = (bool[]){1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+    transition_to[14] = (bool[]){1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
 
     cortecs_lexer_test_multi_config_t config = {
         .configs = configs,

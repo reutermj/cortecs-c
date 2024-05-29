@@ -2,6 +2,7 @@
 
 #include <common.h>
 #include <ctype.h>
+#include <tokens.h>
 
 static uint32_t lexer_test_space_max_entropy(uint32_t state) {
     UNUSED(state);
@@ -587,6 +588,138 @@ cortecs_lexer_test_config_t cortecs_lexer_test_new_line_config = {
     .should_skip_token = &cortecs_lexer_test_never_skip,
     .state_max_entropy = &lexer_test_new_line_max_entropy,
     .tag = CORTECS_LEXER_TAG_NEW_LINE,
+    .min_length = 1,
+    .max_length = 1,
+};
+
+static uint32_t lexer_test_open_paren_max_entropy(uint32_t state) {
+    UNUSED(state);
+    return 1;
+}
+
+static cortecs_lexer_test_result_t lexer_test_open_paren_next(cortecs_lexer_test_state_t state, uint32_t entropy) {
+    UNUSED(state);
+    UNUSED(entropy);
+    return (cortecs_lexer_test_result_t){
+        .next_char = '(',
+    };
+}
+
+cortecs_lexer_test_config_t cortecs_lexer_test_open_paren_config = {
+    .next = &lexer_test_open_paren_next,
+    .should_skip_token = &cortecs_lexer_test_never_skip,
+    .state_max_entropy = &lexer_test_open_paren_max_entropy,
+    .tag = CORTECS_LEXER_TAG_OPEN_PAREN,
+    .min_length = 1,
+    .max_length = 1,
+};
+
+static uint32_t lexer_test_close_paren_max_entropy(uint32_t state) {
+    UNUSED(state);
+    return 1;
+}
+
+static cortecs_lexer_test_result_t lexer_test_close_paren_next(cortecs_lexer_test_state_t state, uint32_t entropy) {
+    UNUSED(state);
+    UNUSED(entropy);
+    return (cortecs_lexer_test_result_t){
+        .next_char = ')',
+    };
+}
+
+cortecs_lexer_test_config_t cortecs_lexer_test_close_paren_config = {
+    .next = &lexer_test_close_paren_next,
+    .should_skip_token = &cortecs_lexer_test_never_skip,
+    .state_max_entropy = &lexer_test_close_paren_max_entropy,
+    .tag = CORTECS_LEXER_TAG_CLOSE_PAREN,
+    .min_length = 1,
+    .max_length = 1,
+};
+
+static uint32_t lexer_test_open_curly_max_entropy(uint32_t state) {
+    UNUSED(state);
+    return 1;
+}
+
+static cortecs_lexer_test_result_t lexer_test_open_curly_next(cortecs_lexer_test_state_t state, uint32_t entropy) {
+    UNUSED(state);
+    UNUSED(entropy);
+    return (cortecs_lexer_test_result_t){
+        .next_char = '{',
+    };
+}
+
+cortecs_lexer_test_config_t cortecs_lexer_test_open_curly_config = {
+    .next = &lexer_test_open_curly_next,
+    .should_skip_token = &cortecs_lexer_test_never_skip,
+    .state_max_entropy = &lexer_test_open_curly_max_entropy,
+    .tag = CORTECS_LEXER_TAG_OPEN_CURLY,
+    .min_length = 1,
+    .max_length = 1,
+};
+
+static uint32_t lexer_test_close_curly_max_entropy(uint32_t state) {
+    UNUSED(state);
+    return 1;
+}
+
+static cortecs_lexer_test_result_t lexer_test_close_curly_next(cortecs_lexer_test_state_t state, uint32_t entropy) {
+    UNUSED(state);
+    UNUSED(entropy);
+    return (cortecs_lexer_test_result_t){
+        .next_char = '}',
+    };
+}
+
+cortecs_lexer_test_config_t cortecs_lexer_test_close_curly_config = {
+    .next = &lexer_test_close_curly_next,
+    .should_skip_token = &cortecs_lexer_test_never_skip,
+    .state_max_entropy = &lexer_test_close_curly_max_entropy,
+    .tag = CORTECS_LEXER_TAG_CLOSE_CURLY,
+    .min_length = 1,
+    .max_length = 1,
+};
+
+static uint32_t lexer_test_open_square_max_entropy(uint32_t state) {
+    UNUSED(state);
+    return 1;
+}
+
+static cortecs_lexer_test_result_t lexer_test_open_square_next(cortecs_lexer_test_state_t state, uint32_t entropy) {
+    UNUSED(state);
+    UNUSED(entropy);
+    return (cortecs_lexer_test_result_t){
+        .next_char = '[',
+    };
+}
+
+cortecs_lexer_test_config_t cortecs_lexer_test_open_square_config = {
+    .next = &lexer_test_open_square_next,
+    .should_skip_token = &cortecs_lexer_test_never_skip,
+    .state_max_entropy = &lexer_test_open_square_max_entropy,
+    .tag = CORTECS_LEXER_TAG_OPEN_SQUARE,
+    .min_length = 1,
+    .max_length = 1,
+};
+
+static uint32_t lexer_test_close_square_max_entropy(uint32_t state) {
+    UNUSED(state);
+    return 1;
+}
+
+static cortecs_lexer_test_result_t lexer_test_close_square_next(cortecs_lexer_test_state_t state, uint32_t entropy) {
+    UNUSED(state);
+    UNUSED(entropy);
+    return (cortecs_lexer_test_result_t){
+        .next_char = ']',
+    };
+}
+
+cortecs_lexer_test_config_t cortecs_lexer_test_close_square_config = {
+    .next = &lexer_test_close_square_next,
+    .should_skip_token = &cortecs_lexer_test_never_skip,
+    .state_max_entropy = &lexer_test_close_square_max_entropy,
+    .tag = CORTECS_LEXER_TAG_CLOSE_SQUARE,
     .min_length = 1,
     .max_length = 1,
 };
