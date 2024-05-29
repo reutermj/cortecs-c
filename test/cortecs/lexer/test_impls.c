@@ -165,7 +165,16 @@ void cortecs_lexer_test_fuzz_multi(cortecs_lexer_test_multi_config_t config) {
         uint32_t length = lexer_test_fuzz_case(next_config, input, offset, &cases[num_cases]);
         num_cases++;
         offset += length;
-        curr_config = config.valid_next_token[curr_config][rand() % config.lengths[curr_config]];
+        uint32_t fuel = rand() % config.num_configs;
+        for (uint32_t i = 0; true; i = (i + 1) % config.num_configs) {
+            if (config.transition_to[curr_config][i]) {
+                if (fuel == 0) {
+                    curr_config = i;
+                    break;
+                }
+                fuel--;
+            }
+        }
     }
 
     uint32_t start = 0;
@@ -187,9 +196,11 @@ void cortecs_lexer_test_exhaustive_two_token(cortecs_lexer_test_multi_config_t c
             cortecs_lexer_test_config_t first_config = config.configs[i];
             uint32_t first_length = lexer_test_fuzz_case(first_config, input, 0, &cases[0]);
 
-            for (uint32_t j = 0; j < config.lengths[i]; j++) {
-                uint32_t second_config_index = config.valid_next_token[i][j];
-                cortecs_lexer_test_config_t second_config = config.configs[second_config_index];
+            for (uint32_t j = 0; j < config.num_configs; j++) {
+                if (!config.transition_to[i][j]) {
+                    continue;
+                }
+                cortecs_lexer_test_config_t second_config = config.configs[j];
                 uint32_t second_length = lexer_test_fuzz_case(second_config, input, first_length, &cases[1]);
                 input[first_length + second_length] = 0;
 
