@@ -27,9 +27,8 @@ typedef struct {
 
 typedef struct {
     cortecs_lexer_test_config_t *configs;
+    bool **transition_to;
     uint32_t num_configs;
-    uint32_t **valid_next_token;
-    uint32_t *lengths;
 } cortecs_lexer_test_multi_config_t;
 
 uint32_t cortecs_lexer_test(char *input, uint32_t offset, char *gold, cortecs_lexer_tag_t tag);
