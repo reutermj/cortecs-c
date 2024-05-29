@@ -723,3 +723,95 @@ cortecs_lexer_test_config_t cortecs_lexer_test_close_square_config = {
     .min_length = 1,
     .max_length = 1,
 };
+
+static uint32_t lexer_test_function_max_entropy(uint32_t state) {
+    UNUSED(state);
+    return 1;
+}
+
+static cortecs_lexer_test_result_t lexer_test_function_next(cortecs_lexer_test_state_t state, uint32_t entropy) {
+    UNUSED(entropy);
+    static const char *function_keyword = "function";
+    return (cortecs_lexer_test_result_t){
+        .next_char = function_keyword[state.state],
+        .next_state = state.state + 1,
+    };
+}
+
+cortecs_lexer_test_config_t cortecs_lexer_test_function_config = {
+    .next = &lexer_test_function_next,
+    .should_skip_token = &cortecs_lexer_test_never_skip,
+    .state_max_entropy = &lexer_test_function_max_entropy,
+    .tag = CORTECS_LEXER_TAG_FUNCTION,
+    .min_length = 8,
+    .max_length = 8,
+};
+
+static uint32_t lexer_test_let_max_entropy(uint32_t state) {
+    UNUSED(state);
+    return 1;
+}
+
+static cortecs_lexer_test_result_t lexer_test_let_next(cortecs_lexer_test_state_t state, uint32_t entropy) {
+    UNUSED(entropy);
+    static const char *let_keyword = "let";
+    return (cortecs_lexer_test_result_t){
+        .next_char = let_keyword[state.state],
+        .next_state = state.state + 1,
+    };
+}
+
+cortecs_lexer_test_config_t cortecs_lexer_test_let_config = {
+    .next = &lexer_test_let_next,
+    .should_skip_token = &cortecs_lexer_test_never_skip,
+    .state_max_entropy = &lexer_test_let_max_entropy,
+    .tag = CORTECS_LEXER_TAG_LET,
+    .min_length = 3,
+    .max_length = 3,
+};
+
+static uint32_t lexer_test_return_max_entropy(uint32_t state) {
+    UNUSED(state);
+    return 1;
+}
+
+static cortecs_lexer_test_result_t lexer_test_return_next(cortecs_lexer_test_state_t state, uint32_t entropy) {
+    UNUSED(entropy);
+    static const char *return_keyword = "return";
+    return (cortecs_lexer_test_result_t){
+        .next_char = return_keyword[state.state],
+        .next_state = state.state + 1,
+    };
+}
+
+cortecs_lexer_test_config_t cortecs_lexer_test_return_config = {
+    .next = &lexer_test_return_next,
+    .should_skip_token = &cortecs_lexer_test_never_skip,
+    .state_max_entropy = &lexer_test_return_max_entropy,
+    .tag = CORTECS_LEXER_TAG_RETURN,
+    .min_length = 6,
+    .max_length = 6,
+};
+
+static uint32_t lexer_test_if_max_entropy(uint32_t state) {
+    UNUSED(state);
+    return 1;
+}
+
+static cortecs_lexer_test_result_t lexer_test_if_next(cortecs_lexer_test_state_t state, uint32_t entropy) {
+    UNUSED(entropy);
+    static const char *if_keyword = "if";
+    return (cortecs_lexer_test_result_t){
+        .next_char = if_keyword[state.state],
+        .next_state = state.state + 1,
+    };
+}
+
+cortecs_lexer_test_config_t cortecs_lexer_test_if_config = {
+    .next = &lexer_test_if_next,
+    .should_skip_token = &cortecs_lexer_test_never_skip,
+    .state_max_entropy = &lexer_test_if_max_entropy,
+    .tag = CORTECS_LEXER_TAG_IF,
+    .min_length = 2,
+    .max_length = 2,
+};

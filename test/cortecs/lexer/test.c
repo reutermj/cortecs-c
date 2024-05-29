@@ -44,32 +44,20 @@ static void lexer_test_bad_int(void) {
     cortecs_lexer_test_fuzz(cortecs_lexer_test_bad_int_config);
 }
 
-void cortecs_lexer_test_function(void) {
-    cortecs_lexer_test("function", 0, "function", CORTECS_LEXER_TAG_FUNCTION);
-    cortecs_lexer_test("asdf function", 5, "function", CORTECS_LEXER_TAG_FUNCTION);
-    cortecs_lexer_test("function 123", 0, "function", CORTECS_LEXER_TAG_FUNCTION);
-    cortecs_lexer_test("asdf function 123", 5, "function", CORTECS_LEXER_TAG_FUNCTION);
+void lexer_test_function(void) {
+    cortecs_lexer_test_exhaustive(cortecs_lexer_test_function_config);
 }
 
-void cortecs_lexer_test_let(void) {
-    cortecs_lexer_test("let", 0, "let", CORTECS_LEXER_TAG_LET);
-    cortecs_lexer_test("asdf let", 5, "let", CORTECS_LEXER_TAG_LET);
-    cortecs_lexer_test("let 123", 0, "let", CORTECS_LEXER_TAG_LET);
-    cortecs_lexer_test("asdf let 123", 5, "let", CORTECS_LEXER_TAG_LET);
+void lexer_test_let(void) {
+    cortecs_lexer_test_exhaustive(cortecs_lexer_test_let_config);
 }
 
-void cortecs_lexer_test_return(void) {
-    cortecs_lexer_test("return", 0, "return", CORTECS_LEXER_TAG_RETURN);
-    cortecs_lexer_test("asdf return", 5, "return", CORTECS_LEXER_TAG_RETURN);
-    cortecs_lexer_test("return 123", 0, "return", CORTECS_LEXER_TAG_RETURN);
-    cortecs_lexer_test("asdf return 123", 5, "return", CORTECS_LEXER_TAG_RETURN);
+void lexer_test_return(void) {
+    cortecs_lexer_test_exhaustive(cortecs_lexer_test_return_config);
 }
 
-void cortecs_lexer_test_if(void) {
-    cortecs_lexer_test("if", 0, "if", CORTECS_LEXER_TAG_IF);
-    cortecs_lexer_test("asdf if", 5, "if", CORTECS_LEXER_TAG_IF);
-    cortecs_lexer_test("if 123", 0, "if", CORTECS_LEXER_TAG_IF);
-    cortecs_lexer_test("asdf if 123", 5, "if", CORTECS_LEXER_TAG_IF);
+void lexer_test_if(void) {
+    cortecs_lexer_test_exhaustive(cortecs_lexer_test_if_config);
 }
 
 static void lexer_test_name(void) {
@@ -87,7 +75,7 @@ static void lexer_test_space(void) {
     cortecs_lexer_test_fuzz(cortecs_lexer_test_space_config);
 }
 
-void cortecs_lexer_test_new_line(void) {
+void lexer_test_new_line(void) {
     cortecs_lexer_test_exhaustive(cortecs_lexer_test_new_line_config);
 }
 
@@ -140,24 +128,32 @@ void cortecs_lexer_test_multi_token_fuzz(void) {
         cortecs_lexer_test_close_curly_config,
         cortecs_lexer_test_open_square_config,
         cortecs_lexer_test_close_square_config,
+        cortecs_lexer_test_function_config,
+        cortecs_lexer_test_let_config,
+        cortecs_lexer_test_return_config,
+        cortecs_lexer_test_if_config,
     };
 
-    bool **transition_to = calloc(15, sizeof(bool *));
-    transition_to[0] = (bool[]){0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
-    transition_to[1] = (bool[]){1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
-    transition_to[2] = (bool[]){1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
-    transition_to[3] = (bool[]){1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1};
-    transition_to[4] = (bool[]){1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1};
-    transition_to[5] = (bool[]){1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1};
-    transition_to[6] = (bool[]){1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1};
-    transition_to[7] = (bool[]){1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1};
-    transition_to[8] = (bool[]){1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1};
-    transition_to[9] = (bool[]){1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
-    transition_to[10] = (bool[]){1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
-    transition_to[11] = (bool[]){1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
-    transition_to[12] = (bool[]){1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
-    transition_to[13] = (bool[]){1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
-    transition_to[14] = (bool[]){1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+    bool **transition_to = calloc(19, sizeof(bool *));
+    transition_to[0] = (bool[]){0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+    transition_to[1] = (bool[]){1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+    transition_to[2] = (bool[]){1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+    transition_to[3] = (bool[]){1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0};
+    transition_to[4] = (bool[]){1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0};
+    transition_to[5] = (bool[]){1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0};
+    transition_to[6] = (bool[]){1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0};
+    transition_to[7] = (bool[]){1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0};
+    transition_to[8] = (bool[]){1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0};
+    transition_to[9] = (bool[]){1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+    transition_to[10] = (bool[]){1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+    transition_to[11] = (bool[]){1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+    transition_to[12] = (bool[]){1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+    transition_to[13] = (bool[]){1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+    transition_to[14] = (bool[]){1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+    transition_to[15] = (bool[]){1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0};
+    transition_to[16] = (bool[]){1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0};
+    transition_to[17] = (bool[]){1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0};
+    transition_to[18] = (bool[]){1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0};
 
     cortecs_lexer_test_multi_config_t config = {
         .configs = configs,
@@ -222,11 +218,11 @@ int main() {
 
     RUN_TEST(lexer_test_invalid);
 
-    RUN_TEST(cortecs_lexer_test_function);
-    RUN_TEST(cortecs_lexer_test_let);
-    RUN_TEST(cortecs_lexer_test_return);
-    RUN_TEST(cortecs_lexer_test_if);
-    RUN_TEST(cortecs_lexer_test_new_line);
+    RUN_TEST(lexer_test_function);
+    RUN_TEST(lexer_test_let);
+    RUN_TEST(lexer_test_return);
+    RUN_TEST(lexer_test_if);
+    RUN_TEST(lexer_test_new_line);
 
     return UNITY_END();
 }
