@@ -50,6 +50,12 @@ const char *cortecs_lexer_tag_to_string(cortecs_lexer_tag_t tag) {
             return "double_quote";
         case CORTECS_LEXER_TAG_BACK_QUOTE:
             return "back_quote";
+        case CORTECS_LEXER_TAG_COMMA:
+            return "comma";
+        case CORTECS_LEXER_TAG_COLON:
+            return "colon";
+        case CORTECS_LEXER_TAG_SEMICOLON:
+            return "semicolon";
         case CORTECS_LEXER_TAG_INVALID:
             return "invalid";
     }

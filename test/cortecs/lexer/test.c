@@ -120,6 +120,18 @@ static void lexer_test_back_quote(void) {
     cortecs_lexer_test_exhaustive(cortecs_lexer_test_back_quote_config);
 }
 
+static void lexer_test_comma(void) {
+    cortecs_lexer_test_exhaustive(cortecs_lexer_test_comma_config);
+}
+
+static void lexer_test_colon(void) {
+    cortecs_lexer_test_exhaustive(cortecs_lexer_test_colon_config);
+}
+
+static void lexer_test_semicolon(void) {
+    cortecs_lexer_test_exhaustive(cortecs_lexer_test_semicolon_config);
+}
+
 static void lexer_test_invalid(void) {
     // currently not running exhaustiveness testing because it takes way too long
     // maybe reenable them if I ever decide it's worth the effort to change test
@@ -153,34 +165,40 @@ void cortecs_lexer_test_multi_token_fuzz(void) {
         cortecs_lexer_test_single_quote_config,
         cortecs_lexer_test_double_quote_config,
         cortecs_lexer_test_back_quote_config,
+        cortecs_lexer_test_comma_config,
+        cortecs_lexer_test_colon_config,
+        cortecs_lexer_test_semicolon_config,
     };
 
     uint32_t num_configs = sizeof(configs) / sizeof(cortecs_lexer_test_config_t);
 
     bool **transition_to = calloc(num_configs, sizeof(bool *));
-    transition_to[0] = (bool[]){0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
-    transition_to[1] = (bool[]){1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
-    transition_to[2] = (bool[]){1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
-    transition_to[3] = (bool[]){1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1};
-    transition_to[4] = (bool[]){1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1};
-    transition_to[5] = (bool[]){1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1};
-    transition_to[6] = (bool[]){1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1};
-    transition_to[7] = (bool[]){1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1};
-    transition_to[8] = (bool[]){1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1};
-    transition_to[9] = (bool[]){1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
-    transition_to[10] = (bool[]){1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
-    transition_to[11] = (bool[]){1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
-    transition_to[12] = (bool[]){1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
-    transition_to[13] = (bool[]){1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
-    transition_to[14] = (bool[]){1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
-    transition_to[15] = (bool[]){1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1};
-    transition_to[16] = (bool[]){1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1};
-    transition_to[17] = (bool[]){1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1};
-    transition_to[18] = (bool[]){1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1};
-    transition_to[19] = (bool[]){1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1};
-    transition_to[20] = (bool[]){1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
-    transition_to[21] = (bool[]){1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
-    transition_to[22] = (bool[]){1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+    transition_to[0] = (bool[]){0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+    transition_to[1] = (bool[]){1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+    transition_to[2] = (bool[]){1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+    transition_to[3] = (bool[]){1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1};
+    transition_to[4] = (bool[]){1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1};
+    transition_to[5] = (bool[]){1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1};
+    transition_to[6] = (bool[]){1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1};
+    transition_to[7] = (bool[]){1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1};
+    transition_to[8] = (bool[]){1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1};
+    transition_to[9] = (bool[]){1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+    transition_to[10] = (bool[]){1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+    transition_to[11] = (bool[]){1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+    transition_to[12] = (bool[]){1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+    transition_to[13] = (bool[]){1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+    transition_to[14] = (bool[]){1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+    transition_to[15] = (bool[]){1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1};
+    transition_to[16] = (bool[]){1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1};
+    transition_to[17] = (bool[]){1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1};
+    transition_to[18] = (bool[]){1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1};
+    transition_to[19] = (bool[]){1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1};
+    transition_to[20] = (bool[]){1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+    transition_to[21] = (bool[]){1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+    transition_to[22] = (bool[]){1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+    transition_to[23] = (bool[]){1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+    transition_to[24] = (bool[]){1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+    transition_to[25] = (bool[]){1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
 
     cortecs_lexer_test_multi_config_t config = {
         .configs = configs,
@@ -224,6 +242,9 @@ static void lexer_test_tag_string(void) {
     assert_tag_equals("single_quote", CORTECS_LEXER_TAG_SINGLE_QUOTE);
     assert_tag_equals("double_quote", CORTECS_LEXER_TAG_DOUBLE_QUOTE);
     assert_tag_equals("back_quote", CORTECS_LEXER_TAG_BACK_QUOTE);
+    assert_tag_equals("comma", CORTECS_LEXER_TAG_COMMA);
+    assert_tag_equals("colon", CORTECS_LEXER_TAG_COLON);
+    assert_tag_equals("semicolon", CORTECS_LEXER_TAG_SEMICOLON);
     assert_tag_equals("invalid", CORTECS_LEXER_TAG_INVALID);
     assert_tag_equals("unknown", (cortecs_lexer_tag_t)-1);
 }
@@ -266,6 +287,10 @@ int main() {
     RUN_TEST(lexer_test_return);
     RUN_TEST(lexer_test_if);
     RUN_TEST(lexer_test_new_line);
+
+    RUN_TEST(lexer_test_comma);
+    RUN_TEST(lexer_test_colon);
+    RUN_TEST(lexer_test_semicolon);
 
     return UNITY_END();
 }
