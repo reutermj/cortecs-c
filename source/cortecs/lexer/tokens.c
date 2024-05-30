@@ -44,6 +44,12 @@ const char *cortecs_lexer_tag_to_string(cortecs_lexer_tag_t tag) {
             return "open_square";
         case CORTECS_LEXER_TAG_CLOSE_SQUARE:
             return "close_square";
+        case CORTECS_LEXER_TAG_SINGLE_QUOTE:
+            return "single_quote";
+        case CORTECS_LEXER_TAG_DOUBLE_QUOTE:
+            return "double_quote";
+        case CORTECS_LEXER_TAG_BACK_QUOTE:
+            return "back_quote";
         case CORTECS_LEXER_TAG_INVALID:
             return "invalid";
     }

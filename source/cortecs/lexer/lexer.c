@@ -1,6 +1,7 @@
 #include <assert.h>
 #include <ctype.h>
 #include <lexer.h>
+#include <span.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
@@ -18,6 +19,14 @@ static cortecs_lexer_result_t construct_result(cortecs_lexer_tag_t tag, char *te
             .text = token,
         },
     };
+}
+
+static cortecs_lexer_result_t construct_single_char_result(cortecs_lexer_tag_t tag, char *text, uint32_t start) {
+    cortecs_span_t span = {
+        .lines = 0,
+        .columns = 1,
+    };
+    return construct_result(tag, text, start, start + 1, span);
 }
 
 static cortecs_lexer_result_t lex_float_bad(char *text, uint32_t start, uint32_t end) {
@@ -312,22 +321,31 @@ cortecs_lexer_result_t cortecs_lexer_next(char *text, uint32_t start) {
             return construct_result(CORTECS_LEXER_TAG_NEW_LINE, text, start, start + 1, (cortecs_span_t){.lines = 1});
         }
         case '(': {
-            return construct_result(CORTECS_LEXER_TAG_OPEN_PAREN, text, start, start + 1, (cortecs_span_t){.columns = 1});
+            return construct_single_char_result(CORTECS_LEXER_TAG_OPEN_PAREN, text, start);
         }
         case ')': {
-            return construct_result(CORTECS_LEXER_TAG_CLOSE_PAREN, text, start, start + 1, (cortecs_span_t){.columns = 1});
+            return construct_single_char_result(CORTECS_LEXER_TAG_CLOSE_PAREN, text, start);
         }
         case '{': {
-            return construct_result(CORTECS_LEXER_TAG_OPEN_CURLY, text, start, start + 1, (cortecs_span_t){.columns = 1});
+            return construct_single_char_result(CORTECS_LEXER_TAG_OPEN_CURLY, text, start);
         }
         case '}': {
-            return construct_result(CORTECS_LEXER_TAG_CLOSE_CURLY, text, start, start + 1, (cortecs_span_t){.columns = 1});
+            return construct_single_char_result(CORTECS_LEXER_TAG_CLOSE_CURLY, text, start);
         }
         case '[': {
-            return construct_result(CORTECS_LEXER_TAG_OPEN_SQUARE, text, start, start + 1, (cortecs_span_t){.columns = 1});
+            return construct_single_char_result(CORTECS_LEXER_TAG_OPEN_SQUARE, text, start);
         }
         case ']': {
-            return construct_result(CORTECS_LEXER_TAG_CLOSE_SQUARE, text, start, start + 1, (cortecs_span_t){.columns = 1});
+            return construct_single_char_result(CORTECS_LEXER_TAG_CLOSE_SQUARE, text, start);
+        }
+        case '\'': {
+            return construct_single_char_result(CORTECS_LEXER_TAG_SINGLE_QUOTE, text, start);
+        }
+        case '"': {
+            return construct_single_char_result(CORTECS_LEXER_TAG_DOUBLE_QUOTE, text, start);
+        }
+        case '`': {
+            return construct_single_char_result(CORTECS_LEXER_TAG_BACK_QUOTE, text, start);
         }
         default: {
             if (isalpha(current_char) || current_char == '_') {
