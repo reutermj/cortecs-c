@@ -347,6 +347,15 @@ cortecs_lexer_result_t cortecs_lexer_next(char *text, uint32_t start) {
         case '`': {
             return construct_single_char_result(CORTECS_LEXER_TAG_BACK_QUOTE, text, start);
         }
+        case ',': {
+            return construct_single_char_result(CORTECS_LEXER_TAG_COMMA, text, start);
+        }
+        case ':': {
+            return construct_single_char_result(CORTECS_LEXER_TAG_COLON, text, start);
+        }
+        case ';': {
+            return construct_single_char_result(CORTECS_LEXER_TAG_SEMICOLON, text, start);
+        }
         default: {
             if (isalpha(current_char) || current_char == '_') {
                 return lex_name(text, start);

@@ -904,3 +904,69 @@ cortecs_lexer_test_config_t cortecs_lexer_test_operator_config = {
     .min_length = 1,
     .max_length = 0xFFFFFFFF,
 };
+
+static uint32_t lexer_test_comma_max_entropy(uint32_t state) {
+    UNUSED(state);
+    return 1;
+}
+
+static cortecs_lexer_test_result_t lexer_test_comma_next(cortecs_lexer_test_state_t state, uint32_t entropy) {
+    UNUSED(state);
+    UNUSED(entropy);
+    return (cortecs_lexer_test_result_t){
+        .next_char = ',',
+    };
+}
+
+cortecs_lexer_test_config_t cortecs_lexer_test_comma_config = {
+    .next = &lexer_test_comma_next,
+    .should_skip_token = &cortecs_lexer_test_never_skip,
+    .state_max_entropy = &lexer_test_comma_max_entropy,
+    .tag = CORTECS_LEXER_TAG_COMMA,
+    .min_length = 1,
+    .max_length = 1,
+};
+
+static uint32_t lexer_test_colon_max_entropy(uint32_t state) {
+    UNUSED(state);
+    return 1;
+}
+
+static cortecs_lexer_test_result_t lexer_test_colon_next(cortecs_lexer_test_state_t state, uint32_t entropy) {
+    UNUSED(state);
+    UNUSED(entropy);
+    return (cortecs_lexer_test_result_t){
+        .next_char = ':',
+    };
+}
+
+cortecs_lexer_test_config_t cortecs_lexer_test_colon_config = {
+    .next = &lexer_test_colon_next,
+    .should_skip_token = &cortecs_lexer_test_never_skip,
+    .state_max_entropy = &lexer_test_colon_max_entropy,
+    .tag = CORTECS_LEXER_TAG_COLON,
+    .min_length = 1,
+    .max_length = 1,
+};
+
+static uint32_t lexer_test_semicolon_max_entropy(uint32_t state) {
+    UNUSED(state);
+    return 1;
+}
+
+static cortecs_lexer_test_result_t lexer_test_semicolon_next(cortecs_lexer_test_state_t state, uint32_t entropy) {
+    UNUSED(state);
+    UNUSED(entropy);
+    return (cortecs_lexer_test_result_t){
+        .next_char = ';',
+    };
+}
+
+cortecs_lexer_test_config_t cortecs_lexer_test_semicolon_config = {
+    .next = &lexer_test_semicolon_next,
+    .should_skip_token = &cortecs_lexer_test_never_skip,
+    .state_max_entropy = &lexer_test_semicolon_max_entropy,
+    .tag = CORTECS_LEXER_TAG_SEMICOLON,
+    .min_length = 1,
+    .max_length = 1,
+};
