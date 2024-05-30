@@ -724,6 +724,72 @@ cortecs_lexer_test_config_t cortecs_lexer_test_close_square_config = {
     .max_length = 1,
 };
 
+static uint32_t lexer_test_single_quote_max_entropy(uint32_t state) {
+    UNUSED(state);
+    return 1;
+}
+
+static cortecs_lexer_test_result_t lexer_test_single_quote_next(cortecs_lexer_test_state_t state, uint32_t entropy) {
+    UNUSED(state);
+    UNUSED(entropy);
+    return (cortecs_lexer_test_result_t){
+        .next_char = '\'',
+    };
+}
+
+cortecs_lexer_test_config_t cortecs_lexer_test_single_quote_config = {
+    .next = &lexer_test_single_quote_next,
+    .should_skip_token = &cortecs_lexer_test_never_skip,
+    .state_max_entropy = &lexer_test_single_quote_max_entropy,
+    .tag = CORTECS_LEXER_TAG_SINGLE_QUOTE,
+    .min_length = 1,
+    .max_length = 1,
+};
+
+static uint32_t lexer_test_double_quote_max_entropy(uint32_t state) {
+    UNUSED(state);
+    return 1;
+}
+
+static cortecs_lexer_test_result_t lexer_test_double_quote_next(cortecs_lexer_test_state_t state, uint32_t entropy) {
+    UNUSED(state);
+    UNUSED(entropy);
+    return (cortecs_lexer_test_result_t){
+        .next_char = '"',
+    };
+}
+
+cortecs_lexer_test_config_t cortecs_lexer_test_double_quote_config = {
+    .next = &lexer_test_double_quote_next,
+    .should_skip_token = &cortecs_lexer_test_never_skip,
+    .state_max_entropy = &lexer_test_double_quote_max_entropy,
+    .tag = CORTECS_LEXER_TAG_DOUBLE_QUOTE,
+    .min_length = 1,
+    .max_length = 1,
+};
+
+static uint32_t lexer_test_back_quote_max_entropy(uint32_t state) {
+    UNUSED(state);
+    return 1;
+}
+
+static cortecs_lexer_test_result_t lexer_test_back_quote_next(cortecs_lexer_test_state_t state, uint32_t entropy) {
+    UNUSED(state);
+    UNUSED(entropy);
+    return (cortecs_lexer_test_result_t){
+        .next_char = '`',
+    };
+}
+
+cortecs_lexer_test_config_t cortecs_lexer_test_back_quote_config = {
+    .next = &lexer_test_back_quote_next,
+    .should_skip_token = &cortecs_lexer_test_never_skip,
+    .state_max_entropy = &lexer_test_back_quote_max_entropy,
+    .tag = CORTECS_LEXER_TAG_BACK_QUOTE,
+    .min_length = 1,
+    .max_length = 1,
+};
+
 static uint32_t lexer_test_function_max_entropy(uint32_t state) {
     UNUSED(state);
     return 1;

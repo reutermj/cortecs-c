@@ -108,6 +108,18 @@ static void lexer_test_close_square(void) {
     cortecs_lexer_test_exhaustive(cortecs_lexer_test_close_square_config);
 }
 
+static void lexer_test_single_quote(void) {
+    cortecs_lexer_test_exhaustive(cortecs_lexer_test_single_quote_config);
+}
+
+static void lexer_test_double_quote(void) {
+    cortecs_lexer_test_exhaustive(cortecs_lexer_test_double_quote_config);
+}
+
+static void lexer_test_back_quote(void) {
+    cortecs_lexer_test_exhaustive(cortecs_lexer_test_back_quote_config);
+}
+
 static void lexer_test_invalid(void) {
     // currently not running exhaustiveness testing because it takes way too long
     // maybe reenable them if I ever decide it's worth the effort to change test
@@ -138,33 +150,41 @@ void cortecs_lexer_test_multi_token_fuzz(void) {
         cortecs_lexer_test_return_config,
         cortecs_lexer_test_if_config,
         cortecs_lexer_test_operator_config,
+        cortecs_lexer_test_single_quote_config,
+        cortecs_lexer_test_double_quote_config,
+        cortecs_lexer_test_back_quote_config,
     };
 
-    bool **transition_to = calloc(20, sizeof(bool *));
-    transition_to[0] = (bool[]){0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
-    transition_to[1] = (bool[]){1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
-    transition_to[2] = (bool[]){1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
-    transition_to[3] = (bool[]){1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1};
-    transition_to[4] = (bool[]){1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1};
-    transition_to[5] = (bool[]){1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1};
-    transition_to[6] = (bool[]){1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1};
-    transition_to[7] = (bool[]){1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1};
-    transition_to[8] = (bool[]){1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1};
-    transition_to[9] = (bool[]){1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
-    transition_to[10] = (bool[]){1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
-    transition_to[11] = (bool[]){1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
-    transition_to[12] = (bool[]){1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
-    transition_to[13] = (bool[]){1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
-    transition_to[14] = (bool[]){1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
-    transition_to[15] = (bool[]){1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1};
-    transition_to[16] = (bool[]){1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1};
-    transition_to[17] = (bool[]){1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1};
-    transition_to[18] = (bool[]){1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1};
-    transition_to[19] = (bool[]){1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0};
+    uint32_t num_configs = sizeof(configs) / sizeof(cortecs_lexer_test_config_t);
+
+    bool **transition_to = calloc(num_configs, sizeof(bool *));
+    transition_to[0] = (bool[]){0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+    transition_to[1] = (bool[]){1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+    transition_to[2] = (bool[]){1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+    transition_to[3] = (bool[]){1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1};
+    transition_to[4] = (bool[]){1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1};
+    transition_to[5] = (bool[]){1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1};
+    transition_to[6] = (bool[]){1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1};
+    transition_to[7] = (bool[]){1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1};
+    transition_to[8] = (bool[]){1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1};
+    transition_to[9] = (bool[]){1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+    transition_to[10] = (bool[]){1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+    transition_to[11] = (bool[]){1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+    transition_to[12] = (bool[]){1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+    transition_to[13] = (bool[]){1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+    transition_to[14] = (bool[]){1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+    transition_to[15] = (bool[]){1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1};
+    transition_to[16] = (bool[]){1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1};
+    transition_to[17] = (bool[]){1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1};
+    transition_to[18] = (bool[]){1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1};
+    transition_to[19] = (bool[]){1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1};
+    transition_to[20] = (bool[]){1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+    transition_to[21] = (bool[]){1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+    transition_to[22] = (bool[]){1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
 
     cortecs_lexer_test_multi_config_t config = {
         .configs = configs,
-        .num_configs = sizeof(configs) / sizeof(cortecs_lexer_test_config_t),
+        .num_configs = num_configs,
         .transition_to = transition_to,
     };
 
@@ -201,6 +221,9 @@ static void lexer_test_tag_string(void) {
     assert_tag_equals("close_curly", CORTECS_LEXER_TAG_CLOSE_CURLY);
     assert_tag_equals("open_square", CORTECS_LEXER_TAG_OPEN_SQUARE);
     assert_tag_equals("close_square", CORTECS_LEXER_TAG_CLOSE_SQUARE);
+    assert_tag_equals("single_quote", CORTECS_LEXER_TAG_SINGLE_QUOTE);
+    assert_tag_equals("double_quote", CORTECS_LEXER_TAG_DOUBLE_QUOTE);
+    assert_tag_equals("back_quote", CORTECS_LEXER_TAG_BACK_QUOTE);
     assert_tag_equals("invalid", CORTECS_LEXER_TAG_INVALID);
     assert_tag_equals("unknown", (cortecs_lexer_tag_t)-1);
 }
@@ -216,6 +239,10 @@ int main() {
     RUN_TEST(lexer_test_close_curly);
     RUN_TEST(lexer_test_open_square);
     RUN_TEST(lexer_test_close_square);
+
+    RUN_TEST(lexer_test_single_quote);
+    RUN_TEST(lexer_test_double_quote);
+    RUN_TEST(lexer_test_back_quote);
 
     RUN_TEST(lexer_test_tag_string);
     RUN_TEST(lexer_test_empty_input);
