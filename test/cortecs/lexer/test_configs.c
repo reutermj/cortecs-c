@@ -4,17 +4,17 @@
 #include <ctype.h>
 #include <tokens.h>
 
+static const char space_lookup[] = {' ', '\t', '\r', '\v', '\f'};
 static uint32_t lexer_test_space_max_entropy(uint32_t state) {
     UNUSED(state);
-    return 5;
+    return sizeof(space_lookup) / sizeof(char);
 }
 
 static cortecs_lexer_test_result_t lexer_test_space_next(cortecs_lexer_test_state_t state, uint32_t entropy) {
     entropy = entropy % lexer_test_space_max_entropy(state.state);
-    static const char space[] = {' ', '\t', '\r', '\v', '\f'};
     return (cortecs_lexer_test_result_t){
         .next_state = 0,
-        .next_char = space[entropy],
+        .next_char = space_lookup[entropy],
     };
 }
 
@@ -814,4 +814,27 @@ cortecs_lexer_test_config_t cortecs_lexer_test_if_config = {
     .tag = CORTECS_LEXER_TAG_IF,
     .min_length = 2,
     .max_length = 2,
+};
+
+static const char operator_lookup[] = {'!', '#', '$', '%', '&', '*', '+', '-', '/', '<', '=', '>', '?', '@', '\\', '^', '|', '~'};
+static uint32_t lexer_test_operator_max_entropy(uint32_t state) {
+    UNUSED(state);
+    return sizeof(operator_lookup) / sizeof(char);
+}
+
+static cortecs_lexer_test_result_t lexer_test_operator_next(cortecs_lexer_test_state_t state, uint32_t entropy) {
+    entropy = entropy % lexer_test_operator_max_entropy(state.state);
+    return (cortecs_lexer_test_result_t){
+        .next_state = 0,
+        .next_char = operator_lookup[entropy],
+    };
+}
+
+cortecs_lexer_test_config_t cortecs_lexer_test_operator_config = {
+    .next = &lexer_test_operator_next,
+    .should_skip_token = &cortecs_lexer_test_never_skip,
+    .state_max_entropy = &lexer_test_operator_max_entropy,
+    .tag = CORTECS_LEXER_TAG_OPERATOR,
+    .min_length = 1,
+    .max_length = 0xFFFFFFFF,
 };

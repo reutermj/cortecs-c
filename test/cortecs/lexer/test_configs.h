@@ -22,5 +22,6 @@ extern cortecs_lexer_test_config_t cortecs_lexer_test_function_config;
 extern cortecs_lexer_test_config_t cortecs_lexer_test_let_config;
 extern cortecs_lexer_test_config_t cortecs_lexer_test_return_config;
 extern cortecs_lexer_test_config_t cortecs_lexer_test_if_config;
+extern cortecs_lexer_test_config_t cortecs_lexer_test_operator_config;
 
 #endif

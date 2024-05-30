@@ -100,10 +100,6 @@ static cortecs_lexer_result_t lex_dot(char *text, uint32_t start) {
 static cortecs_lexer_result_t lex_int_bad(char *text, uint32_t start, uint32_t end) {
     while (true) {
         char current_char = text[end];
-        if (current_char == 0) {
-            break;
-        }
-
         if (isalnum(current_char) || current_char == '_') {
             end++;
             continue;
@@ -125,10 +121,6 @@ static cortecs_lexer_result_t lex_int(char *text, uint32_t start) {
     uint32_t end = start + 1;
     while (true) {
         char current_char = text[end];
-        if (current_char == 0) {
-            break;
-        }
-
         if (current_char == '.') {
             // the token is a float literal matching \d+\.\d*[dD]?
             return lex_float(text, start, end + 1);
@@ -178,10 +170,6 @@ static cortecs_lexer_result_t lex_name(char *text, uint32_t start) {
     uint32_t end = start + 1;
     while (true) {
         char current_char = text[end];
-        if (current_char == 0) {
-            break;
-        }
-
         if (isalnum(current_char) || current_char == '_') {
             end++;
             continue;
@@ -220,10 +208,6 @@ static cortecs_lexer_result_t lex_whitespace(char *text, uint32_t start) {
     uint32_t end = start + 1;
     while (true) {
         char current_char = text[end];
-        if (current_char == 0) {
-            break;
-        }
-
         if (isspace(current_char) && current_char != '\n') {
             end++;
             continue;
@@ -240,26 +224,55 @@ static cortecs_lexer_result_t lex_whitespace(char *text, uint32_t start) {
     return construct_result(CORTECS_LEXER_TAG_SPACE, text, start, end, span);
 }
 
+static bool is_operator(char charater) {
+    return charater == '!' || charater == '#' || charater == '$' ||
+           charater == '%' || charater == '&' || charater == '*' ||
+           charater == '+' || charater == '-' || charater == '/' ||
+           charater == '<' || charater == '=' || charater == '>' ||
+           charater == '?' || charater == '@' || charater == '\\' ||
+           charater == '^' || charater == '|' || charater == '~';
+}
+
+static cortecs_lexer_result_t lex_operator(char *text, uint32_t start) {
+    // [\ \t\r\f\v]+
+    uint32_t end = start + 1;
+    while (true) {
+        char current_char = text[end];
+        if (is_operator(current_char)) {
+            end++;
+            continue;
+        }
+
+        break;
+    }
+
+    cortecs_span_t span = {
+        .lines = 0,
+        .columns = end - start,
+    };
+
+    return construct_result(CORTECS_LEXER_TAG_OPERATOR, text, start, end, span);
+}
+
 static bool is_invalid(char charater) {
     // ensure that the char is represented as unsigned [0, 255]
     uint8_t as_uint = (uint8_t)charater;
 
+    // first range of control characters
     const uint8_t ctrl0_min = 1;
     const uint8_t ctrl0_max = 8;
-    if (ctrl0_min <= as_uint && as_uint <= ctrl0_max) {
-        return true;
-    }
 
     // 9-13 are whitespace
 
+    // second range of control characters
     const uint8_t ctrl1_min = 14;
     const uint8_t ctrl1_max = 31;
-    if (ctrl1_min <= as_uint && as_uint <= ctrl1_max) {
-        return true;
-    }
 
+    // last control character + extended ascii
     const uint8_t oob_min = 127;
-    return as_uint >= oob_min;
+    return (ctrl0_min <= as_uint && as_uint <= ctrl0_max) ||
+           (ctrl1_min <= as_uint && as_uint <= ctrl1_max) ||
+           as_uint >= oob_min;
 }
 
 static cortecs_lexer_result_t lex_invalid(char *text, uint32_t start) {
@@ -329,8 +342,12 @@ cortecs_lexer_result_t cortecs_lexer_next(char *text, uint32_t start) {
                 return lex_whitespace(text, start);
             }
 
+            if (is_operator(current_char)) {
+                return lex_operator(text, start);
+            }
+
             // This assert is for testing to ensure that all possible characters have been covered
-            assert(is_invalid(current_char));  // LCOV_EXCL_LINE
+            assert(is_invalid(current_char));
 
             return lex_invalid(text, start);
         }
