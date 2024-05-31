@@ -16,6 +16,9 @@ static void lexer_test_empty_input(void) {
     cortecs_lexer_test("", 0, "", CORTECS_LEXER_TAG_INVALID);
     cortecs_lexer_test("asdf", 4, "", CORTECS_LEXER_TAG_INVALID);
     cortecs_lexer_test("asdf123", 7, "", CORTECS_LEXER_TAG_INVALID);
+    cortecs_lexer_test(NULL, 0, "", CORTECS_LEXER_TAG_INVALID);
+    cortecs_lexer_test(NULL, 4, "", CORTECS_LEXER_TAG_INVALID);
+    cortecs_lexer_test(NULL, 7, "", CORTECS_LEXER_TAG_INVALID);
 }
 
 static void lexer_test_dot(void) {
