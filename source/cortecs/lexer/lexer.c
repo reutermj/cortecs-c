@@ -305,6 +305,14 @@ static cortecs_lexer_result_t lex_invalid(char *text, uint32_t start) {
 }
 
 cortecs_lexer_result_t cortecs_lexer_next(char *text, uint32_t start) {
+    if (text == NULL) {
+        cortecs_span_t span = {
+            .lines = 0,
+            .columns = 0,
+        };
+        return construct_result(CORTECS_LEXER_TAG_INVALID, "", start, start, span);
+    }
+
     char current_char = text[start];
     switch (current_char) {
         case 0: {
