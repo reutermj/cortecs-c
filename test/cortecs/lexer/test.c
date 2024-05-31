@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
 #include <time.h>
 #include <tokens.h>
 #include <unity.h>
@@ -249,11 +250,33 @@ static void lexer_test_tag_string(void) {
     assert_tag_equals("unknown", (cortecs_lexer_tag_t)-1);
 }
 
+static void lexer_test_random_input() {
+    // tests to ensure that all characters are covered
+    const uint32_t input_size = 10000;
+    char input[input_size + 1];
+    input[input_size] = 0;
+    for (int times = 0; times < 100; times++) {
+        for (uint32_t i = 0; i < input_size; i++) {
+            // ignore most of extended ascii because it's already
+            // exhaustively tested elsewhere and makes other tokens
+            // less likely to be hit
+            input[i] = (char)(rand() % 128 + 1);
+        }
+
+        uint32_t offset = 0;
+        while (input[offset]) {
+            cortecs_lexer_result_t result = cortecs_lexer_next(input, offset);
+            offset = result.start;
+        }
+    }
+}
+
 int main() {
     UNITY_BEGIN();
 
     RUN_TEST(cortecs_lexer_test_multi_token_fuzz);
 
+    RUN_TEST(lexer_test_random_input);
     RUN_TEST(lexer_test_open_paren);
     RUN_TEST(lexer_test_close_paren);
     RUN_TEST(lexer_test_open_curly);
