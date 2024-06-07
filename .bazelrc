@@ -1,1 +1,1 @@
-common --copt="-Wall" --copt="-Wextra"
+common --copt="-Wall" --copt="-Wextra" --cxxopt='-std=c++17'
