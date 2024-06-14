@@ -29,5 +29,6 @@ extern cortecs_lexer_test_config_t cortecs_lexer_test_operator_config;
 extern cortecs_lexer_test_config_t cortecs_lexer_test_comma_config;
 extern cortecs_lexer_test_config_t cortecs_lexer_test_colon_config;
 extern cortecs_lexer_test_config_t cortecs_lexer_test_semicolon_config;
+extern cortecs_lexer_test_config_t cortecs_lexer_test_dot_config;
 
 #endif

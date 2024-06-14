@@ -2,6 +2,7 @@
 #define CORTECS_LEXER_TOKENS_H
 
 #include <span.h>
+#include <unicode/uchar.h>
 
 typedef enum {
     CORTECS_LEXER_TAG_NAME,
@@ -44,7 +45,7 @@ typedef enum {
 typedef struct {
     cortecs_lexer_tag_t tag;
     cortecs_span_t span;
-    char *text;
+    UChar *text;
 } cortecs_lexer_token_t;
 
 const char *cortecs_lexer_tag_to_string(cortecs_lexer_tag_t tag);

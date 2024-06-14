@@ -4,12 +4,24 @@
 #include <lexer.h>
 #include <stdlib.h>
 #include <tokens.h>
+#include <unicode/urename.h>
+#include <unicode/utypes.h>
 #include <unity.h>
 
-uint32_t cortecs_lexer_test(char *input, uint32_t offset, char *gold, cortecs_lexer_tag_t tag) {
-    cortecs_lexer_result_t result = cortecs_lexer_next(input, offset);
+static bool compare_utext_to_string(const UChar *text, const char *keyword) {
+    for (uint32_t i = 0; keyword[i] != 0; i++) {
+        // ASCII characters are encoded with the same value in utf-32
+        if (text[i] != keyword[i]) {
+            return true;
+        }
+    }
 
-    int target_length = (int)strnlen(gold, 256);
+    return false;
+}
+
+void cortecs_lexer_test(UText *text, char *gold, cortecs_lexer_tag_t tag) {
+    cortecs_lexer_token_t out = cortecs_lexer_next(text);
+
     cortecs_span_t gold_span = {
         .lines = 0,
         .columns = 0,
@@ -29,34 +41,27 @@ uint32_t cortecs_lexer_test(char *input, uint32_t offset, char *gold, cortecs_le
         gold_span.columns++;
     }
 
-    if (offset + target_length != result.start) {
+    if (gold_span.lines != out.span.lines) {
         NOOP;
     }
-    TEST_ASSERT_EQUAL_INT32(offset + target_length, result.start);
+    TEST_ASSERT_EQUAL_INT32(gold_span.lines, out.span.lines);
 
-    if (gold_span.lines != result.token.span.lines) {
+    if (gold_span.columns != out.span.columns) {
         NOOP;
     }
-    TEST_ASSERT_EQUAL_INT32(gold_span.lines, result.token.span.lines);
+    TEST_ASSERT_EQUAL_INT32(gold_span.columns, out.span.columns);
 
-    if (gold_span.columns != result.token.span.columns) {
+    if (out.tag != tag) {
         NOOP;
     }
-    TEST_ASSERT_EQUAL_INT32(gold_span.columns, result.token.span.columns);
+    TEST_ASSERT_TRUE(out.tag == tag);
 
-    if (result.token.tag != tag) {
-        NOOP;
-    }
-    TEST_ASSERT_TRUE(result.token.tag == tag);
-
-    int isDifferent = strncmp(gold, result.token.text, strlen(gold));
+    int isDifferent = compare_utext_to_string(out.text, gold);
     if (isDifferent) {
         NOOP;
     }
     TEST_ASSERT_TRUE(!isDifferent);
-    free(result.token.text);
-
-    return result.start;
+    free(out.text);
 }
 
 void cortecs_lexer_test_fuzz(cortecs_lexer_test_config_t config) {
@@ -75,9 +80,10 @@ void cortecs_lexer_test_fuzz(cortecs_lexer_test_config_t config) {
     }
 
     for (uint32_t length = start_length; length < max_length; length++) {
-        for (uint32_t offset = 0; offset < 100; offset++) {
+        for (int64_t offset = 0; offset < 100; offset++) {
             for (int times = 0; times < 100; times++) {
-                char *input = calloc(offset + length + 1, sizeof(char));
+                int64_t input_length = offset + length + 1;
+                char *input = calloc(input_length, sizeof(char));
                 char *gold = calloc(length + 1, sizeof(char));
                 while (true) {
                     cortecs_lexer_test_state_t state = {
@@ -99,7 +105,13 @@ void cortecs_lexer_test_fuzz(cortecs_lexer_test_config_t config) {
                     break;
                 }
                 input[offset + length] = 0;
-                cortecs_lexer_test(input, offset, gold, config.tag);
+
+                // not initializing status to U_ZERO_ERROR here caused utext_openUTF8 to return NULL
+                UErrorCode status = U_ZERO_ERROR;
+                UText *text = utext_openUTF8(NULL, input, input_length, &status);
+                utext_setNativeIndex(text, offset);
+                cortecs_lexer_test(text, gold, config.tag);
+                utext_close(text);
                 free(input);
                 free(gold);
             }
@@ -177,12 +189,14 @@ void cortecs_lexer_test_fuzz_multi(cortecs_lexer_test_multi_config_t config) {
         }
     }
 
-    uint32_t start = 0;
+    UErrorCode status = U_ZERO_ERROR;
+    UText *text = utext_openUTF8(NULL, input, offset + 1, &status);
     for (int i = 0; i < num_cases; i++) {
         lexer_fuzz_case_t gold = cases[i];
-        start = cortecs_lexer_test(input, start, gold.gold, gold.tag);
+        cortecs_lexer_test(text, gold.gold, gold.tag);
         free(gold.gold);
     }
+    utext_close(text);
 
     free(input);
 }
@@ -204,11 +218,13 @@ void cortecs_lexer_test_exhaustive_two_token(cortecs_lexer_test_multi_config_t c
                 uint32_t second_length = lexer_test_fuzz_case(second_config, input, first_length, &cases[1]);
                 input[first_length + second_length] = 0;
 
-                uint32_t start = 0;
+                UErrorCode status = U_ZERO_ERROR;
+                UText *text = utext_openUTF8(NULL, input, first_length + second_length + 1, &status);
                 for (int i = 0; i < 2; i++) {
                     lexer_fuzz_case_t gold = cases[i];
-                    start = cortecs_lexer_test(input, start, gold.gold, gold.tag);
+                    cortecs_lexer_test(text, gold.gold, gold.tag);
                 }
+                utext_close(text);
                 free(cases[1].gold);
             }
             free(cases[0].gold);
@@ -232,7 +248,11 @@ static void lexer_test_exhaustive_run(cortecs_lexer_test_config_t config, cortec
 
         state.in[state.offset + index] = 0;
         state.gold[index] = 0;
-        cortecs_lexer_test(state.in, state.offset, state.gold, config.tag);
+        UErrorCode status = U_ZERO_ERROR;
+        UText *text = utext_openUTF8(NULL, state.in, state.offset + state.length + 1, &status);
+        utext_setNativeIndex(text, state.offset);
+        cortecs_lexer_test(text, state.gold, config.tag);
+        utext_close(text);
 
         return;
     }

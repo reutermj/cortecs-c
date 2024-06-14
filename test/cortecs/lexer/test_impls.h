@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <tokens.h>
+#include <unicode/utext.h>
 
 typedef struct {
     uint32_t state;
@@ -31,7 +32,7 @@ typedef struct {
     uint32_t num_configs;
 } cortecs_lexer_test_multi_config_t;
 
-uint32_t cortecs_lexer_test(char *input, uint32_t offset, char *gold, cortecs_lexer_tag_t tag);
+void cortecs_lexer_test(UText *text, char *gold, cortecs_lexer_tag_t tag);
 void cortecs_lexer_test_fuzz(cortecs_lexer_test_config_t config);
 void cortecs_lexer_test_fuzz_multi(cortecs_lexer_test_multi_config_t config);
 void cortecs_lexer_test_exhaustive(cortecs_lexer_test_config_t config);
