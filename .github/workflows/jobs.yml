@@ -15,16 +15,24 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       
-      - run: bazel build //source/... --aspects @bazel_clang_tidy//clang_tidy:clang_tidy.bzl%clang_tidy_aspect --output_groups=report --@bazel_clang_tidy//:clang_tidy_config=//source:clang_tidy_config
-      - run: bazel build //test/... --aspects @bazel_clang_tidy//clang_tidy:clang_tidy.bzl%clang_tidy_aspect --output_groups=report --@bazel_clang_tidy//:clang_tidy_config=//test:clang_tidy_config
+      # Make sure it builds under both clang and gcc
       - run: CC=clang bazel build //...
+      - run: CC=clang bazel run @hedron_compile_commands//:refresh_all # generates the compile_commands.json
+      - run: clang-tidy --config-file ./source/.clang-tidy -p ./ $(find source/. -name "*.c")
+      - run: clang-tidy --config-file ./test/.clang-tidy -p ./ $(find test/. -name "*.c")
+
+      # Currently only running coverage for tracking. 
+      # May eventually start failing CI if code isnt covered
       - run: CC=gcc bazel coverage --instrumentation_filter //source/... --combined_report=lcov //test/...
       - run: echo "COVERAGE_DAT=$(bazel info output_path)/_coverage/_coverage_report.dat" >> $GITHUB_ENV
-      - run: echo $COVERAGE_DAT
       - uses: codecov/codecov-action@v4
         with:
-          fail_ci_if_error: true # optional (default = false)
+          fail_ci_if_error: true
           files: ${{ env.COVERAGE_DAT }}
-          token: ${{ secrets.CODECOV_TOKEN }} # required
-          verbose: true # optional (default = false)
+          token: ${{ secrets.CODECOV_TOKEN }}
+          verbose: true
+          # coverage gets uploaded from the trunk merge staging branch
+          # override and say coverage is from main
           override_branch: main
+          # TODO coverage isnt reported for the right commits
+          # it uses the merge commit into the staging branch instead of the code change
