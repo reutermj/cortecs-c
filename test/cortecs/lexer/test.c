@@ -7,25 +7,27 @@
 #include <sys/types.h>
 #include <time.h>
 #include <tokens.h>
+#include <unicode/urename.h>
+#include <unicode/utypes.h>
 #include <unity.h>
 
 #include "test_configs.h"
 #include "test_impls.h"
 
 static void lexer_test_empty_input(void) {
-    cortecs_lexer_test("", 0, "", CORTECS_LEXER_TAG_INVALID);
-    cortecs_lexer_test("asdf", 4, "", CORTECS_LEXER_TAG_INVALID);
-    cortecs_lexer_test("asdf123", 7, "", CORTECS_LEXER_TAG_INVALID);
-    cortecs_lexer_test(NULL, 0, "", CORTECS_LEXER_TAG_INVALID);
-    cortecs_lexer_test(NULL, 4, "", CORTECS_LEXER_TAG_INVALID);
-    cortecs_lexer_test(NULL, 7, "", CORTECS_LEXER_TAG_INVALID);
-}
+    cortecs_lexer_test(NULL, "", CORTECS_LEXER_TAG_INVALID);
 
-static void lexer_test_dot(void) {
-    cortecs_lexer_test(".", 0, ".", CORTECS_LEXER_TAG_DOT);
-    cortecs_lexer_test("asdf .", 5, ".", CORTECS_LEXER_TAG_DOT);
-    cortecs_lexer_test(".asdf", 0, ".", CORTECS_LEXER_TAG_DOT);
-    cortecs_lexer_test("asdf .asdf", 5, ".", CORTECS_LEXER_TAG_DOT);
+    UErrorCode status = U_ZERO_ERROR;
+    UText *empty_text = utext_openUTF8(NULL, "", 0, &status);
+    cortecs_lexer_test(empty_text, "", CORTECS_LEXER_TAG_INVALID);
+    utext_close(empty_text);
+
+    UText *end_of_text = utext_openUTF8(NULL, "asdf123", 0, &status);
+    for (int i = 0; i < 7; i++) {
+        utext_next32(end_of_text);
+    }
+    cortecs_lexer_test(end_of_text, "", CORTECS_LEXER_TAG_INVALID);
+    utext_close(end_of_text);
 }
 
 static void lexer_test_float(void) {
@@ -134,6 +136,10 @@ static void lexer_test_colon(void) {
 
 static void lexer_test_semicolon(void) {
     cortecs_lexer_test_exhaustive(cortecs_lexer_test_semicolon_config);
+}
+
+static void lexer_test_dot(void) {
+    cortecs_lexer_test_exhaustive(cortecs_lexer_test_dot_config);
 }
 
 static void lexer_test_invalid(void) {
@@ -253,33 +259,13 @@ static void lexer_test_tag_string(void) {
     assert_tag_equals("unknown", (cortecs_lexer_tag_t)-1);
 }
 
-static void lexer_test_random_input() {
-    // tests to ensure that all characters are covered
-    const uint32_t input_size = 10000;
-    char input[input_size + 1];
-    input[input_size] = 0;
-    for (int times = 0; times < 100; times++) {
-        for (uint32_t i = 0; i < input_size; i++) {
-            // ignore most of extended ascii because it's already
-            // exhaustively tested elsewhere and makes other tokens
-            // less likely to be hit
-            input[i] = (char)(rand() % 128 + 1);
-        }
-
-        uint32_t offset = 0;
-        while (input[offset]) {
-            cortecs_lexer_result_t result = cortecs_lexer_next(input, offset);
-            offset = result.start;
-        }
-    }
-}
-
 int main() {
     UNITY_BEGIN();
 
-    RUN_TEST(cortecs_lexer_test_multi_token_fuzz);
+    RUN_TEST(lexer_test_tag_string);
 
-    RUN_TEST(lexer_test_random_input);
+    RUN_TEST(lexer_test_empty_input);
+
     RUN_TEST(lexer_test_open_paren);
     RUN_TEST(lexer_test_close_paren);
     RUN_TEST(lexer_test_open_curly);
@@ -291,32 +277,32 @@ int main() {
     RUN_TEST(lexer_test_double_quote);
     RUN_TEST(lexer_test_back_quote);
 
-    RUN_TEST(lexer_test_tag_string);
-    RUN_TEST(lexer_test_empty_input);
+    RUN_TEST(lexer_test_comma);
+    RUN_TEST(lexer_test_colon);
+    RUN_TEST(lexer_test_semicolon);
     RUN_TEST(lexer_test_dot);
 
-    RUN_TEST(lexer_test_space);
-    RUN_TEST(lexer_test_operator);
+    RUN_TEST(lexer_test_if);
+    RUN_TEST(lexer_test_let);
+    RUN_TEST(lexer_test_return);
+    RUN_TEST(lexer_test_function);
 
-    RUN_TEST(lexer_test_name);
-    RUN_TEST(lexer_test_type);
+    RUN_TEST(lexer_test_new_line);
+    RUN_TEST(lexer_test_space);
+
+    RUN_TEST(lexer_test_operator);
 
     RUN_TEST(lexer_test_int);
     RUN_TEST(lexer_test_bad_int);
     RUN_TEST(lexer_test_float);
     RUN_TEST(lexer_test_bad_float);
 
+    RUN_TEST(lexer_test_name);
+    RUN_TEST(lexer_test_type);
+
     RUN_TEST(lexer_test_invalid);
 
-    RUN_TEST(lexer_test_function);
-    RUN_TEST(lexer_test_let);
-    RUN_TEST(lexer_test_return);
-    RUN_TEST(lexer_test_if);
-    RUN_TEST(lexer_test_new_line);
-
-    RUN_TEST(lexer_test_comma);
-    RUN_TEST(lexer_test_colon);
-    RUN_TEST(lexer_test_semicolon);
+    RUN_TEST(cortecs_lexer_test_multi_token_fuzz);
 
     return UNITY_END();
 }

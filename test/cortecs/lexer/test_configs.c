@@ -535,28 +535,23 @@ cortecs_lexer_test_config_t cortecs_lexer_test_bad_int_config = {
     .max_length = 0xFFFFFFFF,
 };
 
+static const char invalid_chars[] = {
+    (char)1, (char)2, (char)3, (char)4, (char)5, (char)6, (char)7, (char)8,
+    (char)14, (char)15, (char)16, (char)17, (char)18, (char)19, (char)20, (char)21, (char)22,
+    (char)23, (char)24, (char)25, (char)26, (char)27, (char)28, (char)29, (char)30, (char)31};
+#define NUM_INVALID_CHARS (sizeof(invalid_chars) / sizeof(char))
+
 static uint32_t lexer_test_invalid_max_entropy(uint32_t state) {
     UNUSED(state);
-    return 154;
+    return NUM_INVALID_CHARS;
 }
 
 static cortecs_lexer_test_result_t lexer_test_invalid_next(cortecs_lexer_test_state_t state, uint32_t entropy) {
     entropy = entropy % lexer_test_invalid_max_entropy(state.state);
     cortecs_lexer_test_result_t result = {
+        .next_char = invalid_chars[entropy],
         .next_state = 0,
     };
-
-    static const char invalid_chars[] = {
-        (char)1, (char)2, (char)3, (char)4, (char)5, (char)6, (char)7, (char)8,
-        (char)14, (char)15, (char)16, (char)17, (char)18, (char)19, (char)20, (char)21, (char)22,
-        (char)23, (char)24, (char)25, (char)26, (char)27, (char)28, (char)29, (char)30, (char)31};
-
-    const uint32_t invalid_chars_length = sizeof(invalid_chars) / sizeof(char);
-    if (entropy < invalid_chars_length) {
-        result.next_char = invalid_chars[entropy];
-    } else {
-        result.next_char = (char)((entropy - invalid_chars_length) + 127);
-    }
 
     return result;
 }
@@ -967,6 +962,28 @@ cortecs_lexer_test_config_t cortecs_lexer_test_semicolon_config = {
     .should_skip_token = &cortecs_lexer_test_never_skip,
     .state_max_entropy = &lexer_test_semicolon_max_entropy,
     .tag = CORTECS_LEXER_TAG_SEMICOLON,
+    .min_length = 1,
+    .max_length = 1,
+};
+
+static uint32_t lexer_test_dot_max_entropy(uint32_t state) {
+    UNUSED(state);
+    return 1;
+}
+
+static cortecs_lexer_test_result_t lexer_test_dot_next(cortecs_lexer_test_state_t state, uint32_t entropy) {
+    UNUSED(state);
+    UNUSED(entropy);
+    return (cortecs_lexer_test_result_t){
+        .next_char = '.',
+    };
+}
+
+cortecs_lexer_test_config_t cortecs_lexer_test_dot_config = {
+    .next = &lexer_test_dot_next,
+    .should_skip_token = &cortecs_lexer_test_never_skip,
+    .state_max_entropy = &lexer_test_dot_max_entropy,
+    .tag = CORTECS_LEXER_TAG_DOT,
     .min_length = 1,
     .max_length = 1,
 };
