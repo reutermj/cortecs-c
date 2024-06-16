@@ -16,13 +16,23 @@
 typedef struct {
     UText *text;
     int64_t start;
-    int32_t u16_length;
+    int32_t u8_length;
+    int32_t num_codepoints;
     cortecs_span_t span;
 } lexer_state_t;
 
-static void accumulate_codepoint(lexer_state_t *state, UChar32 codepoint) {
+static UChar32 current_codepoint(lexer_state_t *state) {
+    return utext_current32(state->text);
+}
+
+static void next_codepoint(lexer_state_t *state) {
     utext_next32(state->text);
-    state->u16_length += U16_LENGTH(codepoint);
+}
+
+static void accumulate_codepoint(lexer_state_t *state, UChar32 codepoint) {
+    next_codepoint(state);
+    state->u8_length += U8_LENGTH(codepoint);
+    state->num_codepoints++;
 
     // characters that take multiple code points seem to have a span that
     // based on number of codepointers and not a single character
@@ -30,27 +40,23 @@ static void accumulate_codepoint(lexer_state_t *state, UChar32 codepoint) {
     state->span.columns++;
 }
 
-static UChar32 current_codepoint(lexer_state_t *state) {
-    return utext_current32(state->text);
-}
-
 static cortecs_lexer_token_t construct_result(cortecs_lexer_tag_t tag, lexer_state_t *state) {
-    // size of the u16 encoding of the substring + null terminator
-    int32_t token_length = state->u16_length + 1;
-    UChar *token = calloc(token_length, sizeof(UChar));
-    int64_t end = utext_getNativeIndex(state->text);
+    // allocate a buffer for the utf-8 encoding of the token + null terminator
+    uint8_t *text = calloc(state->u8_length + 1, sizeof(uint8_t));
 
-    // You must initialize the status because the call to utext_extract
-    // wont set it when there are no errors. In other places, failing to
-    // initialize status caused api calls to fail. Always initialize status.
-    UErrorCode status = U_ZERO_ERROR;
-    utext_extract(state->text, state->start, end, token, token_length, &status);
-    assert(status == U_ZERO_ERROR);
+    // reset the UText to the start of this token and copy it into the buffer
+    utext_setNativeIndex(state->text, state->start);
+    int32_t next_offset = 0;
+    for (int i = 0; i < state->num_codepoints; i++) {
+        UChar32 codepoint = current_codepoint(state);
+        U8_APPEND_UNSAFE(text, next_offset, codepoint);
+        next_codepoint(state);
+    }
 
     return (cortecs_lexer_token_t){
         .tag = tag,
         .span = state->span,
-        .text = token,
+        .text = text,
     };
 }
 
@@ -179,11 +185,11 @@ static cortecs_lexer_token_t lex_int(lexer_state_t *state) {
 
 // All ASCII characters are represented with the same numerical value
 // in UTF-16 just with twice the space usage.
-#define U16_LENGTH_OF_ASCII(kw) (sizeof(kw) - 1)
-#define U16_IF_LENGTH U16_LENGTH_OF_ASCII("if")
-#define U16_LET_LENGTH U16_LENGTH_OF_ASCII("let")
-#define U16_RETURN_LENGTH U16_LENGTH_OF_ASCII("return")
-#define U16_FUNCTION_LENGTH U16_LENGTH_OF_ASCII("function")
+#define U8_LENGTH_OF_ASCII(kw) (sizeof(kw) - 1)
+#define U8_IF_LENGTH U8_LENGTH_OF_ASCII("if")
+#define U8_LET_LENGTH U8_LENGTH_OF_ASCII("let")
+#define U8_RETURN_LENGTH U8_LENGTH_OF_ASCII("return")
+#define U8_FUNCTION_LENGTH U8_LENGTH_OF_ASCII("function")
 
 static bool check_keyword(lexer_state_t *state, const char *keyword) {
     int64_t end = utext_getNativeIndex(state->text);
@@ -214,16 +220,16 @@ static bool is_first_codepoint_upper(lexer_state_t *state) {
 }
 
 static cortecs_lexer_tag_t get_name_tag(lexer_state_t *state) {
-    if (state->u16_length == U16_IF_LENGTH && check_keyword(state, "if")) {
+    if (state->u8_length == U8_IF_LENGTH && check_keyword(state, "if")) {
         return CORTECS_LEXER_TAG_IF;
     }
-    if (state->u16_length == U16_LET_LENGTH && check_keyword(state, "let")) {
+    if (state->u8_length == U8_LET_LENGTH && check_keyword(state, "let")) {
         return CORTECS_LEXER_TAG_LET;
     }
-    if (state->u16_length == U16_RETURN_LENGTH && check_keyword(state, "return")) {
+    if (state->u8_length == U8_RETURN_LENGTH && check_keyword(state, "return")) {
         return CORTECS_LEXER_TAG_RETURN;
     }
-    if (state->u16_length == U16_FUNCTION_LENGTH && check_keyword(state, "function")) {
+    if (state->u8_length == U8_FUNCTION_LENGTH && check_keyword(state, "function")) {
         return CORTECS_LEXER_TAG_FUNCTION;
     }
     if (is_first_codepoint_upper(state)) {
@@ -348,7 +354,8 @@ cortecs_lexer_token_t cortecs_lexer_next(UText *text) {
     lexer_state_t state = {
         .text = text,
         .start = utext_getNativeIndex(text),
-        .u16_length = 0,
+        .u8_length = 0,
+        .num_codepoints = 0,
         .span = {
             .lines = 0,
             .columns = 0,

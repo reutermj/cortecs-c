@@ -8,17 +8,6 @@
 #include <unicode/utypes.h>
 #include <unity.h>
 
-static bool compare_utext_to_string(const UChar *text, const char *keyword) {
-    for (uint32_t i = 0; keyword[i] != 0; i++) {
-        // ASCII characters are encoded with the same value in utf-32
-        if (text[i] != keyword[i]) {
-            return true;
-        }
-    }
-
-    return false;
-}
-
 void cortecs_lexer_test(UText *text, char *gold, cortecs_lexer_tag_t tag) {
     cortecs_lexer_token_t out = cortecs_lexer_next(text);
 
@@ -56,7 +45,7 @@ void cortecs_lexer_test(UText *text, char *gold, cortecs_lexer_tag_t tag) {
     }
     TEST_ASSERT_TRUE(out.tag == tag);
 
-    int isDifferent = compare_utext_to_string(out.text, gold);
+    int isDifferent = strncmp(gold, (const char *)out.text, strlen(gold));
     if (isDifferent) {
         NOOP;
     }
