@@ -1,5 +1,5 @@
-#ifndef PERSISTENT_STRING_H
-#define PERSISTENT_STRING_H
+#ifndef COMMON_PERSISTENT_STRING_H
+#define COMMON_PERSISTENT_STRING_H
 
 #include <inttypes.h>
 #include <stdbool.h>
