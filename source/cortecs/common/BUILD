@@ -10,5 +10,8 @@ cc_library(
         "//source/cortecs:__subpackages__",
         "//test/cortecs:__subpackages__",
     ],
-    deps = ["@flecs"],
+    deps = [
+        "//source/common",
+        "@flecs",
+    ],
 )

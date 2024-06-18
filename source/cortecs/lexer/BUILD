@@ -11,6 +11,7 @@ cc_library(
         "//test/cortecs:__subpackages__",
     ],
     deps = [
+        "//source/common",
         "//source/cortecs/common",
         "//third-party/icu4c/common:errorcode",
         "//third-party/icu4c/common:headers",

@@ -33,3 +33,26 @@ cortecs_span_t cortecs_span_add(cortecs_span_t left, cortecs_span_t right) {
         .columns = left.columns + right.columns,
     };
 }
+
+cortecs_span_t cortecs_span_of(string_t text) {
+    cortecs_span_t out = {
+        .lines = 0,
+        .columns = 0,
+    };
+    for (uint32_t i = 0; i < text.length; i++) {
+        uint8_t current_char = text.content[i];
+        if (current_char == 0) {
+            break;
+        }
+
+        if (current_char == '\n') {
+            out.columns = 0;
+            out.lines++;
+            continue;
+        }
+
+        out.columns++;
+    }
+
+    return out;
+}
