@@ -42,21 +42,24 @@ static void accumulate_codepoint(lexer_state_t *state, UChar32 codepoint) {
 
 static cortecs_lexer_token_t construct_result(cortecs_lexer_tag_t tag, lexer_state_t *state) {
     // allocate a buffer for the utf-8 encoding of the token + null terminator
-    uint8_t *text = calloc(state->u8_length + 1, sizeof(uint8_t));
+    uint8_t *content = calloc(state->u8_length + 1, sizeof(uint8_t));
 
     // reset the UText to the start of this token and copy it into the buffer
     utext_setNativeIndex(state->text, state->start);
     int32_t next_offset = 0;
     for (int i = 0; i < state->num_codepoints; i++) {
         UChar32 codepoint = current_codepoint(state);
-        U8_APPEND_UNSAFE(text, next_offset, codepoint);
+        U8_APPEND_UNSAFE(content, next_offset, codepoint);
         next_codepoint(state);
     }
 
     return (cortecs_lexer_token_t){
         .tag = tag,
         .span = state->span,
-        .text = text,
+        .text = (string_t){
+            .content = content,
+            .length = state->u8_length,
+        },
     };
 }
 
@@ -343,7 +346,10 @@ cortecs_lexer_token_t cortecs_lexer_next(UText *text) {
     if (text == NULL) {
         return (cortecs_lexer_token_t){
             .tag = CORTECS_LEXER_TAG_INVALID,
-            .text = NULL,
+            .text = (string_t){
+                .content = NULL,
+                .length = 0,
+            },
             .span = {
                 .lines = 0,
                 .columns = 0,
@@ -366,7 +372,10 @@ cortecs_lexer_token_t cortecs_lexer_next(UText *text) {
     if (codepoint == U_SENTINEL) {
         return (cortecs_lexer_token_t){
             .tag = CORTECS_LEXER_TAG_INVALID,
-            .text = NULL,
+            .text = (string_t){
+                .content = NULL,
+                .length = 0,
+            },
             .span = {
                 .lines = 0,
                 .columns = 0,

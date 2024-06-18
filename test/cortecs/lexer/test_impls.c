@@ -2,6 +2,7 @@
 
 #include <common.h>
 #include <lexer.h>
+#include <persistent_string.h>
 #include <stdlib.h>
 #include <tokens.h>
 #include <unicode/urename.h>
@@ -11,24 +12,12 @@
 void cortecs_lexer_test(UText *text, char *gold, cortecs_lexer_tag_t tag) {
     cortecs_lexer_token_t out = cortecs_lexer_next(text);
 
-    cortecs_span_t gold_span = {
-        .lines = 0,
-        .columns = 0,
+    string_t gold_text = {
+        .length = strlen(gold),
+        .content = (uint8_t *)gold,
     };
-    for (uint32_t i = 0;; i++) {
-        char current_char = gold[i];
-        if (current_char == 0) {
-            break;
-        }
 
-        if (current_char == '\n') {
-            gold_span.columns = 0;
-            gold_span.lines = 1;
-            break;
-        }
-
-        gold_span.columns++;
-    }
+    cortecs_span_t gold_span = cortecs_span_of(gold_text);
 
     if (gold_span.lines != out.span.lines) {
         NOOP;
@@ -45,12 +34,12 @@ void cortecs_lexer_test(UText *text, char *gold, cortecs_lexer_tag_t tag) {
     }
     TEST_ASSERT_TRUE(out.tag == tag);
 
-    int isDifferent = strncmp(gold, (const char *)out.text, strlen(gold));
-    if (isDifferent) {
+    int areEqual = string_equals(gold_text, out.text);
+    if (!areEqual) {
         NOOP;
     }
-    TEST_ASSERT_TRUE(!isDifferent);
-    free(out.text);
+    TEST_ASSERT_TRUE(areEqual);
+    string_cleanup(out.text);
 }
 
 void cortecs_lexer_test_fuzz(cortecs_lexer_test_config_t config) {
