@@ -267,8 +267,6 @@ def print_fields(fields, num_tabs, prefix):
                 print((tab * (num_tabs + 1)) + "} value;")
                 print((tab * num_tabs) + "} " + name + ";")
 
-            
-
 interface = parse_interface(token_stream)
 print("typedef struct {")
 if interface.parent is not None:

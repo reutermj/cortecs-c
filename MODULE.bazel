@@ -36,6 +36,22 @@ cc_library(
 """,
 )
 
+git_repository(
+    name = "cJSON",
+    remote = "https://github.com/DaveGamble/cJSON.git",
+    branch = "master",
+    build_file_content = """
+cc_library(
+    name = "cJSON",
+    srcs = ["cJSON.c"],
+    hdrs = ["cJSON.h"],
+    features = ["treat_warnings_as_errors"],
+    includes = ["."],
+    visibility = ["//visibility:public"],
+)
+""",
+)
+
 # Hedron's Compile Commands Extractor for Bazel
 # https://github.com/hedronvision/bazel-compile-commands-extractor
 # Usage:

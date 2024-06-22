@@ -4,6 +4,17 @@
 #include <persistent_string.h>
 #include <stdbool.h>
 
+#define LSP_ERROR_MESSAGE_MAX_SIZE (sizeof(char) * 256)
+
+typedef struct {
+    enum {
+        LSP_PARSE_SUCCESS,
+        LSP_PARSE_MISSING_REQUIRED_FIELD,
+        LSP_PARSE_TYPE_ERROR,
+    } tag;
+    char *message;
+} lsp_parse_error_t;
+
 typedef struct {
     enum {
         LSP_ANY_STRING,

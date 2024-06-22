@@ -7,5 +7,8 @@ cc_library(
     features = ["treat_warnings_as_errors"],
     includes = ["./"],
     visibility = ["//:__subpackages__"],
-    deps = ["//source/common"],
+    deps = [
+        "//source/common",
+        "@cJSON",
+    ],
 )
