@@ -48,13 +48,15 @@ static lsp_parse_error_t accept_string(const cJSON *field, bool is_optional, str
         }
 
         char *error_message = malloc(LSP_ERROR_MESSAGE_MAX_SIZE);
+        char *field_str = cJSON_Print(field);
         snprintf(
             error_message,
             LSP_ERROR_MESSAGE_MAX_SIZE,
             "%s expected to be string, found %s",
             field->string,
-            cJSON_Print(field)
+            field_str
         );
+        free(field_str);
 
         return (lsp_parse_error_t){
             .tag = LSP_PARSE_TYPE_ERROR,
