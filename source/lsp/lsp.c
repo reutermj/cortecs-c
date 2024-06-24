@@ -1,13 +1,21 @@
 #include "lsp.h"
 
 #include <cJSON.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-static lsp_parse_error_t expect_string(cJSON *json, const char *field_name, string_t *out) {
+static lsp_parse_error_t find_field(cJSON *json, const char *field_name, bool is_optional, const cJSON **out) {
     const cJSON *field = cJSON_GetObjectItemCaseSensitive(json, field_name);
     if (field == NULL) {
+        if (is_optional) {
+            return (lsp_parse_error_t){
+                .tag = LSP_PARSE_SUCCESS_NOT_FOUND,
+                .message = NULL,
+            };
+        }
+
         char *error_message = malloc(LSP_ERROR_MESSAGE_MAX_SIZE);
         snprintf(
             error_message,
@@ -22,13 +30,29 @@ static lsp_parse_error_t expect_string(cJSON *json, const char *field_name, stri
         };
     }
 
+    *out = field;
+
+    return (lsp_parse_error_t){
+        .tag = LSP_PARSE_SUCCESS,
+        .message = NULL,
+    };
+}
+
+static lsp_parse_error_t accept_string(const cJSON *field, bool is_optional, string_t *out) {
     if (!cJSON_IsString(field) || field->valuestring == NULL) {
+        if (is_optional) {
+            return (lsp_parse_error_t){
+                .tag = LSP_PARSE_SUCCESS_NOT_FOUND,
+                .message = NULL,
+            };
+        }
+
         char *error_message = malloc(LSP_ERROR_MESSAGE_MAX_SIZE);
         snprintf(
             error_message,
             LSP_ERROR_MESSAGE_MAX_SIZE,
             "%s expected to be string, found %s",
-            field_name,
+            field->string,
             cJSON_Print(field)
         );
 
@@ -52,8 +76,13 @@ static lsp_parse_error_t expect_string(cJSON *json, const char *field_name, stri
 
 lsp_parse_error_t parse_lsp_message(cJSON *json, lsp_message *message) {
     lsp_parse_error_t error_message;
+    const cJSON *jsonrpc_field;
+    error_message = find_field(json, "jsonrpc", false, &jsonrpc_field);
+    if (error_message.tag != LSP_PARSE_SUCCESS) {
+        return error_message;
+    }
 
-    error_message = expect_string(json, "jsonrpc", &message->jsonrpc);
+    error_message = accept_string(json, false, &message->jsonrpc);
     if (error_message.tag != LSP_PARSE_SUCCESS) {
         return error_message;
     }
