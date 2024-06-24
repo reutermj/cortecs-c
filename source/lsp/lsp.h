@@ -9,6 +9,7 @@
 typedef struct {
     enum {
         LSP_PARSE_SUCCESS,
+        LSP_PARSE_SUCCESS_NOT_FOUND,
         LSP_PARSE_MISSING_REQUIRED_FIELD,
         LSP_PARSE_TYPE_ERROR,
     } tag;
