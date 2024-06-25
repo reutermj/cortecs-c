@@ -16,13 +16,28 @@ typedef struct {
     char *message;
 } lsp_parse_error_t;
 
+typedef struct lsp_any lsp_any;
+
 typedef struct {
+    uint32_t num_fields;
+    string_t *field_names;
+    lsp_any *field_values;
+} lsp_object;
+
+typedef struct {
+    uint32_t length;
+    lsp_any *content;
+} lsp_array;
+
+struct lsp_any {
     enum {
         LSP_ANY_STRING,
         LSP_ANY_INTEGER,
         LSP_ANY_UINTEGER,
         LSP_ANY_DECIMAL,
         LSP_ANY_BOOLEAN,
+        LSP_ANY_OBJECT,
+        LSP_ANY_ARRAY,
         LSP_ANY_NULL,
     } tag;
 
@@ -32,13 +47,10 @@ typedef struct {
         uint32_t uinteger;
         float decimal;
         bool boolean;
+        lsp_object object;
+        lsp_array array;
     } value;
-} lsp_any;
-
-typedef struct {
-    uint32_t length;
-    lsp_any *content;
-} lsp_array;
+};
 
 typedef struct {
     string_t jsonrpc;
@@ -47,38 +59,24 @@ typedef struct {
 typedef struct {
     lsp_message super;
     /**
-     * The request id.
-     */
-    struct {
-        enum {
-            LSP_REQUEST_MESSAGE_INTEGER,
-            LSP_REQUEST_MESSAGE_STRING,
-        } tag;
-        union {
-            int32_t integer;
-            string_t string;
-        } value;
-    } id;
-
-    /**
      * The method to be invoked.
      */
     string_t method;
 
     /**
-     * The method's params.
+     * The notification's params.
      */
     struct {
         bool is_set;
         enum {
-            LSP_REQUEST_MESSAGE_ARRAY,
-            LSP_REQUEST_MESSAGE_OBJECT,
+            LSP_NOTIFICATION_MESSAGE_PARAMS_ARRAY,
+            LSP_NOTIFICATION_MESSAGE_PARAMS_OBJECT,
         } tag;
         union {
             lsp_array array;
-            lsp_any object;
+            lsp_object object;
         } value;
     } params;
-} lsp_request_message;
+} lsp_notification_message;
 
 #endif
