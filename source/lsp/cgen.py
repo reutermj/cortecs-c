@@ -123,7 +123,7 @@ def get_type(token_stream):
     elif type_token == "null":
         cname = "null"
     elif type_token == "object":
-        cname = "lsp_any"
+        cname = "lsp_object"
     elif type_token == "array":
         cname = "lsp_array"
     elif type_token.startswith("LSP"):
@@ -293,7 +293,7 @@ def print_parser(fields, num_tabs, prefix):
             case FieldSingle(comment, name, is_optional, is_nullable, annotation):
                 field_name = name + "_field"
                 print((tab * num_tabs) + "const cJSON *" + field_name + ";")
-                print((tab * num_tabs) + "error_message = get_field(json, \"" + name + "\", " + str(is_optional).lower() + ", &" + field_name + ");")
+                print((tab * num_tabs) + "error_message = find_field(json, \"" + name + "\", " + str(is_optional).lower() + ", &" + field_name + ");")
                 if is_optional:
                     print((tab * num_tabs) + "if (error_message.tag == LSP_PARSE_SUCCESS_NOT_FOUND) {")
                     print((tab * (num_tabs + 1)) + "message->" + name + ".is_set = false;")
@@ -319,9 +319,10 @@ def print_parser(fields, num_tabs, prefix):
                     print((tab * num_tabs) + "end_of_" + name + ":")
                 print()
             case FieldUnion(comment, name, is_optional, is_nullable, annotations):
+                prefix_name = prefix.upper() + "_" + name.upper()
                 field_name = name + "_field"
                 print((tab * num_tabs) + "const cJSON *" + field_name + ";")
-                print((tab * num_tabs) + "error_message = get_field(json, \"" + name + "\", " + str(is_optional).lower() + ", &" + field_name + ");")
+                print((tab * num_tabs) + "error_message = find_field(json, \"" + name + "\", " + str(is_optional).lower() + ", &" + field_name + ");")
                 if is_optional:
                     print((tab * num_tabs) + "if (error_message.tag == LSP_PARSE_SUCCESS_NOT_FOUND) {")
                     print((tab * (num_tabs + 1)) + "message->" + name + ".is_set = false;")
@@ -336,9 +337,9 @@ def print_parser(fields, num_tabs, prefix):
                     print((tab * num_tabs) + "}")
                 
                 for annotation in annotations:
-                    print((tab * num_tabs) + "error_message = accept_" + annotation.name + "(" + field_name + ", false, &message->" + name + ");")
+                    print((tab * num_tabs) + "error_message = accept_" + annotation.name + "(" + field_name + ", false, &message->" + name + ".value." + annotation.name + ");")
                     print((tab * num_tabs) + "if(error_message.tag == LSP_PARSE_SUCCESS) {")
-                    print((tab * (num_tabs + 2)) + "message->" + name + ".tag = " + prefix.upper() + "_" + annotation.name.upper() + ";")
+                    print((tab * (num_tabs + 2)) + "message->" + name + ".tag = " + prefix_name + "_" + annotation.name.upper() + ";")
                     print((tab * (num_tabs + 2)) + "goto end_of_" + name + ";")
                     print((tab * num_tabs) + "}")
                 print((tab * num_tabs) + "return error_message;")
@@ -348,6 +349,9 @@ def print_parser(fields, num_tabs, prefix):
 
 print("lsp_parse_error_t parse_" + interface.name + "(cJSON *json, " + interface.name + " *message) {")
 print(tab + "lsp_parse_error_t error_message;")
+print()
+print(tab + "parse_" + interface.parent + "(json, &message->super);")
+print()
 print_parser(interface.fields, 1, interface.name)
 print(tab + "return (lsp_parse_error_t){")
 print((tab * 2) + ".tag = LSP_PARSE_SUCCESS,")
