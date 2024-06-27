@@ -4,21 +4,22 @@
 #include <string.h>
 #include <unity.h>
 
-static string_t load_string(const char *text) {
-    uint32_t length = strlen(text);
-    uint8_t *u8_text = malloc(sizeof(uint8_t) * (length + 1));
-    memcpy(u8_text, text, length);
-    u8_text[length] = 0;
+static void run_test_copy_cstring(const char *target) {
+    uint32_t target_length = strlen(target);
+    string_t out = string_copy_cstring(target);
+    TEST_ASSERT_EQUAL_UINT32(target_length, out.length);
+    TEST_ASSERT_EQUAL_MEMORY(target, out.content, target_length + 1);  // + 1 for the null terminator
+    string_cleanup(out);
+}
 
-    return (string_t){
-        .content = u8_text,
-        .length = length,
-    };
+static void test_copy_cstring(void) {
+    run_test_copy_cstring("");
+    run_test_copy_cstring("hello world");
 }
 
 static void test_equality(const char *left, const char *right, bool areEqual) {
-    string_t left_str = load_string(left);
-    string_t right_str = load_string(right);
+    string_t left_str = string_copy_cstring(left);
+    string_t right_str = string_copy_cstring(right);
 
     TEST_ASSERT_TRUE(string_equals(left_str, right_str) == areEqual);
 
@@ -41,6 +42,7 @@ static void test_null_cleanup(void) {
 
 int main() {
     UNITY_BEGIN();
+    RUN_TEST(test_copy_cstring);
     RUN_TEST(test_string_equals);
     RUN_TEST(test_null_cleanup);
     return UNITY_END();
