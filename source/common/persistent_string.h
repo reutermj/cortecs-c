@@ -10,6 +10,7 @@ typedef struct {
 } string_t;
 
 bool string_equals(string_t left, string_t right);
+string_t string_copy_cstring(const char *target);
 void string_cleanup(string_t target);
 
 #endif
