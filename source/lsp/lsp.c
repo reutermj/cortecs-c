@@ -17,7 +17,7 @@
 
 static lsp_any accept_any(const cJSON *field);
 
-static lsp_parse_error_t find_field(cJSON *json, const char *field_name, bool is_optional, const cJSON **out) {
+static lsp_parse_error_t find_field(const cJSON *json, const char *field_name, bool is_optional, const cJSON **out) {
     const cJSON *field = cJSON_GetObjectItemCaseSensitive(json, field_name);
     if (field == NULL) {
         if (is_optional) {
@@ -97,21 +97,7 @@ static bool is_object(const cJSON *field) {
 //         return LSP_SUCCESS;
 //     }
 
-//     char *error_message = malloc(LSP_ERROR_MESSAGE_MAX_SIZE);
-//     char *field_str = cJSON_Print(field);
-//     snprintf(
-//         error_message,
-//         LSP_ERROR_MESSAGE_MAX_SIZE,
-//         "%s expected to be object, found %s",
-//         field->string,
-//         field_str
-//     );
-//     free(field_str);
-
-//     return (lsp_parse_error_t){
-//         .tag = LSP_PARSE_TYPE_ERROR,
-//         .message = error_message,
-//     };
+//     return incorrect_type_message(field, "object");
 // }
 
 static lsp_object accept_object(const cJSON *field) {
@@ -169,21 +155,7 @@ static bool is_array(const cJSON *field) {
 //         return LSP_SUCCESS;
 //     }
 
-//     char *error_message = malloc(LSP_ERROR_MESSAGE_MAX_SIZE);
-//     char *field_str = cJSON_Print(field);
-//     snprintf(
-//         error_message,
-//         LSP_ERROR_MESSAGE_MAX_SIZE,
-//         "%s expected to be array, found %s",
-//         field->string,
-//         field_str
-//     );
-//     free(field_str);
-
-//     return (lsp_parse_error_t){
-//         .tag = LSP_PARSE_TYPE_ERROR,
-//         .message = error_message,
-//     };
+//     return incorrect_type_message(field, "array");
 // }
 
 static lsp_array accept_array(const cJSON *field) {
@@ -247,27 +219,24 @@ static lsp_any accept_any(const cJSON *field) {
     assert(false);
 }
 
-lsp_parse_error_t parse_lsp_message(cJSON *json, lsp_message *message) {
+lsp_parse_error_t parse_lsp_message(const cJSON *json, lsp_message *message) {
     lsp_parse_error_t error_message;
+
     const cJSON *jsonrpc_field;
     error_message = find_field(json, "jsonrpc", false, &jsonrpc_field);
     if (error_message.tag != LSP_PARSE_SUCCESS) {
         return error_message;
     }
-
-    error_message = expect_string(json);
+    error_message = expect_string(jsonrpc_field);
     if (error_message.tag != LSP_PARSE_SUCCESS) {
         return error_message;
     }
-    message->jsonrpc = accept_string(json);
+    message->jsonrpc = accept_string(jsonrpc_field);
 
-    return (lsp_parse_error_t){
-        .tag = LSP_PARSE_SUCCESS,
-        .message = NULL,
-    };
+    return LSP_SUCCESS;
 }
 
-lsp_parse_error_t parse_lsp_notification_message(cJSON *json, lsp_notification_message *message) {
+lsp_parse_error_t parse_lsp_notification_message(const cJSON *json, lsp_notification_message *message) {
     lsp_parse_error_t error_message;
 
     error_message = parse_lsp_message(json, &message->super);
@@ -308,8 +277,5 @@ lsp_parse_error_t parse_lsp_notification_message(cJSON *json, lsp_notification_m
     return incorrect_type_message(params_field, "array or object");
 end_of_params:
 
-    return (lsp_parse_error_t){
-        .tag = LSP_PARSE_SUCCESS,
-        .message = NULL,
-    };
+    return LSP_SUCCESS;
 }

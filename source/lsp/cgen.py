@@ -292,69 +292,83 @@ def print_parser(fields, num_tabs, prefix):
         match field:
             case FieldSingle(comment, name, is_optional, is_nullable, annotation):
                 field_name = name + "_field"
-                print((tab * num_tabs) + "const cJSON *" + field_name + ";")
-                print((tab * num_tabs) + "error_message = find_field(json, \"" + name + "\", " + str(is_optional).lower() + ", &" + field_name + ");")
+                print("const cJSON *{};".format(field_name))
+                print("error_message = find_field(json, \"{name}\", {is_optional}, &{field_name});".format(name=name, is_optional=str(is_optional).lower(), field_name = field_name))
                 if is_optional:
-                    print((tab * num_tabs) + "if (error_message.tag == LSP_PARSE_SUCCESS_NOT_FOUND) {")
-                    print((tab * (num_tabs + 1)) + "message->" + name + ".is_set = false;")
-                    print((tab * (num_tabs + 1)) + "goto end_of_" + name + ";")
-                    print((tab * num_tabs) + "} else if (error_message.tag != LSP_PARSE_SUCCESS) {")
-                    print((tab * (num_tabs + 1)) + "return error_message;")
-                    print((tab * num_tabs) + "}")
-                    print((tab * num_tabs) + "message->" + name + ".is_set = true;")
-                else:
-                    print((tab * num_tabs) + "if (error_message.tag != LSP_PARSE_SUCCESS) {")
-                    print((tab * (num_tabs + 1)) + "return error_message;")
-                    print((tab * num_tabs) + "}")
-
-                if is_optional:
+                    print("if (error_message.tag == LSP_PARSE_SUCCESS_NOT_FOUND) {")
+                    print("  message->" + name + ".is_set = false;")
+                    print("  goto end_of_" + name + ";")
+                    print("} else if (error_message.tag != LSP_PARSE_SUCCESS) {")
+                    print("  return error_message;")
+                    print("}")
+                    print("message->{name}.is_set = true;".format(name=name))
                     struct_field_name = name + ".value"
                 else:
+                    print("if (error_message.tag != LSP_PARSE_SUCCESS) {")
+                    print("  return error_message;")
+                    print("}")
+                    
                     struct_field_name = name
-                print((tab * num_tabs) + "error_message = accept_" + annotation.name + "(" + field_name + ", false, &message->" + struct_field_name + ");")
-                print((tab * num_tabs) + "if (error_message.tag != LSP_PARSE_SUCCESS) {")
-                print((tab * (num_tabs + 1)) + "return error_message;")
-                print((tab * num_tabs) + "}")
+
+                print("error_message = expect_string({});".format(field_name))
+                print("if (error_message.tag != LSP_PARSE_SUCCESS) {")
+                print("  return error_message;")
+                print("}")
+                print("message->{struct_field_name} = accept_string({field_name});".format(struct_field_name=struct_field_name, field_name=field_name))
+
                 if is_optional:
-                    print((tab * num_tabs) + "end_of_" + name + ":")
+                    print("end_of_{name}:".format(name=name))
                 print()
             case FieldUnion(comment, name, is_optional, is_nullable, annotations):
                 prefix_name = prefix.upper() + "_" + name.upper()
                 field_name = name + "_field"
-                print((tab * num_tabs) + "const cJSON *" + field_name + ";")
-                print((tab * num_tabs) + "error_message = find_field(json, \"" + name + "\", " + str(is_optional).lower() + ", &" + field_name + ");")
+                print("const cJSON *{};".format(field_name))
+                print("error_message = find_field(json, \"{name}\", {is_optional}, &{field_name});".format(name=name, is_optional=str(is_optional).lower(), field_name = field_name))
                 if is_optional:
-                    print((tab * num_tabs) + "if (error_message.tag == LSP_PARSE_SUCCESS_NOT_FOUND) {")
-                    print((tab * (num_tabs + 1)) + "message->" + name + ".is_set = false;")
-                    print((tab * (num_tabs + 1)) + "goto end_of_" + name + ";")
-                    print((tab * num_tabs) + "} else if (error_message.tag != LSP_PARSE_SUCCESS) {")
-                    print((tab * (num_tabs + 1)) + "return error_message;")
-                    print((tab * num_tabs) + "}")
-                    print((tab * num_tabs) + "message->" + name + ".is_set = true;")
+                    print("if (error_message.tag == LSP_PARSE_SUCCESS_NOT_FOUND) {")
+                    print("  message->{}.is_set = false;".format(name))
+                    print("  goto end_of_{};".format(name))
+                    print("} else if (error_message.tag != LSP_PARSE_SUCCESS) {")
+                    print("  return error_message;")
+                    print("}")
+                    print("message->" + name + ".is_set = true;")
                 else:
-                    print((tab * num_tabs) + "if (error_message.tag != LSP_PARSE_SUCCESS) {")
-                    print((tab * (num_tabs + 1)) + "return error_message;")
-                    print((tab * num_tabs) + "}")
+                    print("if (error_message.tag != LSP_PARSE_SUCCESS) {")
+                    print("  return error_message;")
+                    print("}")
                 
+                annotation_types = []
                 for annotation in annotations:
-                    print((tab * num_tabs) + "error_message = accept_" + annotation.name + "(" + field_name + ", false, &message->" + name + ".value." + annotation.name + ");")
-                    print((tab * num_tabs) + "if(error_message.tag == LSP_PARSE_SUCCESS) {")
-                    print((tab * (num_tabs + 2)) + "message->" + name + ".tag = " + prefix_name + "_" + annotation.name.upper() + ";")
-                    print((tab * (num_tabs + 2)) + "goto end_of_" + name + ";")
-                    print((tab * num_tabs) + "}")
-                print((tab * num_tabs) + "return error_message;")
-                print((tab * num_tabs) + "end_of_" + name + ":")
+                    annotation_types.append(annotation.name)
+                    print("if(is_{annotation_name}({field_name})) {{".format(annotation_name=annotation.name, field_name=field_name))
+                    print("message->{name}.tag = {prefix_name}_{annotation_name};".format(name=name, prefix_name=prefix_name, annotation_name=annotation.name.upper()))
+                    print("message->{name}.value.{annotation_name} = accept_{annotation_name}({field_name});".format(name=name, field_name=field_name, annotation_name=annotation.name))
+                    print("goto end_of_{};".format(name))
+                    print("}")
+
+                accepted_types = ""
+                if len(annotation_types) < 2:
+                    raise Exception("WTF")
+                elif len(annotation_types) == 2:
+                    accepted_types = annotation_types[0] + " or " + annotation_types[1]
+                else:
+                    for i in range(len(annotation_types) - 1):
+                        accepted_types = accepted_types + annotation_types[i] + ", "
+                    accepted_types = accepted_types + "or " + annotation_types[-1]
+                print("return incorrect_type_message({field_name}, \"{accepted_types}\");".format(field_name=field_name, accepted_types=accepted_types))
+                print("end_of_{}:".format(name))
                 print()
                     
 
-print("lsp_parse_error_t parse_" + interface.name + "(cJSON *json, " + interface.name + " *message) {")
-print(tab + "lsp_parse_error_t error_message;")
+print("lsp_parse_error_t parse_" + interface.name + "(const cJSON *json, " + interface.name + " *message) {")
+print("  lsp_parse_error_t error_message;")
 print()
-print(tab + "parse_" + interface.parent + "(json, &message->super);")
-print()
+if interface.parent != None:
+    print("  error_message = parse_{}(json, &message->super);".format(interface.parent))
+    print("if (error_message.tag != LSP_PARSE_SUCCESS) {")
+    print("  return error_message;")
+    print("}")
+    print()
 print_parser(interface.fields, 1, interface.name)
-print(tab + "return (lsp_parse_error_t){")
-print((tab * 2) + ".tag = LSP_PARSE_SUCCESS,")
-print((tab * 2) + ".message = NULL,")
-print(tab + "};")
+print("  return LSP_SUCCESS;")
 print("}")
