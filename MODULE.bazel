@@ -7,7 +7,7 @@ http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "ht
 git_repository(
     name = "flecs",
     remote = "https://github.com/SanderMertens/flecs.git",
-    branch = "master",
+    branch = "v4",
     build_file_content = """
 cc_library(
     name = "flecs",
