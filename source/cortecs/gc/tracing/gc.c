@@ -21,11 +21,6 @@ static ecs_entity_t root;
 // used to signify that an allocation is connected to another dynamic allocation
 static ecs_entity_t reachable;
 
-static ecs_id_t buffer_component[2];
-static mark_sweep_data uninitialized = {.is_root_reachable = false};
-static ecs_value_t mark_sweep_data_component[2];
-static ecs_entity_desc_t allocation;
-
 // Basic mark-sweep algorithm:
 // Definitions:
 // An allocation is rooted iff it is directly accessible to a component on some entity
@@ -75,22 +70,6 @@ void cortecs_gc_init() {
     // the mark query traverses up reachable to find root relationships
     ecs_add_id(world, reachable, EcsTraversable);
 
-    // define the allocation descriptor
-    buffer_component[0] = ecs_id(gc_buffer);
-    buffer_component[1] = 0;
-    mark_sweep_data_component[0] = (ecs_value_t){
-        .type = ecs_id(mark_sweep_data),
-        .ptr = &uninitialized,
-    };
-    mark_sweep_data_component[1] = (ecs_value_t){
-        .type = 0,
-        .ptr = NULL,
-    };
-    allocation = (ecs_entity_desc_t){
-        .add = buffer_component,
-        .set = mark_sweep_data_component,
-    };
-
     // define the mark system
     ecs_id_t run_on_post_frame[2] = {ecs_dependson(EcsPostFrame), 0};
     ecs_entity_desc_t mark_entity = (ecs_entity_desc_t){
@@ -120,9 +99,13 @@ void cortecs_gc_init() {
 
 cortecs_gc_allocation_t cortecs_gc_alloc(uint32_t size) {
     assert(size <= CORTECS_GC_ALLOC_MAX_SIZE);
-    ecs_entity_t entity = ecs_entity_init(world, &allocation);
+    ecs_entity_t entity = ecs_new(world);
+    bool is_new = true;
+    // emplace returns a valiud pointer to the buffer!
+    void *memory = ecs_emplace_id(world, entity, ecs_id(gc_buffer), &is_new);
+    ecs_set(world, entity, mark_sweep_data, {.is_root_reachable = false});
     return (cortecs_gc_allocation_t){
-        .memory = ecs_get_mut(world, entity, gc_buffer)->data,
+        .memory = memory,
         .entity = entity,
     };
 }
