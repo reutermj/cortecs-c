@@ -2,13 +2,14 @@
 #define CORTECS_GC_GC_H
 
 #include <flecs.h>
+#include <stdint.h>
 
 typedef struct {
     void *memory;
     ecs_entity_t entity;
 } cortecs_gc_allocation_t;
 
-cortecs_gc_allocation_t cortecs_gc_alloc();
+cortecs_gc_allocation_t cortecs_gc_alloc(uint32_t size);
 void cortecs_gc_init();
 void cortecs_gc_add(ecs_entity_t entity, cortecs_gc_allocation_t memory);
 void cortecs_gc_remove(ecs_entity_t entity, cortecs_gc_allocation_t memory);
