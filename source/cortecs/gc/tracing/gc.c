@@ -1,6 +1,5 @@
 #include <assert.h>
 #include <gc.h>
-#include <stdio.h>
 #include <world.h>
 
 // currently only allowing buffer size of 256. Will expand later
@@ -37,22 +36,17 @@ static ecs_entity_t reachable;
 
 void mark(ecs_iter_t *iterator) {
     mark_sweep_data *data = ecs_field(iterator, mark_sweep_data, 0);
-    gc_buffer *memory = ecs_field(iterator, gc_buffer, 1);
     for (int i = 0; i < iterator->count; i++) {
-        printf("marking %s\n", memory->data);
         data[i].is_root_reachable = true;
     }
 }
 
 void sweep(ecs_iter_t *iterator) {
     mark_sweep_data *data = ecs_field(iterator, mark_sweep_data, 0);
-    gc_buffer *memory = ecs_field(iterator, gc_buffer, 1);
     for (int i = 0; i < iterator->count; i++) {
         if (!data[i].is_root_reachable) {
-            printf("deleting %s\n", memory->data);
             ecs_delete(world, iterator->entities[i]);
         } else {
-            printf("resetting mark %s\n", memory->data);
             data[i].is_root_reachable = false;
         }
     }
@@ -80,8 +74,7 @@ void cortecs_gc_init() {
         .entity = ecs_entity_init(world, &mark_entity),
         .query = (ecs_query_desc_t){
             .terms[0].first.id = ecs_id(mark_sweep_data),
-            .terms[1].first.id = ecs_id(gc_buffer),
-            .terms[2] = (ecs_term_t){
+            .terms[1] = (ecs_term_t){
                 // select nodes where root appears either on EcsThis or by traversing up the reachable relationship
                 .src.id = EcsSelf | EcsUp,
                 .first.id = root,
@@ -94,16 +87,17 @@ void cortecs_gc_init() {
     ecs_system_init(world, &mark_desc);
 
     // define the sweep system
-    ECS_SYSTEM(world, sweep, EcsPostFrame, mark_sweep_data, gc_buffer);
+    ECS_SYSTEM(world, sweep, EcsPostFrame, mark_sweep_data);
 }
 
 cortecs_gc_allocation_t cortecs_gc_alloc(uint32_t size) {
     assert(size <= CORTECS_GC_ALLOC_MAX_SIZE);
-    ecs_entity_t entity = ecs_new(world);
     bool is_new = true;
-    // emplace returns a valiud pointer to the buffer!
+
+    ecs_entity_t entity = ecs_new(world);
     void *memory = ecs_emplace_id(world, entity, ecs_id(gc_buffer), &is_new);
     ecs_set(world, entity, mark_sweep_data, {.is_root_reachable = false});
+
     return (cortecs_gc_allocation_t){
         .memory = memory,
         .entity = entity,
