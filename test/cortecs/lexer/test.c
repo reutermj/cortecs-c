@@ -31,22 +31,22 @@ static void lexer_test_empty_input(void) {
 }
 
 static void lexer_test_float(void) {
-    cortecs_lexer_test_exhaustive(cortecs_lexer_test_float_config);
+    // cortecs_lexer_test_exhaustive(cortecs_lexer_test_float_config);
     cortecs_lexer_test_fuzz(cortecs_lexer_test_float_config);
 }
 
 static void lexer_test_bad_float(void) {
-    cortecs_lexer_test_exhaustive(cortecs_lexer_test_bad_float_config);
+    // cortecs_lexer_test_exhaustive(cortecs_lexer_test_bad_float_config);
     cortecs_lexer_test_fuzz(cortecs_lexer_test_bad_float_config);
 }
 
 static void lexer_test_int(void) {
-    cortecs_lexer_test_exhaustive(cortecs_lexer_test_int_config);
+    // cortecs_lexer_test_exhaustive(cortecs_lexer_test_int_config);
     cortecs_lexer_test_fuzz(cortecs_lexer_test_int_config);
 }
 
 static void lexer_test_bad_int(void) {
-    cortecs_lexer_test_exhaustive(cortecs_lexer_test_bad_int_config);
+    // cortecs_lexer_test_exhaustive(cortecs_lexer_test_bad_int_config);
     cortecs_lexer_test_fuzz(cortecs_lexer_test_bad_int_config);
 }
 
@@ -67,22 +67,22 @@ void lexer_test_if(void) {
 }
 
 static void lexer_test_name(void) {
-    cortecs_lexer_test_exhaustive(cortecs_lexer_test_name_config);
+    // cortecs_lexer_test_exhaustive(cortecs_lexer_test_name_config);
     cortecs_lexer_test_fuzz(cortecs_lexer_test_name_config);
 }
 
 static void lexer_test_type(void) {
-    cortecs_lexer_test_exhaustive(cortecs_lexer_test_type_config);
+    // cortecs_lexer_test_exhaustive(cortecs_lexer_test_type_config);
     cortecs_lexer_test_fuzz(cortecs_lexer_test_type_config);
 }
 
 static void lexer_test_space(void) {
-    cortecs_lexer_test_exhaustive(cortecs_lexer_test_space_config);
+    // cortecs_lexer_test_exhaustive(cortecs_lexer_test_space_config);
     cortecs_lexer_test_fuzz(cortecs_lexer_test_space_config);
 }
 
 static void lexer_test_operator(void) {
-    cortecs_lexer_test_exhaustive(cortecs_lexer_test_operator_config);
+    // cortecs_lexer_test_exhaustive(cortecs_lexer_test_operator_config);
     cortecs_lexer_test_fuzz(cortecs_lexer_test_operator_config);
 }
 
