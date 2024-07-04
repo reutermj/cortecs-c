@@ -92,10 +92,9 @@ void cortecs_gc_init() {
 
 cortecs_gc_allocation_t cortecs_gc_alloc(uint32_t size) {
     assert(size <= CORTECS_GC_ALLOC_MAX_SIZE);
-    bool is_new = true;
 
     ecs_entity_t entity = ecs_new(world);
-    void *memory = ecs_emplace_id(world, entity, ecs_id(gc_buffer), &is_new);
+    void *memory = ecs_emplace_id(world, entity, ecs_id(gc_buffer), NULL);
     ecs_set(world, entity, mark_sweep_data, {.is_root_reachable = false});
 
     return (cortecs_gc_allocation_t){
