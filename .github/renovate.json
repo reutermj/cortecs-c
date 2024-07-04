@@ -1,0 +1,14 @@
+{
+    "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+    "extends": [
+        "config:recommended"
+    ],
+    "enabledManagers": [
+        "bazel",
+        "bazel-module"
+    ],
+    "autoApprove": true,
+    "automerge": true,
+    "automergeType": "pr-comment",
+    "automergeComment": "/trunk merge"
+}
