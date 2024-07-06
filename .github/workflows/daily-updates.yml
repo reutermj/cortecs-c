@@ -1,5 +1,5 @@
-name: Update calver
-run-name: Update calver
+name: Daily Updates
+run-name: Daily Updates
 on:
   schedule:
     - cron: "19 6 * * *"
@@ -20,4 +20,5 @@ jobs:
       - run: pip install GitPython
       - run: git config user.name "Mark Reuter"
       - run: git config user.email "13319190+reutermj@users.noreply.github.com"
-      - run: python .github/calver/update-calver.py
+      - run: python .github/workflows/update-calver.py
+      - run: python .github/workflows/update-dependencies.py
