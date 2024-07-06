@@ -7,7 +7,8 @@ http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "ht
 git_repository(
     name = "flecs",
     remote = "https://github.com/SanderMertens/flecs.git",
-    branch = "v4",
+    # branch = "v4",
+    commit = "27b69eea9a95af0bcf350159a87cccffd772f64b",
     build_file_content = """
 cc_library(
     name = "flecs",
@@ -23,7 +24,8 @@ cc_library(
 git_repository(
     name = "unity",
     remote = "https://github.com/ThrowTheSwitch/Unity.git",
-    branch = "master",
+    # branch = "master",
+    commit = "35229fda301faf8f651b2aca7281579c6118ffda",
     build_file_content = """
 cc_library(
     name = "unity",
@@ -39,7 +41,8 @@ cc_library(
 git_repository(
     name = "cJSON",
     remote = "https://github.com/DaveGamble/cJSON.git",
-    branch = "master",
+    # branch = "master",
+    commit = "424ce4ce9668f288fb4ab665775546d3ed709e96",
     build_file_content = """
 cc_library(
     name = "cJSON",
@@ -52,8 +55,6 @@ cc_library(
 """,
 )
 
-# Hedron's Compile Commands Extractor for Bazel
-# https://github.com/hedronvision/bazel-compile-commands-extractor
 # Usage:
 # bazel build //...
 # bazel run @hedron_compile_commands//:refresh_all
@@ -61,7 +62,6 @@ bazel_dep(name = "hedron_compile_commands", dev_dependency = True)
 git_override(
     module_name = "hedron_compile_commands",
     remote = "https://github.com/hedronvision/bazel-compile-commands-extractor.git",
-    commit = "a14ad3a64e7bf398ab48105aaa0348e032ac87f8",
-    # Replace the commit hash (above) with the latest (https://github.com/hedronvision/bazel-compile-commands-extractor/commits/main).
-    # Even better, set up Renovate and let it do the work for you (see "Suggestion: Updates" in the README).
+    # branch = "main",
+    commit = "1e08f8e0507b6b6b1f4416a9a22cf5c28beaba93",
 )
