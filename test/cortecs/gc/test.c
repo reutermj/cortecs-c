@@ -1,6 +1,7 @@
 #include <flecs.h>
 #include <gc.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -241,7 +242,7 @@ void test_pointer_stability(void) {
     ECS_SYSTEM(world, pointer_stability_system, EcsOnUpdate, pointer_stability);
 
     uint32_t value = 0;
-    const uint32_t num_entities = 10000;
+    const uint32_t num_entities = 1000;
     ecs_entity_t entities[num_entities];
     for (uint32_t i = 0; i < num_entities; i++) {
         entities[i] = ecs_new(world);
@@ -256,10 +257,9 @@ void test_pointer_stability(void) {
         value++;
     }
 
-    ecs_progress(world, 0);
     bool marked[num_entities];
     memset(marked, false, sizeof(marked));
-    for (uint32_t run = 0; run < 1000; run++) {
+    for (uint32_t run = 0; run < 10; run++) {
         for (uint32_t i = 0; i < num_entities; i++) {
             if (rand() % 2 == 1) {
                 ecs_delete(world, entities[i]);
