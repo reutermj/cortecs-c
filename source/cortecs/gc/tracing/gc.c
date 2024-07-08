@@ -78,7 +78,7 @@ void cortecs_gc_init() {
                 // select nodes where root appears either on EcsThis or by traversing up the reachable relationship
                 .src.id = EcsSelf | EcsUp,
                 .first.id = root,
-                .second.name = "$Unused",  // Dont care about the target of the root relationship
+                .second.name = EcsWildcard,  // Dont care about the target of the root relationship
                 .trav = reachable,
             },
         },
