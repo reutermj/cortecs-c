@@ -303,8 +303,7 @@ int main() {
     RUN_TEST(test_remove_reachable_keep_one_rooted_one_root_reachable_remove_one_root_reachable);
     RUN_TEST(test_remove_reachable_keep_one_rooted_remove_two_root_reachable);
     RUN_TEST(test_delete_entity_one_rooted);
-    // currently there's a flecs bug preventing this test from working
-    // RUN_TEST(test_pointer_stability);
+    RUN_TEST(test_pointer_stability);
     return UNITY_END();
 }
 
