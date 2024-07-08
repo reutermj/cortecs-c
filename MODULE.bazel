@@ -2,7 +2,23 @@
 module(name = "cortecs", version = "2024.07.07")
 
 git_repository = use_repo_rule("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
-http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
+# Dependencies are auto updated by a github action that
+# * scans for lines that start with git_repository( or git_override(
+# * inside it looks for:
+#   * name/module_name
+#   * remote
+#   * branch
+#     * this conflicts with commit in git_repository and isnt valid in git_override
+#     * this line should be commented out
+#   * commit
+#     * due to a bit of laziness this must come last
+# * checks the remote for the commit at the tip of the branch
+# * if they're different, it submits a new PR for each individual dependency that needs updating
+
+# Make sure the 4 attributes are at the top of the declaration/ahead of build_file_content.
+# due to a bit of laziness in the script, the error checking only looks for build_file_content or )
+# to determine end of declaration.
 
 git_repository(
     name = "flecs",
