@@ -13,9 +13,9 @@ cc_library(
     deps = [
         "//source/common",
         "//source/cortecs/common",
-        "//third-party/icu4c/common:errorcode",
-        "//third-party/icu4c/common:headers",
-        "//third-party/icu4c/common:uchar",
-        "//third-party/icu4c/common:utext",
+        "//third_party/icu4c/common:errorcode",
+        "//third_party/icu4c/common:headers",
+        "//third_party/icu4c/common:uchar",
+        "//third_party/icu4c/common:utext",
     ],
 )

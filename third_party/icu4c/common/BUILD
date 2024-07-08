@@ -895,7 +895,7 @@ cc_library(
         ":icu_utility",
         ":platform",
         ":uhash",
-        "//third-party/icu4c/stubdata",
+        "//third_party/icu4c/stubdata",
     ],
 )
 
