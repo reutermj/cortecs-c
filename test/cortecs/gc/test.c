@@ -22,11 +22,11 @@ void test_remove_one_unconnected(void) {
     cortecs_world_cleanup();
 }
 
-void test_remove_one_reachable_not_rooted(void) {
+void test_remove_two_not_rooted_one_reference(void) {
     cortecs_world_init();
     cortecs_gc_init();
 
-    ecs_entity_t target = ecs_new(world);
+    cortecs_gc_allocation_t target = cortecs_gc_alloc(128);
     cortecs_gc_allocation_t unroot_reachable = cortecs_gc_alloc(128);
     cortecs_gc_add(target, unroot_reachable);
 
@@ -61,7 +61,7 @@ void test_keep_one_rooted_one_root_reachable(void) {
     cortecs_gc_add_root(target, rooted);
 
     cortecs_gc_allocation_t root_reachable = cortecs_gc_alloc(128);
-    cortecs_gc_add(rooted.entity, root_reachable);
+    cortecs_gc_add(rooted, root_reachable);
 
     ecs_progress(world, 0);
 
@@ -126,7 +126,7 @@ void test_remove_root_one_rooted_one_root_reachable(void) {
     cortecs_gc_allocation_t rooted = cortecs_gc_alloc(128);
     cortecs_gc_add_root(target, rooted);
     cortecs_gc_allocation_t root_reachable = cortecs_gc_alloc(128);
-    cortecs_gc_add(rooted.entity, root_reachable);
+    cortecs_gc_add(rooted, root_reachable);
 
     ecs_progress(world, 0);
 
@@ -151,9 +151,9 @@ void test_remove_reachable_keep_one_rooted_one_root_reachable_remove_one_root_re
     cortecs_gc_allocation_t rooted = cortecs_gc_alloc(128);
     cortecs_gc_add_root(target, rooted);
     cortecs_gc_allocation_t root_reachable_keep = cortecs_gc_alloc(128);
-    cortecs_gc_add(rooted.entity, root_reachable_keep);
+    cortecs_gc_add(rooted, root_reachable_keep);
     cortecs_gc_allocation_t root_reachable_remove = cortecs_gc_alloc(128);
-    cortecs_gc_add(root_reachable_keep.entity, root_reachable_remove);
+    cortecs_gc_add(root_reachable_keep, root_reachable_remove);
 
     ecs_progress(world, 0);
 
@@ -161,7 +161,7 @@ void test_remove_reachable_keep_one_rooted_one_root_reachable_remove_one_root_re
     TEST_ASSERT_TRUE(ecs_is_alive(world, root_reachable_keep.entity));
     TEST_ASSERT_TRUE(ecs_is_alive(world, root_reachable_remove.entity));
 
-    cortecs_gc_remove(root_reachable_keep.entity, root_reachable_remove);
+    cortecs_gc_remove(root_reachable_keep, root_reachable_remove);
 
     ecs_progress(world, 0);
 
@@ -180,9 +180,9 @@ void test_remove_reachable_keep_one_rooted_remove_two_root_reachable(void) {
     cortecs_gc_allocation_t rooted = cortecs_gc_alloc(128);
     cortecs_gc_add_root(target, rooted);
     cortecs_gc_allocation_t root_reachable_remove1 = cortecs_gc_alloc(128);
-    cortecs_gc_add(rooted.entity, root_reachable_remove1);
+    cortecs_gc_add(rooted, root_reachable_remove1);
     cortecs_gc_allocation_t root_reachable_remove2 = cortecs_gc_alloc(128);
-    cortecs_gc_add(root_reachable_remove1.entity, root_reachable_remove2);
+    cortecs_gc_add(root_reachable_remove1, root_reachable_remove2);
 
     ecs_progress(world, 0);
 
@@ -190,7 +190,7 @@ void test_remove_reachable_keep_one_rooted_remove_two_root_reachable(void) {
     TEST_ASSERT_TRUE(ecs_is_alive(world, root_reachable_remove1.entity));
     TEST_ASSERT_TRUE(ecs_is_alive(world, root_reachable_remove2.entity));
 
-    cortecs_gc_remove(rooted.entity, root_reachable_remove1);
+    cortecs_gc_remove(rooted, root_reachable_remove1);
 
     ecs_progress(world, 0);
 
@@ -294,7 +294,7 @@ void test_pointer_stability(void) {
 int main() {
     UNITY_BEGIN();
     RUN_TEST(test_remove_one_unconnected);
-    RUN_TEST(test_remove_one_reachable_not_rooted);
+    RUN_TEST(test_remove_two_not_rooted_one_reference);
     RUN_TEST(test_keep_one_rooted);
     RUN_TEST(test_keep_one_rooted_one_root_reachable);
     RUN_TEST(test_remove_root_one_rooted);

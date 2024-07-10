@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <common.h>
 #include <gc.h>
 #include <world.h>
 
@@ -103,18 +104,22 @@ cortecs_gc_allocation_t cortecs_gc_alloc(uint32_t size) {
     };
 }
 
-void cortecs_gc_add(ecs_entity_t entity, cortecs_gc_allocation_t memory) {
-    ecs_add_pair(world, memory.entity, reachable, entity);
+void cortecs_gc_add(cortecs_gc_allocation_t target, cortecs_gc_allocation_t reference) {
+    ecs_add_pair(world, reference.entity, reachable, target.entity);
 }
 
-void cortecs_gc_remove(ecs_entity_t entity, cortecs_gc_allocation_t memory) {
-    ecs_remove_pair(world, memory.entity, reachable, entity);
+void cortecs_gc_remove(cortecs_gc_allocation_t target, cortecs_gc_allocation_t reference) {
+    ecs_remove_pair(world, reference.entity, reachable, target.entity);
 }
 
-void cortecs_gc_add_root(ecs_entity_t entity, cortecs_gc_allocation_t memory) {
-    ecs_add_pair(world, memory.entity, root, entity);
+void cortecs_gc_add_root(ecs_entity_t target, cortecs_gc_allocation_t reference) {
+    ecs_add_pair(world, reference.entity, root, target);
 }
 
-void cortecs_gc_remove_root(ecs_entity_t entity, cortecs_gc_allocation_t memory) {
-    ecs_remove_pair(world, memory.entity, root, entity);
+void cortecs_gc_remove_root(ecs_entity_t target, cortecs_gc_allocation_t reference) {
+    ecs_remove_pair(world, reference.entity, root, target);
+}
+
+void cortecs_gc_memory_unused(cortecs_gc_allocation_t reference) {
+    UNUSED(reference);
 }

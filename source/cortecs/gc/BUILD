@@ -38,6 +38,7 @@ cc_library(
         "//test/cortecs:__subpackages__",
     ],
     deps = [
+        "//source/common",
         "//source/cortecs/common",
         "@flecs",
     ],
