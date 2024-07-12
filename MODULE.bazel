@@ -24,7 +24,7 @@ git_repository(
     name = "flecs",
     remote = "https://github.com/SanderMertens/flecs.git",
     # branch = "v4",
-    commit = "b0538370fa2903ebc189da9647ac0ef65a2f406f",
+    commit = "3f1e63ac4270c2e8837be28487d16153fcf01f90",
     build_file_content = """
 cc_library(
     name = "flecs",
