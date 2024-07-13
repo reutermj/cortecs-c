@@ -67,15 +67,15 @@ void cortecs_gc_init() {
 
     // define the mark system
     ecs_id_t run_on_post_frame[2] = {ecs_dependson(EcsPostFrame), 0};
-    ecs_entity_desc_t mark_entity = (ecs_entity_desc_t){
+    ecs_entity_desc_t mark_entity = {
         .name = "Mark",
         .add = run_on_post_frame,
     };
-    ecs_system_desc_t mark_desc = (ecs_system_desc_t){
+    ecs_system_desc_t mark_desc = {
         .entity = ecs_entity_init(world, &mark_entity),
-        .query = (ecs_query_desc_t){
+        .query = {
             .terms[0].first.id = ecs_id(mark_sweep_data),
-            .terms[1] = (ecs_term_t){
+            .terms[1] = {
                 // select nodes where root appears either on EcsThis or by traversing up the reachable relationship
                 .src.id = EcsSelf | EcsUp,
                 .first.id = root,
@@ -118,8 +118,4 @@ void cortecs_gc_add_root(ecs_entity_t target, cortecs_gc_allocation_t reference)
 
 void cortecs_gc_remove_root(ecs_entity_t target, cortecs_gc_allocation_t reference) {
     ecs_remove_pair(world, reference.entity, root, target);
-}
-
-void cortecs_gc_memory_unused(cortecs_gc_allocation_t reference) {
-    UNUSED(reference);
 }

@@ -15,6 +15,5 @@ void cortecs_gc_add(cortecs_gc_allocation_t target, cortecs_gc_allocation_t refe
 void cortecs_gc_remove(cortecs_gc_allocation_t target, cortecs_gc_allocation_t reference);
 void cortecs_gc_add_root(ecs_entity_t target, cortecs_gc_allocation_t reference);
 void cortecs_gc_remove_root(ecs_entity_t target, cortecs_gc_allocation_t reference);
-void cortecs_gc_memory_unused(cortecs_gc_allocation_t reference);
 
 #endif
