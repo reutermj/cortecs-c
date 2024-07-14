@@ -23,7 +23,7 @@ git_repository = use_repo_rule("@bazel_tools//tools/build_defs/repo:git.bzl", "g
 git_repository(
     name = "flecs",
     remote = "https://github.com/SanderMertens/flecs.git",
-    # branch = "v4",
+    # branch = "master",
     commit = "3c489209db40dce9f4a98aa1d6cf356dc701c05d",
     build_file_content = """
 cc_library(
