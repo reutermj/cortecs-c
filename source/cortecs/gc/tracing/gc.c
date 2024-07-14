@@ -10,18 +10,13 @@ typedef struct {
 } gc_buffer;
 static ECS_COMPONENT_DECLARE(gc_buffer);
 
-typedef struct {
-    bool is_root_reachable;
-} mark_sweep_data;
-static ECS_COMPONENT_DECLARE(mark_sweep_data);
-
 // used to signify that an allocation in directly connected to a "live" entity
 static ecs_entity_t root;
 
 // used to signify that an allocation is connected to another dynamic allocation
 static ecs_entity_t reachable;
 
-// Basic mark-sweep algorithm:
+// Basic tracing algorithm:
 // Definitions:
 // An allocation is rooted iff it is directly accessible to a component on some entity
 // An allocation is reachable iff it is accessible to some other memory
@@ -29,32 +24,15 @@ static ecs_entity_t reachable;
 //   1) A root_reachable B <- A root B
 //   2) A root_reachable B <- A reachable C & C root_reachable B
 
-// Steps:
-// 1) mark: iterate all root_reachable memory and set the mark bit
-// 2) sweep: iterate all allocations
-//    2.1) delete nodes that arent root_reachable
-//    2.2) reset the mark bit on nodes that are
+// Iterate all not root reachable allocations and delete the entities
 
-void mark(ecs_iter_t *iterator) {
-    mark_sweep_data *data = ecs_field(iterator, mark_sweep_data, 0);
+void run_gc(ecs_iter_t *iterator) {
     for (int i = 0; i < iterator->count; i++) {
-        data[i].is_root_reachable = true;
-    }
-}
-
-void sweep(ecs_iter_t *iterator) {
-    mark_sweep_data *data = ecs_field(iterator, mark_sweep_data, 0);
-    for (int i = 0; i < iterator->count; i++) {
-        if (!data[i].is_root_reachable) {
-            ecs_delete(world, iterator->entities[i]);
-        } else {
-            data[i].is_root_reachable = false;
-        }
+        ecs_delete(world, iterator->entities[i]);
     }
 }
 
 void cortecs_gc_init() {
-    ECS_COMPONENT_DEFINE(world, mark_sweep_data);
     ECS_COMPONENT_DEFINE(world, gc_buffer);
     // marking the buffer as sparse makes sure it doesnt get moved and
     // pointers to it are stable
@@ -68,27 +46,25 @@ void cortecs_gc_init() {
     // define the mark system
     ecs_id_t run_on_post_frame[2] = {ecs_dependson(EcsPostFrame), 0};
     ecs_entity_desc_t mark_entity = {
-        .name = "Mark",
+        .name = "run_gc",
         .add = run_on_post_frame,
     };
     ecs_system_desc_t mark_desc = {
         .entity = ecs_entity_init(world, &mark_entity),
         .query = {
-            .terms[0].first.id = ecs_id(mark_sweep_data),
+            .terms[0].first.id = ecs_id(gc_buffer),
             .terms[1] = {
                 // select nodes where root appears either on EcsThis or by traversing up the reachable relationship
                 .src.id = EcsSelf | EcsUp,
                 .first.id = root,
-                .second.id = EcsWildcard,  // Dont care about the target of the root relationship
+                .second.id = EcsAny,  // Dont care about the target of the root relationship
                 .trav = reachable,
+                .oper = EcsNot,
             },
         },
-        .callback = &mark,
+        .callback = &run_gc,
     };
     ecs_system_init(world, &mark_desc);
-
-    // define the sweep system
-    ECS_SYSTEM(world, sweep, EcsPostFrame, mark_sweep_data);
 }
 
 cortecs_gc_allocation_t cortecs_gc_alloc(uint32_t size) {
@@ -96,7 +72,6 @@ cortecs_gc_allocation_t cortecs_gc_alloc(uint32_t size) {
 
     ecs_entity_t entity = ecs_new(world);
     void *memory = ecs_emplace_id(world, entity, ecs_id(gc_buffer), NULL);
-    ecs_set(world, entity, mark_sweep_data, {.is_root_reachable = false});
 
     return (cortecs_gc_allocation_t){
         .memory = memory,
