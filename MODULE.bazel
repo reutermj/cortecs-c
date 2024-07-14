@@ -24,7 +24,7 @@ git_repository(
     name = "flecs",
     remote = "https://github.com/SanderMertens/flecs.git",
     # branch = "master",
-    commit = "eeb9eaa64243536c5d5c19279c9c305a52d0b9b3",
+    commit = "c2c095fe948a6d9621f2541c41fa523877f33ef3",
     build_file_content = """
 cc_library(
     name = "flecs",
@@ -74,6 +74,9 @@ cc_library(
 # Usage:
 # bazel build //...
 # bazel run @hedron_compile_commands//:refresh_all
+# Sometimes helpful to clear the bazel cache:
+# bazel clean
+# rm -r $(bazel info repository_cache)
 bazel_dep(name = "hedron_compile_commands", dev_dependency = True)
 git_override(
     module_name = "hedron_compile_commands",
