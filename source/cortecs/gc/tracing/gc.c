@@ -1,7 +1,40 @@
 #include <assert.h>
-#include <common.h>
 #include <gc.h>
 #include <world.h>
+
+// High level overview of memory allocations in cortecs
+// * static size: size of the allocation can be determined at compile time
+// * dynamic size: size of the allocation depends on some runtime value
+// Currently, the only way for an allocation to escape a system is for
+// it to be set on a component.
+// * non-escaping allocations never invoke the gc
+// * static non-escaping: stack allocated
+// * dynamic non-escaping: allocated on a per thread arena allocator
+// * escaping static allocations
+//   * set the component value
+//   * gc is not involved
+// * escaping dynamic allocation
+//   * gc has to be involved
+
+// Application entities: entities created by the application
+// Allocation entities: entities created by the gc to track dynamic allocation liveness
+// The tracing algorithm introduces two relationships to track liveness
+//   * A rooted_to B: a relationship from allocation entity A to an application entity B
+//     * In tracing gc terminology, A is part of the root set
+//     * Relationships are used so that if the application deletes B,
+//       the A rooted_to B relationship is automatically removed
+//   * A reachable_to B: a relationship from allocation entity A to another allocation entity B
+// These relationships are updated by codegened API calls and application entity deletion
+
+// The tracing algorithm introduces a derivative relationship: root_reachable_to.
+// An allocation entity A is root_reachable_to an application entity B given the following rules:
+//   1) A root_reachable_to B <- A rooted_to B
+//   2) A root_reachable_to B <- there exists an allocation entity C such that A reachable_to C & C root_reachable_to B
+
+// The tracing algorithm introduces a derivative property: root_reachable
+// An allocation entity A is root_reachable iff there exists an application entity B such that A root_reachable_to B
+
+// The tracing algorithm: For all A where A is not root_reachable, delete A
 
 // currently only allowing buffer size of 256. Will expand later
 #define CORTECS_GC_ALLOC_MAX_SIZE 256
@@ -10,61 +43,46 @@ typedef struct {
 } gc_buffer;
 static ECS_COMPONENT_DECLARE(gc_buffer);
 
-// used to signify that an allocation in directly connected to a "live" entity
-static ecs_entity_t root;
+static ecs_entity_t rooted_to;
+static ecs_entity_t reachable_to;
 
-// used to signify that an allocation is connected to another dynamic allocation
-static ecs_entity_t reachable;
-
-// Basic tracing algorithm:
-// Definitions:
-// An allocation is rooted iff it is directly accessible to a component on some entity
-// An allocation is reachable iff it is accessible to some other memory
-// An allocation is root_reachable given the following rules:
-//   1) A root_reachable B <- A root B
-//   2) A root_reachable B <- A reachable C & C root_reachable B
-
-// Iterate all not root reachable allocations and delete the entities
-
-void run_gc(ecs_iter_t *iterator) {
+static void delete_not_root_reachable_allocations(ecs_iter_t *iterator) {
     for (int i = 0; i < iterator->count; i++) {
         ecs_delete(world, iterator->entities[i]);
     }
 }
 
 void cortecs_gc_init() {
+    // marking the buffer as sparse makes pointers to it stable
     ECS_COMPONENT_DEFINE(world, gc_buffer);
-    // marking the buffer as sparse makes sure it doesnt get moved and
-    // pointers to it are stable
     ecs_add_id(world, ecs_id(gc_buffer), EcsSparse);
 
-    root = ecs_new(world);
-    reachable = ecs_new(world);
-    // the mark query traverses up reachable to find root relationships
-    ecs_add_id(world, reachable, EcsTraversable);
+    rooted_to = ecs_new(world);
+    reachable_to = ecs_new(world);
+    ecs_add_id(world, reachable_to, EcsTraversable);
 
-    // define the mark system
-    ecs_id_t run_on_post_frame[2] = {ecs_dependson(EcsPostFrame), 0};
-    ecs_entity_desc_t mark_entity = {
-        .name = "run_gc",
-        .add = run_on_post_frame,
-    };
-    ecs_system_desc_t mark_desc = {
-        .entity = ecs_entity_init(world, &mark_entity),
-        .query = {
-            .terms[0].first.id = ecs_id(gc_buffer),
-            .terms[1] = {
-                // select nodes where root appears either on EcsThis or by traversing up the reachable relationship
-                .src.id = EcsSelf | EcsUp,
-                .first.id = root,
-                .second.id = EcsAny,  // Dont care about the target of the root relationship
-                .trav = reachable,
-                .oper = EcsNot,
-            },
+    ecs_query_desc_t is_not_root_reachable = {
+        .terms[0].first.id = ecs_id(gc_buffer),
+        .terms[1] = {
+            .src.id = EcsSelf | EcsUp,
+            .first.id = rooted_to,
+            .second.id = EcsAny,
+            .trav = reachable_to,
+            .oper = EcsNot,
         },
-        .callback = &run_gc,
     };
-    ecs_system_init(world, &mark_desc);
+
+    // init tracing system
+    ecs_entity_desc_t tracing_entity = {
+        .name = "tracing_gc",
+        .add = ecs_ids(ecs_dependson(EcsPostFrame)),
+    };
+    ecs_system_desc_t tracing_system = {
+        .entity = ecs_entity_init(world, &tracing_entity),
+        .query = is_not_root_reachable,
+        .callback = &delete_not_root_reachable_allocations,
+    };
+    ecs_system_init(world, &tracing_system);
 }
 
 cortecs_gc_allocation_t cortecs_gc_alloc(uint32_t size) {
@@ -80,17 +98,17 @@ cortecs_gc_allocation_t cortecs_gc_alloc(uint32_t size) {
 }
 
 void cortecs_gc_add(cortecs_gc_allocation_t target, cortecs_gc_allocation_t reference) {
-    ecs_add_pair(world, reference.entity, reachable, target.entity);
+    ecs_add_pair(world, reference.entity, reachable_to, target.entity);
 }
 
 void cortecs_gc_remove(cortecs_gc_allocation_t target, cortecs_gc_allocation_t reference) {
-    ecs_remove_pair(world, reference.entity, reachable, target.entity);
+    ecs_remove_pair(world, reference.entity, reachable_to, target.entity);
 }
 
 void cortecs_gc_add_root(ecs_entity_t target, cortecs_gc_allocation_t reference) {
-    ecs_add_pair(world, reference.entity, root, target);
+    ecs_add_pair(world, reference.entity, rooted_to, target);
 }
 
 void cortecs_gc_remove_root(ecs_entity_t target, cortecs_gc_allocation_t reference) {
-    ecs_remove_pair(world, reference.entity, root, target);
+    ecs_remove_pair(world, reference.entity, rooted_to, target);
 }
