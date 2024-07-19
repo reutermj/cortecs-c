@@ -18,7 +18,7 @@ with open("MODULE.bazel", "r") as f:
 # 5) kick off CI
 # 6) switch back to main branch for next dependency
 def replace_commit(line_number, old, new, name):
-    # create new branch for the singel dependency update
+    # create new branch for the single dependency update
     new_branch = repo.create_head(name, main.commit)
     new_branch.checkout()
 
