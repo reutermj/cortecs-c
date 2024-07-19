@@ -6,10 +6,14 @@ import subprocess
 
 # Get most recent commit
 repo = Repo()
-head = repo.head.commit
+main = repo.head.commit
 
 # Only bump version if new commits were pushed in the last day
-if "Updating module version" not in head.message:
+if "Updating module version" not in main.message:
+    # create new branch for the singel dependency update
+    new_branch = repo.create_head("module_update", main.commit)
+    new_branch.checkout()
+
     today = datetime.now()
     # Date formatted for the module version number
     today_module_formatted = today.strftime('%Y.%m.%d')
@@ -64,5 +68,8 @@ if "Updating module version" not in head.message:
                 # Comment on the PR to initiate a merge
                 print("Kicking off trunk merge")
                 subprocess.run(['gh', 'pr', 'comment', pr_num, '--body', '/trunk merge'])
+    
+    # switch back to main
+    main.checkout()
 else:
     print("No new commits. Ignoring version bump")
