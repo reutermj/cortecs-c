@@ -6,10 +6,10 @@ import subprocess
 
 # Get most recent commit
 repo = Repo()
-main = repo.head.commit
+main = repo.heads.main
 
 # Only bump version if new commits were pushed in the last day
-if "Updating module version" not in main.message:
+if "Updating module version" not in main.commit.message:
     # create new branch for the singel dependency update
     new_branch = repo.create_head("module_update", main.commit)
     new_branch.checkout()
