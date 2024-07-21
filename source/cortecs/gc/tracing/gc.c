@@ -39,6 +39,7 @@
 // currently only allowing buffer size of 256. Will expand later
 #define CORTECS_GC_ALLOC_MAX_SIZE 256
 typedef struct {
+    ecs_entity_t entity;
     uint8_t data[CORTECS_GC_ALLOC_MAX_SIZE];
 } gc_buffer;
 static ECS_COMPONENT_DECLARE(gc_buffer);
@@ -85,30 +86,44 @@ void cortecs_gc_init() {
     ecs_system_init(world, &tracing_system);
 }
 
-cortecs_gc_allocation_t cortecs_gc_alloc(uint32_t size) {
+void *cortecs_gc_alloc(uint32_t size) {
     assert(size <= CORTECS_GC_ALLOC_MAX_SIZE);
 
     ecs_entity_t entity = ecs_new(world);
-    void *memory = ecs_emplace_id(world, entity, ecs_id(gc_buffer), NULL);
+    gc_buffer *allocation = ecs_emplace_id(world, entity, ecs_id(gc_buffer), NULL);
+    allocation->entity = entity;
 
-    return (cortecs_gc_allocation_t){
-        .memory = memory,
-        .entity = entity,
-    };
+    return allocation->data;
 }
 
-void cortecs_gc_add(cortecs_gc_allocation_t target, cortecs_gc_allocation_t reference) {
-    ecs_add_pair(world, reference.entity, reachable_to, target.entity);
+ecs_entity_t get_allocation_entity(void *allocation) {
+    gc_buffer *buffer = (gc_buffer *)(((uintptr_t)allocation) - sizeof(ecs_entity_t));
+    return buffer->entity;
 }
 
-void cortecs_gc_remove(cortecs_gc_allocation_t target, cortecs_gc_allocation_t reference) {
-    ecs_remove_pair(world, reference.entity, reachable_to, target.entity);
+bool cortecs_gc_is_alive(void *target) {
+    ecs_entity_t entity = get_allocation_entity(target);
+    return ecs_is_alive(world, entity);
 }
 
-void cortecs_gc_add_root(ecs_entity_t target, cortecs_gc_allocation_t reference) {
-    ecs_add_pair(world, reference.entity, rooted_to, target);
+void cortecs_gc_add(void *target, void *reference) {  // NOLINT(bugprone-easily-swappable-parameters)
+    ecs_entity_t target_entity = get_allocation_entity(target);
+    ecs_entity_t reference_entity = get_allocation_entity(reference);
+    ecs_add_pair(world, reference_entity, reachable_to, target_entity);
 }
 
-void cortecs_gc_remove_root(ecs_entity_t target, cortecs_gc_allocation_t reference) {
-    ecs_remove_pair(world, reference.entity, rooted_to, target);
+void cortecs_gc_remove(void *target, void *reference) {
+    ecs_entity_t target_entity = get_allocation_entity(target);
+    ecs_entity_t reference_entity = get_allocation_entity(reference);
+    ecs_remove_pair(world, reference_entity, reachable_to, target_entity);
+}
+
+void cortecs_gc_add_root(ecs_entity_t target, void *reference) {
+    ecs_entity_t reference_entity = get_allocation_entity(reference);
+    ecs_add_pair(world, reference_entity, rooted_to, target);
+}
+
+void cortecs_gc_remove_root(ecs_entity_t target, void *reference) {
+    ecs_entity_t reference_entity = get_allocation_entity(reference);
+    ecs_remove_pair(world, reference_entity, rooted_to, target);
 }

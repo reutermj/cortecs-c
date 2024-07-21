@@ -6,7 +6,7 @@ load("@rules_cc//cc:defs.bzl", "cc_library")
 # --//source/cortecs/gc:impl=tracing
 string_flag(
     name = "impl",
-    build_setting_default = "tracing",
+    build_setting_default = "rc",
 )
 
 config_setting(
