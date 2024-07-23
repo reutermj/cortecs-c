@@ -106,7 +106,7 @@ bool cortecs_gc_is_alive(void *target) {
     return ecs_is_alive(world, entity);
 }
 
-void cortecs_gc_add(void *target, void *reference) {  // NOLINT(bugprone-easily-swappable-parameters)
+void cortecs_gc_add(void *target, void *reference) {
     ecs_entity_t target_entity = get_allocation_entity(target);
     ecs_entity_t reference_entity = get_allocation_entity(reference);
     ecs_add_pair(world, reference_entity, reachable_to, target_entity);
