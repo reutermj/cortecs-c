@@ -6,5 +6,6 @@ Checks: >
     readability-*,
     -readability-magic-numbers,
     -clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling,
+    -bugprone-easily-swappable-parameters,
 
 WarningsAsErrors: "*"
