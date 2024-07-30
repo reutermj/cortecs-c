@@ -7,24 +7,34 @@
 #include <stdlib.h>
 #include <world.h>
 
+// Implementation of a size segregated, deferred reference counting gc
+// Allocations are made from a set of size classes or will fallback to
+// malloc if the allocation fits in none of the size classes
+// Collection is handled with immediate increments and deferred decrements.
+// Since all increments happen before any decrement, if the reference count
+// is ever 0, the allocation is garbage and can be collected.
+
 #define CORTECS_GC_NUM_SIZES 5
 static const uint32_t buffer_sizes[CORTECS_GC_NUM_SIZES] = {32, 64, 128, 256, 512};
 static const uint32_t name_max_size = sizeof("gc_buffer_512");
 static ecs_entity_t gc_buffers[CORTECS_GC_NUM_SIZES + 1];
 
+// struct for the
 typedef struct {
     void *ptr;
 } gc_buffer_ptr;
 
 static ecs_entity_t get_allocation_entity(void *allocation) {
-    ecs_entity_t *entity = (ecs_entity_t *)((uintptr_t)allocation - sizeof(uint32_t) - sizeof(ecs_entity_t));
-    return *entity;
+    return *(ecs_entity_t *)((uintptr_t)allocation - sizeof(uint32_t) - sizeof(ecs_entity_t));
 }
 
 static uint32_t *get_reference_count(void *allocation) {
     return (uint32_t *)((uintptr_t)allocation - sizeof(uint32_t));
 }
 
+// declared as a component, but it's really just an event.
+// used to pass the allocation pointer to the dec observer
+// without needing to know what size class the allocation is in
 typedef struct {
     void *allocation;
 } dec;
@@ -32,15 +42,11 @@ static ECS_COMPONENT_DECLARE(dec);
 
 static void on_dec(ecs_iter_t *iterator) {
     assert(iterator->count == 1);
-    printf("decing\n");
     dec *event = iterator->param;
     uint32_t *reference_count = get_reference_count(event->allocation);
-    uint32_t count = *reference_count - 1;
-    if (count == 0) {
-        printf("deleting\n");
+    *reference_count = *reference_count - 1;
+    if (*reference_count == 0) {
         ecs_delete(world, iterator->entities[0]);
-    } else {
-        *reference_count = count;
     }
 }
 
@@ -53,9 +59,10 @@ static void free_gc_buffer_ptr(void *ptr, int32_t count, const ecs_type_info_t *
 }
 
 void cortecs_gc_init() {
+    // initialize the various size classes
+    char name[name_max_size];
     for (int i = 0; i < CORTECS_GC_NUM_SIZES; i++) {
         uint32_t size = buffer_sizes[i];
-        char name[name_max_size];
         snprintf(name, name_max_size, "gc_buffer_%d", size);
         ecs_component_desc_t desc = {
             .entity = ecs_entity_init(world, &(ecs_entity_desc_t){.name = name}),
@@ -70,21 +77,22 @@ void cortecs_gc_init() {
         ecs_add_id(world, gc_buffers[i], EcsSparse);
     }
 
+    // initialize the malloc based buffer
+    // malloc based buffer doesnt need to be sparse
     ecs_component_desc_t desc = {
         .entity = ecs_entity_init(world, &(ecs_entity_desc_t){.name = "gc_buffer_ptr"}),
         .type = {
             .size = ECS_SIZEOF(gc_buffer_ptr),
             .alignment = ECS_ALIGNOF(gc_buffer_ptr),
             .hooks = {
+                // hook to free the malloced pointer when deleting the entity
                 .dtor = free_gc_buffer_ptr,
             },
         },
     };
     gc_buffers[CORTECS_GC_NUM_SIZES] = ecs_component_init(world, &desc);
-    // marking the buffer as sparse makes sure it doesnt get moved and
-    // pointers to it are stable
-    ecs_add_id(world, gc_buffers[CORTECS_GC_NUM_SIZES], EcsSparse);
 
+    // initialize the dec event and observer
     ECS_COMPONENT_DEFINE(world, dec);
     ecs_observer_desc_t dec_desc = {
         .query = {
@@ -97,6 +105,9 @@ void cortecs_gc_init() {
 }
 
 void gc_dec(ecs_entity_t target, void *allocation) {
+    // need to use a component event so that the pointer
+    // can be passed to the observer without knowing which
+    // size class was used to allocate it
     ecs_event_desc_t dec_event = {
         .event = ecs_id(dec),
         .entity = target,
@@ -106,6 +117,7 @@ void gc_dec(ecs_entity_t target, void *allocation) {
 }
 
 static void *alloc(uint32_t size, ecs_entity_t entity) {
+    // first try to allocate from one of the size classes
     void *allocation;
     for (int i = 0; i < CORTECS_GC_NUM_SIZES; i++) {
         if (size < buffer_sizes[i]) {
@@ -114,12 +126,14 @@ static void *alloc(uint32_t size, ecs_entity_t entity) {
         }
     }
 
+    // fallback to malloc based buffer
     gc_buffer_ptr *buffer = ecs_emplace_id(world, entity, gc_buffers[CORTECS_GC_NUM_SIZES], NULL);
     allocation = malloc(sizeof(ecs_entity_t) + sizeof(uint32_t) + size);
     buffer->ptr = allocation;
 
-initialize_allocation:;  // clang is complaining about expected expression if this semicolon isnt here
-
+initialize_allocation:;
+    // initialize the allocation metadata
+    // [entity | reference count | user memory ...]
     ecs_entity_t *entity_location = allocation;
     *entity_location = entity;
     uint32_t *count_location = (uint32_t *)((uintptr_t)allocation + sizeof(ecs_entity_t));
@@ -130,25 +144,22 @@ initialize_allocation:;  // clang is complaining about expected expression if th
 
 void *cortecs_gc_alloc(uint32_t size) {
     ecs_entity_t entity = ecs_new(world);
-    int buffer_index = 0;
-    for (; buffer_index < CORTECS_GC_NUM_SIZES; buffer_index++) {
-        if (size < buffer_sizes[buffer_index]) {
-            break;
-        }
-    }
-
     void *allocation = alloc(size, entity);
-    gc_dec(entity, allocation);
 
+    // defer a decrement to collect allocations that are never
+    // attached to an entity
+    gc_dec(entity, allocation);
     return allocation;
 }
 
 void cortecs_gc_inc(void *allocation) {
+    // Immediate increment
     // TODO make atomic
     uint32_t *count = get_reference_count(allocation);
     *count = *count + 1;
 }
 
 void cortecs_gc_dec(void *allocation) {
+    // Deferred decrement
     gc_dec(get_allocation_entity(allocation), allocation);
 }
