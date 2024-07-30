@@ -2,43 +2,45 @@
 #include <common.h>
 #include <flecs.h>
 #include <gc.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <world.h>
 
 #define CORTECS_GC_NUM_SIZES 5
 static const uint32_t buffer_sizes[CORTECS_GC_NUM_SIZES] = {32, 64, 128, 256, 512};
-const uint32_t name_max_size = sizeof("gc_buffer_512");
+static const uint32_t name_max_size = sizeof("gc_buffer_512");
 static ecs_entity_t gc_buffers[CORTECS_GC_NUM_SIZES + 1];
-
-typedef struct {
-    uint32_t count;
-} reference_count;
-static ECS_COMPONENT_DECLARE(reference_count);
 
 typedef struct {
     void *ptr;
 } gc_buffer_ptr;
 
-static void on_inc(ecs_iter_t *iterator) {
-    reference_count *count = ecs_field(iterator, reference_count, 0);
-
-    for (int i = 0; i < iterator->count; i++) {
-        printf("incing\n");
-        count->count++;
-    }
+static ecs_entity_t get_allocation_entity(void *allocation) {
+    ecs_entity_t *entity = (ecs_entity_t *)((uintptr_t)allocation - sizeof(uint32_t) - sizeof(ecs_entity_t));
+    return *entity;
 }
 
-static void on_dec(ecs_iter_t *iterator) {
-    reference_count *count = ecs_field(iterator, reference_count, 0);
+static uint32_t *get_reference_count(void *allocation) {
+    return (uint32_t *)((uintptr_t)allocation - sizeof(uint32_t));
+}
 
-    for (int i = 0; i < iterator->count; i++) {
-        printf("decing\n");
-        count->count--;
-        if (count->count == 0) {
-            printf("deleting\n");
-            ecs_delete(world, iterator->entities[i]);
-        }
+typedef struct {
+    void *allocation;
+} dec;
+static ECS_COMPONENT_DECLARE(dec);
+
+static void on_dec(ecs_iter_t *iterator) {
+    assert(iterator->count == 1);
+    printf("decing\n");
+    dec *event = iterator->param;
+    uint32_t *reference_count = get_reference_count(event->allocation);
+    uint32_t count = *reference_count - 1;
+    if (count == 0) {
+        printf("deleting\n");
+        ecs_delete(world, iterator->entities[0]);
+    } else {
+        *reference_count = count;
     }
 }
 
@@ -50,12 +52,7 @@ static void free_gc_buffer_ptr(void *ptr, int32_t count, const ecs_type_info_t *
     }
 }
 
-static ecs_entity_t inc;
-static ecs_entity_t dec;
-
 void cortecs_gc_init() {
-    ECS_COMPONENT_DEFINE(world, reference_count);
-
     for (int i = 0; i < CORTECS_GC_NUM_SIZES; i++) {
         uint32_t size = buffer_sizes[i];
         char name[name_max_size];
@@ -63,8 +60,8 @@ void cortecs_gc_init() {
         ecs_component_desc_t desc = {
             .entity = ecs_entity_init(world, &(ecs_entity_desc_t){.name = name}),
             .type = {
-                .size = ECS_SIZEOF(ecs_entity_t) + size,
-                .alignment = ECS_ALIGNOF(ecs_entity_t) + size,
+                .size = ECS_SIZEOF(ecs_entity_t) + ECS_SIZEOF(uint32_t) + size,
+                .alignment = ECS_ALIGNOF(ecs_entity_t) + ECS_ALIGNOF(uint32_t) + size,
             },
         };
         gc_buffers[i] = ecs_component_init(world, &desc);
@@ -88,53 +85,47 @@ void cortecs_gc_init() {
     // pointers to it are stable
     ecs_add_id(world, gc_buffers[CORTECS_GC_NUM_SIZES], EcsSparse);
 
-    inc = ecs_new(world);
-    ecs_observer_desc_t inc_desc = {
-        .query = {
-            .terms[0].id = ecs_id(reference_count),
-        },
-        .events[0] = inc,
-        .callback = on_inc,
-    };
-    ecs_observer_init(world, &inc_desc);
-
-    dec = ecs_new(world);
+    ECS_COMPONENT_DEFINE(world, dec);
     ecs_observer_desc_t dec_desc = {
         .query = {
-            .terms[0].id = ecs_id(reference_count),
+            .terms[0].id = EcsAny,
         },
-        .events[0] = dec,
+        .events[0] = ecs_id(dec),
         .callback = on_dec,
     };
     ecs_observer_init(world, &dec_desc);
 }
 
-void gc_dec(ecs_entity_t target) {
+void gc_dec(ecs_entity_t target, void *allocation) {
     ecs_event_desc_t dec_event = {
-        .event = dec,
+        .event = ecs_id(dec),
         .entity = target,
-        .ids = &(ecs_type_t){
-            .array = ecs_ids(ecs_id(reference_count)),
-            .count = 1,
-        },
+        .param = &(dec){.allocation = allocation},
     };
     ecs_enqueue(world, &dec_event);
 }
 
 static void *alloc(uint32_t size, ecs_entity_t entity) {
+    void *allocation;
     for (int i = 0; i < CORTECS_GC_NUM_SIZES; i++) {
         if (size < buffer_sizes[i]) {
-            ecs_entity_t *memory = ecs_emplace_id(world, entity, gc_buffers[i], NULL);
-            memory[0] = entity;
-            return &memory[1];
+            allocation = ecs_emplace_id(world, entity, gc_buffers[i], NULL);
+            goto initialize_allocation;
         }
     }
 
     gc_buffer_ptr *buffer = ecs_emplace_id(world, entity, gc_buffers[CORTECS_GC_NUM_SIZES], NULL);
-    ecs_entity_t *memory = malloc(sizeof(ecs_entity_t) + size);
-    buffer->ptr = memory;
-    memory[0] = entity;
-    return &memory[1];
+    allocation = malloc(sizeof(ecs_entity_t) + sizeof(uint32_t) + size);
+    buffer->ptr = allocation;
+
+initialize_allocation:;  // clang is complaining about expected expression if this semicolon isnt here
+
+    ecs_entity_t *entity_location = allocation;
+    *entity_location = entity;
+    uint32_t *count_location = (uint32_t *)((uintptr_t)allocation + sizeof(ecs_entity_t));
+    *count_location = 1;
+
+    return (void *)((uintptr_t)count_location + sizeof(uint32_t));
 }
 
 void *cortecs_gc_alloc(uint32_t size) {
@@ -146,30 +137,18 @@ void *cortecs_gc_alloc(uint32_t size) {
         }
     }
 
-    void *memory = alloc(size, entity);
-    ecs_set(world, entity, reference_count, {.count = 1});
-    gc_dec(entity);
+    void *allocation = alloc(size, entity);
+    gc_dec(entity, allocation);
 
-    return memory;
-}
-
-ecs_entity_t get_allocation_entity(void *allocation) {
-    ecs_entity_t *entity = (ecs_entity_t *)(((uintptr_t)allocation) - sizeof(ecs_entity_t));
-    return *entity;
+    return allocation;
 }
 
 void cortecs_gc_inc(void *allocation) {
-    ecs_event_desc_t inc_event = {
-        .event = inc,
-        .entity = get_allocation_entity(allocation),
-        .ids = &(ecs_type_t){
-            .array = ecs_ids(ecs_id(reference_count)),
-            .count = 1,
-        },
-    };
-    ecs_emit(world, &inc_event);
+    // TODO make atomic
+    uint32_t *count = get_reference_count(allocation);
+    *count = *count + 1;
 }
 
 void cortecs_gc_dec(void *allocation) {
-    gc_dec(get_allocation_entity(allocation));
+    gc_dec(get_allocation_entity(allocation), allocation);
 }
