@@ -19,7 +19,7 @@ static const uint32_t buffer_sizes[CORTECS_GC_NUM_SIZES] = {32, 64, 128, 256, 51
 static const uint32_t name_max_size = sizeof("gc_buffer_512");
 static ecs_entity_t gc_buffers[CORTECS_GC_NUM_SIZES + 1];
 
-// struct for the
+// struct for the malloc based fallback
 typedef struct {
     void *ptr;
 } gc_buffer_ptr;
@@ -52,10 +52,9 @@ static void on_dec(ecs_iter_t *iterator) {
 
 static void free_gc_buffer_ptr(void *ptr, int32_t count, const ecs_type_info_t *type_info) {
     UNUSED(type_info);
-    gc_buffer_ptr *buffers = (gc_buffer_ptr *)ptr;
-    for (int i = 0; i < count; i++) {
-        free(buffers[i].ptr);
-    }
+    assert(count == 1);
+    gc_buffer_ptr *buffer = (gc_buffer_ptr *)ptr;
+    free(buffer->ptr);
 }
 
 void cortecs_gc_init() {
@@ -162,4 +161,9 @@ void cortecs_gc_inc(void *allocation) {
 void cortecs_gc_dec(void *allocation) {
     // Deferred decrement
     gc_dec(get_allocation_entity(allocation), allocation);
+}
+
+bool cortecs_gc_is_alive(void *allocation) {
+    ecs_entity_t entity = get_allocation_entity(allocation);
+    return ecs_is_alive(world, entity);
 }
