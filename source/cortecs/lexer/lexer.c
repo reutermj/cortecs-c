@@ -43,7 +43,7 @@ static void accumulate_codepoint(lexer_state_t *state, UChar32 codepoint) {
 
 static cortecs_lexer_token_t construct_result(cortecs_lexer_tag_t tag, lexer_state_t *state) {
     // allocate a buffer for the utf-8 encoding of the token + null terminator
-    uint8_t *content = cortecs_gc_alloc((state->u8_length + 1) * sizeof(uint8_t));
+    uint8_t *content = cortecs_gc_alloc((state->u8_length + 1) * sizeof(uint8_t), NULL);
 
     // reset the UText to the start of this token and copy it into the buffer
     utext_setNativeIndex(state->text, state->start);

@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <common.h>
 #include <gc.h>
 #include <world.h>
 
@@ -86,7 +87,8 @@ void cortecs_gc_init() {
     ecs_system_init(world, &tracing_system);
 }
 
-void *cortecs_gc_alloc(uint32_t size) {
+void *cortecs_gc_alloc(uint32_t size, cortecs_gc_finalizer finalizer) {
+    UNUSED(finalizer);
     assert(size <= CORTECS_GC_ALLOC_MAX_SIZE);
 
     ecs_entity_t entity = ecs_new(world);
