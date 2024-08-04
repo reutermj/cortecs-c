@@ -1,5 +1,4 @@
 load("@bazel_skylib//rules:common_settings.bzl", "string_flag")
-load("@rules_cc//cc:defs.bzl", "cc_library")
 
 # defines a cli flag that lets you configure the gc implementation
 # --//source/cortecs/gc:impl=rc
