@@ -8,8 +8,10 @@
 #include <unicode/urename.h>
 #include <unicode/utypes.h>
 #include <unity.h>
+#include <world.h>
 
 void cortecs_lexer_test(UText *text, char *gold, cortecs_lexer_tag_t tag) {
+    ecs_defer_begin(world);
     cortecs_lexer_token_t out = cortecs_lexer_next(text);
 
     string_t gold_text = {
@@ -39,7 +41,7 @@ void cortecs_lexer_test(UText *text, char *gold, cortecs_lexer_tag_t tag) {
         NOOP;
     }
     TEST_ASSERT_TRUE(areEqual);
-    string_cleanup(out.text);
+    ecs_defer_end(world);
 }
 
 void cortecs_lexer_test_fuzz(cortecs_lexer_test_config_t config) {

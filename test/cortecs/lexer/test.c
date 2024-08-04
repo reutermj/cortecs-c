@@ -1,5 +1,6 @@
 #include <common.h>
 #include <ctype.h>
+#include <gc.h>
 #include <lexer.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -10,6 +11,7 @@
 #include <unicode/urename.h>
 #include <unicode/utypes.h>
 #include <unity.h>
+#include <world.h>
 
 #include "test_configs.h"
 #include "test_impls.h"
@@ -309,9 +311,10 @@ int main() {
 
 void setUp() {
     srand(time(NULL));
-    // required for unity
+    cortecs_world_init();
+    cortecs_gc_init();
 }
 
 void tearDown() {
-    // required for unity
+    cortecs_world_cleanup();
 }
