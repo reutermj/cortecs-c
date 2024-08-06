@@ -133,11 +133,11 @@ void gc_dec(ecs_entity_t target, void *allocation) {
     ecs_enqueue(world, &dec_event);
 }
 
-static void *alloc(uint32_t size, ecs_entity_t entity, cortecs_gc_finalizer finalizer) {
+static void *alloc(uint32_t element_size, ecs_entity_t entity, cortecs_gc_finalizer finalizer) {
     // first try to allocate from one of the size classes
     void *allocation;
     for (int i = 0; i < CORTECS_GC_NUM_SIZES; i++) {
-        if (size < buffer_sizes[i]) {
+        if (element_size < buffer_sizes[i]) {
             allocation = ecs_emplace_id(world, entity, gc_buffers[i], NULL);
             goto initialize_allocation;
         }
@@ -145,7 +145,7 @@ static void *alloc(uint32_t size, ecs_entity_t entity, cortecs_gc_finalizer fina
 
     // fallback to malloc based buffer
     gc_buffer_ptr *buffer = ecs_emplace_id(world, entity, gc_buffers[CORTECS_GC_NUM_SIZES], NULL);
-    allocation = malloc(HEADER_SIZE + size);
+    allocation = malloc(HEADER_SIZE + element_size);
     buffer->ptr = allocation;
 
 initialize_allocation:;
@@ -159,9 +159,9 @@ initialize_allocation:;
     return (void *)((uintptr_t)count_location + sizeof(uint32_t));
 }
 
-void *cortecs_gc_alloc(uint32_t size, cortecs_gc_finalizer finalizer) {
+void *cortecs_gc_alloc(uint32_t element_size, cortecs_gc_finalizer finalizer) {
     ecs_entity_t entity = ecs_new(world);
-    void *allocation = alloc(size, entity, finalizer);
+    void *allocation = alloc(element_size, entity, finalizer);
 
     // defer a decrement to collect allocations that are never
     // attached to an entity
