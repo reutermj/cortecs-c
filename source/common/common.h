@@ -10,4 +10,9 @@
     int CONCAT(NOOP_, __LINE__) = 0; \
     UNUSED(CONCAT(NOOP_, __LINE__));
 
+#define MASK(BITS) (~(UINT64_MAX << BITS))
+
+#define COMPILE_TIME_ASSERT(predicate) \
+    static char CONCAT(compile_time_assertion_, line)[!!(predicate)-1];
+
 #endif
