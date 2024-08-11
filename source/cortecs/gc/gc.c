@@ -14,11 +14,13 @@
 // Since all increments happen before any decrement, if the reference count
 // is ever 0, the allocation is garbage and can be collected.
 
-// Current memory layout
-// [entity | finalizer | reference count | data buffer]
+typedef struct {
+    ecs_entity_t entity;
+    uint16_t type;
+    uint16_t count;
+} gc_header;
 
 #define ENTITY_OFFSET (0)
-#define FINALIZER_OFFSET (sizeof(ecs_entity_t))
 #define RC_OFFSET (FINALIZER_OFFSET + sizeof(cortecs_gc_finalizer))
 #define DATA_OFFSET (RC_OFFSET + sizeof(uint32_t))
 #define HEADER_SIZE DATA_OFFSET
@@ -33,16 +35,36 @@ typedef struct {
     void *ptr;
 } gc_buffer_ptr;
 
+static gc_header *get_header(void *allocation) {
+    return (gc_header *)((uintptr_t)allocation - sizeof(gc_header));
+}
+
 static ecs_entity_t get_entity(void *allocation) {
-    return *(ecs_entity_t *)((uintptr_t)allocation - DATA_OFFSET + ENTITY_OFFSET);
+    return get_header(allocation)->entity;
 }
 
-static cortecs_gc_finalizer get_finalizer(void *allocation) {
-    return *(cortecs_gc_finalizer *)((uintptr_t)allocation - DATA_OFFSET + FINALIZER_OFFSET);
-}
+typedef struct {
+    cortecs_gc_finalizer finalizer;
+    uint32_t size;
+} gc_type_info;
 
-static uint32_t *get_reference_count(void *allocation) {
-    return (uint32_t *)((uintptr_t)allocation - DATA_OFFSET + RC_OFFSET);
+// Define registered type info
+// reserved types:
+//   0: NOOP on collection
+//   1: Decrement pointer on collection (mostly useful for arrays of pointers)
+#define TYPE_BITS 16
+#define MAX_REGISTERED_TYPES (1 << TYPE_BITS)
+static gc_type_info registered_types[MAX_REGISTERED_TYPES];
+static uint32_t next_type_index = 2;
+
+cortecs_gc_type_index cortecs_gc_register_type(cortecs_gc_finalizer finalizer, uint32_t size) {
+    cortecs_gc_type_index index = next_type_index;
+    next_type_index++;
+    registered_types[index] = (gc_type_info){
+        .finalizer = finalizer,
+        .size = size,
+    };
+    return index;
 }
 
 // declared as a component, but it's really just an event.
@@ -57,13 +79,16 @@ static void on_dec(ecs_iter_t *iterator) {
     assert(iterator->count == 1);
     dec *event = iterator->param;
     void *allocation = event->allocation;
-    uint32_t *reference_count = get_reference_count(allocation);
-    *reference_count = *reference_count - 1;
-    if (*reference_count == 0) {
-        cortecs_gc_finalizer finalizer = get_finalizer(allocation);
-        if (finalizer) {
-            finalizer(allocation);
+    gc_header *header = get_header(allocation);
+    header->count--;
+    if (header->count == 0) {
+        if (header->type) {
+            gc_type_info type = registered_types[header->type];
+            if (type.finalizer) {
+                type.finalizer(allocation);
+            }
         }
+
         ecs_delete(world, iterator->entities[0]);
     }
 }
@@ -84,8 +109,8 @@ void cortecs_gc_init() {
         ecs_component_desc_t desc = {
             .entity = ecs_entity_init(world, &(ecs_entity_desc_t){.name = name}),
             .type = {
-                .size = HEADER_SIZE + size,
-                .alignment = HEADER_SIZE + size,
+                .size = (ecs_size_t)(sizeof(gc_header) + size),
+                .alignment = (ecs_size_t)(sizeof(gc_header) + size),
             },
         };
         gc_buffers[i] = ecs_component_init(world, &desc);
@@ -133,7 +158,7 @@ void gc_dec(ecs_entity_t target, void *allocation) {
     ecs_enqueue(world, &dec_event);
 }
 
-static void *alloc(uint32_t element_size, ecs_entity_t entity, cortecs_gc_finalizer finalizer) {
+static void *alloc(uint32_t element_size, ecs_entity_t entity, cortecs_gc_type_index type_index) {
     // first try to allocate from one of the size classes
     void *allocation;
     for (int i = 0; i < CORTECS_GC_NUM_SIZES; i++) {
@@ -145,23 +170,21 @@ static void *alloc(uint32_t element_size, ecs_entity_t entity, cortecs_gc_finali
 
     // fallback to malloc based buffer
     gc_buffer_ptr *buffer = ecs_emplace_id(world, entity, gc_buffers[CORTECS_GC_NUM_SIZES], NULL);
-    allocation = malloc(HEADER_SIZE + element_size);
+    allocation = malloc(sizeof(gc_header) + element_size);
     buffer->ptr = allocation;
 
 initialize_allocation:;
-    ecs_entity_t *entity_location = allocation;
-    *entity_location = entity;
-    cortecs_gc_finalizer *finalizer_location = (cortecs_gc_finalizer *)((uintptr_t)allocation + FINALIZER_OFFSET);
-    *finalizer_location = finalizer;
-    uint32_t *count_location = (uint32_t *)((uintptr_t)allocation + RC_OFFSET);
-    *count_location = 1;
+    gc_header *header = allocation;
+    header->entity = entity;
+    header->type = type_index;
+    header->count = 1;
 
-    return (void *)((uintptr_t)count_location + sizeof(uint32_t));
+    return (void *)((uintptr_t)allocation + sizeof(gc_header));
 }
 
-void *cortecs_gc_alloc(uint32_t element_size, cortecs_gc_finalizer finalizer) {
+void *cortecs_gc_alloc(uint32_t element_size, cortecs_gc_type_index type_index) {
     ecs_entity_t entity = ecs_new(world);
-    void *allocation = alloc(element_size, entity, finalizer);
+    void *allocation = alloc(element_size, entity, type_index);
 
     // defer a decrement to collect allocations that are never
     // attached to an entity
@@ -172,8 +195,7 @@ void *cortecs_gc_alloc(uint32_t element_size, cortecs_gc_finalizer finalizer) {
 void cortecs_gc_inc(void *allocation) {
     // Immediate increment
     // TODO make atomic
-    uint32_t *count = get_reference_count(allocation);
-    *count = *count + 1;
+    get_header(allocation)->count++;
 }
 
 void cortecs_gc_dec(void *allocation) {
