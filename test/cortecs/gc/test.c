@@ -14,7 +14,7 @@ static void test_collect_unused_allocation() {
     cortecs_gc_init();
 
     ecs_defer_begin(world);
-    void *allocation = cortecs_gc_alloc(128, NULL);
+    void *allocation = cortecs_gc_alloc(128, 0);
     ecs_defer_end(world);
 
     TEST_ASSERT_FALSE(cortecs_gc_is_alive(allocation));
@@ -27,7 +27,7 @@ static void test_keep_used_allocation() {
     cortecs_gc_init();
 
     ecs_defer_begin(world);
-    void *allocation = cortecs_gc_alloc(128, NULL);
+    void *allocation = cortecs_gc_alloc(128, 0);
     cortecs_gc_inc(allocation);
     ecs_defer_end(world);
 
@@ -41,7 +41,7 @@ static void test_keep_then_collect() {
     cortecs_gc_init();
 
     ecs_defer_begin(world);
-    void *allocation = cortecs_gc_alloc(128, NULL);
+    void *allocation = cortecs_gc_alloc(128, 0);
     cortecs_gc_inc(allocation);
     ecs_defer_end(world);
 
@@ -61,7 +61,7 @@ static void test_allocate_sizes() {
     cortecs_gc_init();
     for (uint32_t size = 32; size < 1024; size += 32) {
         ecs_defer_begin(world);
-        cortecs_gc_alloc(size, NULL);
+        cortecs_gc_alloc(size, 0);
         ecs_defer_end(world);
     }
     cortecs_world_cleanup();
@@ -76,8 +76,10 @@ static void test_noop_finalizer() {
     cortecs_world_init();
     cortecs_gc_init();
 
+    cortecs_gc_type_index noop = cortecs_gc_register_type(noop_finalizer, 0);
+
     ecs_defer_begin(world);
-    cortecs_gc_alloc(128, noop_finalizer);
+    cortecs_gc_alloc(128, noop);
     ecs_defer_end(world);
 
     TEST_ASSERT_TRUE(noop_finalizer_called);

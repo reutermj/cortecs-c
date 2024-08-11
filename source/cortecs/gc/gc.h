@@ -5,8 +5,10 @@
 #include <stdint.h>
 
 typedef void (*cortecs_gc_finalizer)(void *allocation);
+typedef uint16_t cortecs_gc_type_index;
 
-void *cortecs_gc_alloc(uint32_t size, cortecs_gc_finalizer finalizer);
+void *cortecs_gc_alloc(uint32_t size, cortecs_gc_type_index type_index);
+cortecs_gc_type_index cortecs_gc_register_type(cortecs_gc_finalizer finalizer, uint32_t size);
 void cortecs_gc_init();
 void cortecs_gc_inc(void *allocation);
 void cortecs_gc_dec(void *allocation);
