@@ -3,6 +3,9 @@
 
 #include <flecs.h>
 
+#define CORTECS_APPLICATION_ENTITY_MIN 0
+#define CORTECS_APPLICATION_ENTITY_MAX 0xFFF00000
+
 extern ecs_world_t *world;
 
 void cortecs_world_init();

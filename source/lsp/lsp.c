@@ -3,6 +3,7 @@
 #include <assert.h>
 #include <cJSON.h>
 #include <common.h>
+#include <gc.h>
 #include <persistent_string.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -27,7 +28,7 @@ static lsp_parse_error_t find_field(const cJSON *json, const char *field_name, b
             };
         }
 
-        char *error_message = malloc(LSP_ERROR_MESSAGE_MAX_SIZE);
+        char *error_message = cortecs_gc_alloc(LSP_ERROR_MESSAGE_MAX_SIZE, 0);
         snprintf(
             error_message,
             LSP_ERROR_MESSAGE_MAX_SIZE,
@@ -47,7 +48,7 @@ static lsp_parse_error_t find_field(const cJSON *json, const char *field_name, b
 }
 
 lsp_parse_error_t incorrect_type_message(const cJSON *field, const char *type_string) {
-    char *error_message = malloc(LSP_ERROR_MESSAGE_MAX_SIZE);
+    char *error_message = cortecs_gc_alloc(LSP_ERROR_MESSAGE_MAX_SIZE, 0);
     char *field_str = cJSON_Print(field);
     snprintf(
         error_message,
