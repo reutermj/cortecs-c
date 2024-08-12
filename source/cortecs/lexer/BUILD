@@ -12,9 +12,9 @@ cc_library(
         "//source/common",
         "//source/cortecs/common",
         "//source/cortecs/gc",
-        "//third_party/icu4c/common:errorcode",
-        "//third_party/icu4c/common:headers",
-        "//third_party/icu4c/common:uchar",
-        "//third_party/icu4c/common:utext",
+        "@icu//icu4c/source/common:errorcode",
+        "@icu//icu4c/source/common:headers",
+        "@icu//icu4c/source/common:uchar",
+        "@icu//icu4c/source/common:utext",
     ],
 )
