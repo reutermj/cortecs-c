@@ -1,1 +1,1 @@
-common --copt="-Wall" --copt="-Wextra" --conlyopt="-std=gnu11"
+common --copt="-Wall" --copt="-Wextra" --conlyopt="-std=gnu11" --cxxopt="-std=c++17"
