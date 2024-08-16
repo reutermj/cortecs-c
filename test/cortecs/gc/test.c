@@ -1,3 +1,4 @@
+#include <array.h>
 #include <common.h>
 #include <flecs.h>
 #include <gc.h>
@@ -29,7 +30,7 @@ static void test_collect_unused_allocation_array() {
     cortecs_gc_init();
 
     ecs_defer_begin(world);
-    void *allocation = cortecs_gc_alloc_array(128, 4, 0);
+    array(void) allocation = cortecs_gc_alloc_array(128, 4, 0);
     TEST_ASSERT_NOT_NULL(allocation);
     ecs_defer_end(world);
 
@@ -57,7 +58,7 @@ static void test_keep_used_allocation_array() {
     cortecs_gc_init();
 
     ecs_defer_begin(world);
-    void *allocation = cortecs_gc_alloc_array(128, 4, 0);
+    array(void) allocation = cortecs_gc_alloc_array(128, 4, 0);
     cortecs_gc_inc(allocation);
     ecs_defer_end(world);
 
@@ -91,7 +92,7 @@ static void test_keep_then_collect_array() {
     cortecs_gc_init();
 
     ecs_defer_begin(world);
-    void *allocation = cortecs_gc_alloc_array(128, 4, 0);
+    array(void) allocation = cortecs_gc_alloc_array(128, 4, 0);
     cortecs_gc_inc(allocation);
     ecs_defer_end(world);
 

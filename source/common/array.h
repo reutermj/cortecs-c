@@ -21,4 +21,9 @@ array_declare(uint16_t);
 array_declare(uint32_t);
 array_declare(uint64_t);
 
+typedef struct {
+    uint32_t size;
+
+} array_void;
+
 #endif
