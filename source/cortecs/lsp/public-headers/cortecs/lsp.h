@@ -1,7 +1,7 @@
-#ifndef LSP_LSP_H
-#define LSP_LSP_H
+#ifndef CORTECS_LSP_LSP_H
+#define CORTECS_LSP_LSP_H
 
-#include <persistent_string.h>
+#include <cortecs/string.h>
 #include <stdbool.h>
 
 #define LSP_ERROR_MESSAGE_MAX_SIZE (sizeof(char) * 256)

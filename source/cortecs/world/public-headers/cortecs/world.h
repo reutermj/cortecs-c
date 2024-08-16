@@ -1,5 +1,5 @@
-#ifndef CORTECS_COMMON_WORLD_H
-#define CORTECS_COMMON_WORLD_H
+#ifndef CORTECS_WORLD_WORLD_H
+#define CORTECS_WORLD_WORLD_H
 
 #include <flecs.h>
 

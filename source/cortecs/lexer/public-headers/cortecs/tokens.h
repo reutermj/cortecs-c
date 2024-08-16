@@ -1,8 +1,8 @@
 #ifndef CORTECS_LEXER_TOKENS_H
 #define CORTECS_LEXER_TOKENS_H
 
-#include <persistent_string.h>
-#include <span.h>
+#include <cortecs/span.h>
+#include <cortecs/string.h>
 #include <unicode/uchar.h>
 
 typedef enum {

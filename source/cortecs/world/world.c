@@ -1,4 +1,4 @@
-#include <world.h>
+#include <cortecs/world.h>
 
 ecs_world_t *world;
 

@@ -1,6 +1,6 @@
 #include <assert.h>
+#include <cortecs/tokens.h>
 #include <stdbool.h>
-#include <tokens.h>
 
 const char *cortecs_lexer_tag_to_string(cortecs_lexer_tag_t tag) {
     switch (tag) {

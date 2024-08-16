@@ -1,8 +1,8 @@
 #include "test_configs.h"
 
 #include <common.h>
+#include <cortecs/tokens.h>
 #include <ctype.h>
-#include <tokens.h>
 
 static const char space_lookup[] = {' ', '\t', '\r', '\v', '\f'};
 static uint32_t lexer_test_space_max_entropy(uint32_t state) {

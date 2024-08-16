@@ -1,9 +1,7 @@
-#include "lsp.h"
-
 #include <assert.h>
 #include <cJSON.h>
 #include <common.h>
-#include <persistent_string.h>
+#include <cortecs/lsp.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
