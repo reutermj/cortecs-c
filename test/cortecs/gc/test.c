@@ -1,7 +1,8 @@
-#include <array.h>
 #include <common.h>
+#include <cortecs/array.h>
+#include <cortecs/gc.h>
+#include <cortecs/world.h>
 #include <flecs.h>
-#include <gc.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -9,7 +10,6 @@
 #include <string.h>
 #include <time.h>
 #include <unity.h>
-#include <world.h>
 
 static void test_collect_unused_allocation() {
     cortecs_world_init();

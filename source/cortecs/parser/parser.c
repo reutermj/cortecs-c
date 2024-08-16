@@ -1,7 +1,7 @@
 #include <common.h>
+#include <cortecs/parser.h>
+#include <cortecs/span.h>
 #include <flecs.h>
-#include <parser.h>
-#include <span.h>
 #include <stdlib.h>
 
 // for use when dfs traversals are implemented

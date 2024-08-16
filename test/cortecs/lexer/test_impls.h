@@ -1,9 +1,9 @@
 #ifndef CORTECS_LEXER_TEST_TEST_IMPLS_H
 #define CORTECS_LEXER_TEST_TEST_IMPLS_H
 
+#include <cortecs/tokens.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include <tokens.h>
 #include <unicode/utext.h>
 
 typedef struct {

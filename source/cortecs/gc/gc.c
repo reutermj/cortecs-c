@@ -1,12 +1,12 @@
-#include <array.h>
 #include <assert.h>
 #include <common.h>
+#include <cortecs/array.h>
+#include <cortecs/gc.h>
+#include <cortecs/world.h>
 #include <flecs.h>
-#include <gc.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <world.h>
 
 // Implementation of a size segregated, deferred reference counting gc
 // Allocations are made from a set of size classes or will fallback to

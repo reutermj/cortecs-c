@@ -1,4 +1,4 @@
-#include <persistent_string.h>
+#include <cortecs/string.h>
 #include <stdlib.h>
 #include <string.h>
 

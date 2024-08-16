@@ -1,17 +1,17 @@
 #include <common.h>
+#include <cortecs/gc.h>
+#include <cortecs/lexer.h>
+#include <cortecs/tokens.h>
+#include <cortecs/world.h>
 #include <ctype.h>
-#include <gc.h>
-#include <lexer.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
 #include <time.h>
-#include <tokens.h>
 #include <unicode/urename.h>
 #include <unicode/utypes.h>
 #include <unity.h>
-#include <world.h>
 
 #include "test_configs.h"
 #include "test_impls.h"

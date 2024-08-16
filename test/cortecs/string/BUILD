@@ -7,7 +7,7 @@ cc_test(
     ]),
     features = ["treat_warnings_as_errors"],
     deps = [
-        "//source/cortecs/common",
+        "//source/cortecs/string",
         "@unity",
     ],
 )

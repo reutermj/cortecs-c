@@ -1,8 +1,8 @@
 #ifndef CORTECS_COMMON_SPAN_H
 #define CORTECS_COMMON_SPAN_H
 
+#include <cortecs/string.h>
 #include <flecs.h>
-#include <persistent_string.h>
 #include <stdint.h>
 
 typedef struct {

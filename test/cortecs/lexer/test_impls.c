@@ -1,14 +1,14 @@
 #include "test_impls.h"
 
 #include <common.h>
-#include <lexer.h>
-#include <persistent_string.h>
+#include <cortecs/lexer.h>
+#include <cortecs/string.h>
+#include <cortecs/tokens.h>
+#include <cortecs/world.h>
 #include <stdlib.h>
-#include <tokens.h>
 #include <unicode/urename.h>
 #include <unicode/utypes.h>
 #include <unity.h>
-#include <world.h>
 
 void cortecs_lexer_test(UText *text, char *gold, cortecs_lexer_tag_t tag) {
     ecs_defer_begin(world);

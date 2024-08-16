@@ -1,12 +1,12 @@
 #include <assert.h>
+#include <cortecs/gc.h>
+#include <cortecs/lexer.h>
+#include <cortecs/span.h>
+#include <cortecs/tokens.h>
 #include <ctype.h>
-#include <gc.h>
-#include <lexer.h>
-#include <span.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
-#include <tokens.h>
 #include <unicode/uchar.h>
 #include <unicode/umachine.h>
 #include <unicode/urename.h>

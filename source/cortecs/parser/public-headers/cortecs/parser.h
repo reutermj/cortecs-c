@@ -1,8 +1,8 @@
 #ifndef CORTECS_PARSER_PARSER_H
 #define CORTECS_PARSER_PARSER_H
 
+#include <cortecs/tokens.h>
 #include <stdbool.h>
-#include <tokens.h>
 
 typedef enum {
     CORTECS_AST_FUNCTION,
