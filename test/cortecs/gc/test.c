@@ -16,7 +16,7 @@ static void test_collect_unused_allocation() {
     cortecs_gc_init();
 
     ecs_defer_begin(world);
-    void *allocation = cortecs_gc_alloc(128, 0);
+    void *allocation = cortecs_gc_alloc(128, CORTECS_GC_NO_FINALIZER);
     TEST_ASSERT_NOT_NULL(allocation);
     ecs_defer_end(world);
 
@@ -30,7 +30,7 @@ static void test_collect_unused_allocation_array() {
     cortecs_gc_init();
 
     ecs_defer_begin(world);
-    cortecs_array(void) allocation = cortecs_gc_alloc_array(128, 4, 0);
+    cortecs_array(void) allocation = cortecs_gc_alloc_array(128, 4, CORTECS_GC_NO_FINALIZER);
     TEST_ASSERT_NOT_NULL(allocation);
     ecs_defer_end(world);
 
@@ -44,7 +44,7 @@ static void test_keep_used_allocation() {
     cortecs_gc_init();
 
     ecs_defer_begin(world);
-    void *allocation = cortecs_gc_alloc(128, 0);
+    void *allocation = cortecs_gc_alloc(128, CORTECS_GC_NO_FINALIZER);
     cortecs_gc_inc(allocation);
     ecs_defer_end(world);
 
@@ -58,7 +58,7 @@ static void test_keep_used_allocation_array() {
     cortecs_gc_init();
 
     ecs_defer_begin(world);
-    cortecs_array(void) allocation = cortecs_gc_alloc_array(128, 4, 0);
+    cortecs_array(void) allocation = cortecs_gc_alloc_array(128, 4, CORTECS_GC_NO_FINALIZER);
     cortecs_gc_inc(allocation);
     ecs_defer_end(world);
 
@@ -72,7 +72,7 @@ static void test_keep_then_collect() {
     cortecs_gc_init();
 
     ecs_defer_begin(world);
-    void *allocation = cortecs_gc_alloc(128, 0);
+    void *allocation = cortecs_gc_alloc(128, CORTECS_GC_NO_FINALIZER);
     cortecs_gc_inc(allocation);
     ecs_defer_end(world);
 
@@ -92,7 +92,7 @@ static void test_keep_then_collect_array() {
     cortecs_gc_init();
 
     ecs_defer_begin(world);
-    cortecs_array(void) allocation = cortecs_gc_alloc_array(128, 4, 0);
+    cortecs_array(void) allocation = cortecs_gc_alloc_array(128, 4, CORTECS_GC_NO_FINALIZER);
     cortecs_gc_inc(allocation);
     ecs_defer_end(world);
 
@@ -112,7 +112,7 @@ static void test_allocate_sizes() {
     cortecs_gc_init();
     for (uint32_t size = 32; size < 1024; size += 32) {
         ecs_defer_begin(world);
-        cortecs_gc_alloc(size, 0);
+        cortecs_gc_alloc(size, CORTECS_GC_NO_FINALIZER);
         ecs_defer_end(world);
     }
     cortecs_world_cleanup();
@@ -124,7 +124,7 @@ static void test_allocate_sizes_array() {
     for (uint32_t size = 32; size < 512; size += 32) {
         for (uint32_t elements = 0; elements < 128; elements++) {
             ecs_defer_begin(world);
-            cortecs_gc_alloc_array(size, elements, 0);
+            cortecs_gc_alloc_array(size, elements, CORTECS_GC_NO_FINALIZER);
             ecs_defer_end(world);
         }
     }
@@ -141,7 +141,7 @@ static void test_noop_finalizer() {
     cortecs_world_init();
     cortecs_gc_init();
 
-    cortecs_gc_type_index noop = cortecs_gc_register_type(noop_finalizer, 128);
+    cortecs_gc_finalizer_index noop = cortecs_gc_register_finalizer(noop_finalizer, 128);
 
     noop_finalizer_called = 0;
     ecs_defer_begin(world);
@@ -157,7 +157,7 @@ static void test_noop_finalizer_array() {
     cortecs_world_init();
     cortecs_gc_init();
 
-    cortecs_gc_type_index noop = cortecs_gc_register_type(noop_finalizer, 128);
+    cortecs_gc_finalizer_index noop = cortecs_gc_register_finalizer(noop_finalizer, 128);
 
     for (uint32_t elements = 1; elements < 128; elements++) {
         noop_finalizer_called = 0;

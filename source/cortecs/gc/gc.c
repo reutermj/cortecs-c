@@ -62,8 +62,8 @@ static uint32_t next_type_index = 2;
 #define ARRAY_BIT_OFF 0
 #define ARRAY_BIT_CLEAR ~ARRAY_BIT_ON
 
-cortecs_gc_type_index cortecs_gc_register_type(cortecs_gc_finalizer finalizer, uint32_t size) {
-    cortecs_gc_type_index index = next_type_index;
+cortecs_gc_finalizer_index cortecs_gc_register_finalizer(cortecs_gc_finalizer finalizer, uint32_t size) {
+    cortecs_gc_finalizer_index index = next_type_index;
     next_type_index++;
     registered_types[index] = (gc_type_info){
         .finalizer = finalizer,
@@ -172,7 +172,7 @@ void gc_dec(ecs_entity_t target, void *allocation) {
     ecs_enqueue(world, &dec_event);
 }
 
-static void *alloc(uint32_t element_size, cortecs_gc_type_index type_index, uint16_t array_bit) {
+static void *alloc(uint32_t element_size, cortecs_gc_finalizer_index type_index, uint16_t array_bit) {
     ecs_entity_t entity = ecs_new(world);
 
     // first try to allocate from one of the size classes
@@ -204,11 +204,11 @@ initialize_allocation:;
     return out_pointer;
 }
 
-void *cortecs_gc_alloc(uint32_t size, cortecs_gc_type_index type_index) {
+void *cortecs_gc_alloc(uint32_t size, cortecs_gc_finalizer_index type_index) {
     return alloc(size, type_index, ARRAY_BIT_OFF);
 }
 
-void *cortecs_gc_alloc_array(uint32_t size, uint32_t elements, cortecs_gc_type_index type_index) {
+void *cortecs_gc_alloc_array(uint32_t size, uint32_t elements, cortecs_gc_finalizer_index type_index) {
     cortecs_array(void) allocation = alloc(size * elements + (uint32_t)sizeof(uint32_t), type_index, ARRAY_BIT_ON);
     allocation->size = elements;
     return allocation;

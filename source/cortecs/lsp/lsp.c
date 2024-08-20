@@ -105,12 +105,12 @@ static lsp_object accept_object(const cJSON *field) {
     cortecs_array(cortecs_string) names = cortecs_gc_alloc_array(
         sizeof(cortecs_string),
         size,
-        0
+        CORTECS_GC_NO_FINALIZER
     );
     cortecs_array(lsp_any) values = cortecs_gc_alloc_array(
         sizeof(lsp_any),
         size,
-        0
+        CORTECS_GC_NO_FINALIZER
     );
 
     // read all fields into the arrays
