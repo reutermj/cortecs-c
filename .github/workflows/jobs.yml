@@ -16,8 +16,8 @@ jobs:
         uses: actions/checkout@v4
       
       # Make sure source has been formatted
-      - run: find source/ -iname '*.h' -o -iname '*.c' | xargs clang-format --dry-run --Werror
-      - run: find test/ -iname '*.h' -o -iname '*.c' | xargs clang-format --dry-run --Werror
+      - run: clang-format --dry-run --Werror $(find source/ -iname '*.h' -o -iname '*.c')
+      - run: clang-format --dry-run --Werror $(find test/ -iname '*.h' -o -iname '*.c')
 
       # Make sure it builds under both clang and gcc
       - run: CC=clang bazel build //...
