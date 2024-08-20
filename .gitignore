@@ -1,6 +1,5 @@
 bazel-*
 .vscode
-*.lock
 buildifier*
 bazelisk*
 compile_commands.json

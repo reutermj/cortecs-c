@@ -6,6 +6,7 @@ cc_library(
     includes = ["public-headers/"],
     visibility = ["//visibility:public"],
     deps = [
+        "//source/cortecs/array",
         "//source/cortecs/gc",
     ],
 )

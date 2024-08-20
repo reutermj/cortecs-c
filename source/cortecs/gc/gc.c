@@ -209,7 +209,7 @@ void *cortecs_gc_alloc(uint32_t size, cortecs_gc_type_index type_index) {
 }
 
 void *cortecs_gc_alloc_array(uint32_t size, uint32_t elements, cortecs_gc_type_index type_index) {
-    array(void) allocation = alloc(size * elements + (uint32_t)sizeof(uint32_t), type_index, ARRAY_BIT_ON);
+    cortecs_array(void) allocation = alloc(size * elements + (uint32_t)sizeof(uint32_t), type_index, ARRAY_BIT_ON);
     allocation->size = elements;
     return allocation;
 }

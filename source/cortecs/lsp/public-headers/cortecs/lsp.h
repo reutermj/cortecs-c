@@ -1,10 +1,9 @@
 #ifndef CORTECS_LSP_LSP_H
 #define CORTECS_LSP_LSP_H
 
+#include <cortecs/array.h>
 #include <cortecs/string.h>
 #include <stdbool.h>
-
-#define LSP_ERROR_MESSAGE_MAX_SIZE (sizeof(char) * 256)
 
 typedef struct {
     enum {
@@ -13,15 +12,15 @@ typedef struct {
         LSP_PARSE_MISSING_REQUIRED_FIELD,
         LSP_PARSE_TYPE_ERROR,
     } tag;
-    char *message;
+    cortecs_string message;
 } lsp_parse_error_t;
 
 typedef struct lsp_any lsp_any;
+cortecs_array_forward_declare(lsp_any);
 
 typedef struct {
-    uint32_t num_fields;
-    string_t *field_names;
-    lsp_any *field_values;
+    cortecs_array(cortecs_string) field_names;
+    cortecs_array(lsp_any) field_values;
 } lsp_object;
 
 typedef struct {
@@ -42,7 +41,7 @@ struct lsp_any {
     } tag;
 
     union {
-        string_t string;
+        cortecs_string string;
         int32_t integer;
         uint32_t uinteger;
         float decimal;
@@ -51,9 +50,10 @@ struct lsp_any {
         lsp_array array;
     } value;
 };
+cortecs_array_define(lsp_any);
 
 typedef struct {
-    string_t jsonrpc;
+    cortecs_string jsonrpc;
 } lsp_message;
 
 typedef struct {
@@ -61,7 +61,7 @@ typedef struct {
     /**
      * The method to be invoked.
      */
-    string_t method;
+    cortecs_string method;
 
     /**
      * The notification's params.
