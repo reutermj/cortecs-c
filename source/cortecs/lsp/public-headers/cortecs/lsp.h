@@ -23,11 +23,6 @@ typedef struct {
     cortecs_array(lsp_any) field_values;
 } lsp_object;
 
-typedef struct {
-    uint32_t length;
-    lsp_any *content;
-} lsp_array;
-
 struct lsp_any {
     enum {
         LSP_ANY_STRING,
@@ -47,7 +42,7 @@ struct lsp_any {
         float decimal;
         bool boolean;
         lsp_object object;
-        lsp_array array;
+        cortecs_array(lsp_any) array;
     } value;
 };
 cortecs_array_define(lsp_any);
@@ -73,7 +68,7 @@ typedef struct {
             LSP_NOTIFICATION_MESSAGE_PARAMS_OBJECT,
         } tag;
         union {
-            lsp_array array;
+            cortecs_array(lsp_any) array;
             lsp_object object;
         } value;
     } params;

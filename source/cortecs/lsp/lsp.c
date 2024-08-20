@@ -139,15 +139,16 @@ static bool is_array(const cJSON *field) {
 //     return incorrect_type_message(field, "array");
 // }
 
-static lsp_array accept_array(const cJSON *field) {
+static cortecs_array(lsp_any) accept_array(const cJSON *field) {
     assert(cJSON_IsArray(field));
 
     if (field->child == NULL) {
         // array is empty: []
-        return (lsp_array){
-            .length = 0,
-            .content = NULL,
-        };
+        return cortecs_gc_alloc_array(
+            sizeof(lsp_any),
+            0,
+            CORTECS_GC_NO_FINALIZER
+        );
     }
 
     cJSON *current = field->child;
@@ -159,20 +160,21 @@ static lsp_array accept_array(const cJSON *field) {
         current = current->next;
     }
 
-    lsp_any *elements = malloc(sizeof(lsp_any) * length);
+    cortecs_array(lsp_any) elements = cortecs_gc_alloc_array(
+        sizeof(lsp_any),
+        length,
+        CORTECS_GC_NO_FINALIZER
+    );
 
     // read all fields into the array
     uint32_t index = 0;
     current = field->child;
     while (current != NULL) {
-        elements[index] = accept_any(current);
+        elements->elements[index] = accept_any(current);
         current = current->next;
     }
 
-    return (lsp_array){
-        .length = length,
-        .content = elements,
-    };
+    return elements;
 }
 
 static lsp_any accept_any(const cJSON *field) {
