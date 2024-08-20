@@ -172,13 +172,13 @@ void gc_dec(ecs_entity_t target, void *allocation) {
     ecs_enqueue(world, &dec_event);
 }
 
-static void *alloc(uint32_t element_size, cortecs_gc_finalizer_index type_index, uint16_t array_bit) {
+static void *alloc(uint32_t size_of_allocation, cortecs_gc_finalizer_index finalizer_index, uint16_t array_bit) {
     ecs_entity_t entity = ecs_new(world);
 
     // first try to allocate from one of the size classes
     void *allocation;
     for (int i = 0; i < CORTECS_GC_NUM_SIZES; i++) {
-        if (element_size < buffer_sizes[i]) {
+        if (size_of_allocation < buffer_sizes[i]) {
             allocation = ecs_emplace_id(world, entity, gc_buffers[i], NULL);
             goto initialize_allocation;
         }
@@ -186,13 +186,13 @@ static void *alloc(uint32_t element_size, cortecs_gc_finalizer_index type_index,
 
     // fallback to malloc based buffer
     gc_buffer_ptr *buffer = ecs_emplace_id(world, entity, gc_buffers[CORTECS_GC_NUM_SIZES], NULL);
-    allocation = malloc(sizeof(gc_header) + element_size);
+    allocation = malloc(sizeof(gc_header) + size_of_allocation);
     buffer->ptr = allocation;
 
 initialize_allocation:;
     gc_header *header = allocation;
     header->entity = entity;
-    header->type = type_index | array_bit;
+    header->type = finalizer_index | array_bit;
     header->count = 1;
 
     void *out_pointer = (void *)((uintptr_t)allocation + sizeof(gc_header));
@@ -204,13 +204,17 @@ initialize_allocation:;
     return out_pointer;
 }
 
-void *cortecs_gc_alloc(uint32_t size, cortecs_gc_finalizer_index type_index) {
-    return alloc(size, type_index, ARRAY_BIT_OFF);
+void *cortecs_gc_alloc(uint32_t size, cortecs_gc_finalizer_index finalizer_index) {
+    return alloc(size, finalizer_index, ARRAY_BIT_OFF);
 }
 
-void *cortecs_gc_alloc_array(uint32_t size, uint32_t elements, cortecs_gc_finalizer_index type_index) {
-    cortecs_array(void) allocation = alloc(size * elements + (uint32_t)sizeof(uint32_t), type_index, ARRAY_BIT_ON);
-    allocation->size = elements;
+void *cortecs_gc_alloc_array(uint32_t size_of_elements, uint32_t size_of_array, cortecs_gc_finalizer_index finalizer_index) {
+    cortecs_array(void) allocation = alloc(
+        size_of_elements * size_of_array + (uint32_t)sizeof(uint32_t),
+        finalizer_index,
+        ARRAY_BIT_ON
+    );
+    allocation->size = size_of_array;
     return allocation;
 }
 

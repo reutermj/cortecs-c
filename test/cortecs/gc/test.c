@@ -121,10 +121,10 @@ static void test_allocate_sizes() {
 static void test_allocate_sizes_array() {
     cortecs_world_init();
     cortecs_gc_init();
-    for (uint32_t size = 32; size < 512; size += 32) {
-        for (uint32_t elements = 0; elements < 128; elements++) {
+    for (uint32_t size_of_elements = 32; size_of_elements < 512; size_of_elements += 32) {
+        for (uint32_t size_of_array = 0; size_of_array < 128; size_of_array++) {
             ecs_defer_begin(world);
-            cortecs_gc_alloc_array(size, elements, CORTECS_GC_NO_FINALIZER);
+            cortecs_gc_alloc_array(size_of_elements, size_of_array, CORTECS_GC_NO_FINALIZER);
             ecs_defer_end(world);
         }
     }
@@ -159,13 +159,13 @@ static void test_noop_finalizer_array() {
 
     cortecs_gc_finalizer_index noop = cortecs_gc_register_finalizer(noop_finalizer, 128);
 
-    for (uint32_t elements = 1; elements < 128; elements++) {
+    for (uint32_t size_of_elements = 1; size_of_elements < 128; size_of_elements++) {
         noop_finalizer_called = 0;
         ecs_defer_begin(world);
-        cortecs_gc_alloc_array(128, elements, noop);
+        cortecs_gc_alloc_array(128, size_of_elements, noop);
         ecs_defer_end(world);
 
-        TEST_ASSERT_EQUAL_UINT32(elements, noop_finalizer_called);
+        TEST_ASSERT_EQUAL_UINT32(size_of_elements, noop_finalizer_called);
     }
 
     cortecs_world_cleanup();
