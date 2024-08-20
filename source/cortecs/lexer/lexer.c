@@ -2,6 +2,7 @@
 #include <cortecs/gc.h>
 #include <cortecs/lexer.h>
 #include <cortecs/span.h>
+#include <cortecs/string.h>
 #include <cortecs/tokens.h>
 #include <ctype.h>
 #include <stdbool.h>
@@ -43,7 +44,8 @@ static void accumulate_codepoint(lexer_state_t *state, UChar32 codepoint) {
 
 static cortecs_lexer_token_t construct_result(cortecs_lexer_tag_t tag, lexer_state_t *state) {
     // allocate a buffer for the utf-8 encoding of the token + null terminator
-    uint8_t *content = cortecs_gc_alloc((state->u8_length + 1) * sizeof(uint8_t), 0);
+    // TODO figure out the correct string API for this use case
+    char *content = malloc((state->u8_length + 1) * sizeof(char));
 
     // reset the UText to the start of this token and copy it into the buffer
     utext_setNativeIndex(state->text, state->start);
@@ -53,14 +55,16 @@ static cortecs_lexer_token_t construct_result(cortecs_lexer_tag_t tag, lexer_sta
         U8_APPEND_UNSAFE(content, next_offset, codepoint);
         next_codepoint(state);
     }
+    content[state->u8_length] = 0;
+
+    cortecs_string out = cortecs_string_new("%s", content);
+
+    free(content);
 
     return (cortecs_lexer_token_t){
         .tag = tag,
         .span = state->span,
-        .text = (string_t){
-            .content = content,
-            .length = state->u8_length,
-        },
+        .text = out,
     };
 }
 
@@ -347,10 +351,7 @@ cortecs_lexer_token_t cortecs_lexer_next(UText *text) {
     if (text == NULL) {
         return (cortecs_lexer_token_t){
             .tag = CORTECS_LEXER_TAG_INVALID,
-            .text = (string_t){
-                .content = NULL,
-                .length = 0,
-            },
+            .text = NULL,
             .span = {
                 .lines = 0,
                 .columns = 0,
@@ -373,10 +374,7 @@ cortecs_lexer_token_t cortecs_lexer_next(UText *text) {
     if (codepoint == U_SENTINEL) {
         return (cortecs_lexer_token_t){
             .tag = CORTECS_LEXER_TAG_INVALID,
-            .text = (string_t){
-                .content = NULL,
-                .length = 0,
-            },
+            .text = NULL,
             .span = {
                 .lines = 0,
                 .columns = 0,

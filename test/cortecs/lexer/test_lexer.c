@@ -17,18 +17,18 @@
 #include "test_impls.h"
 
 static void lexer_test_empty_input(void) {
-    cortecs_lexer_test(NULL, "", CORTECS_LEXER_TAG_INVALID);
+    cortecs_lexer_test(NULL, NULL, CORTECS_LEXER_TAG_INVALID);
 
     UErrorCode status = U_ZERO_ERROR;
     UText *empty_text = utext_openUTF8(NULL, "", 0, &status);
-    cortecs_lexer_test(empty_text, "", CORTECS_LEXER_TAG_INVALID);
+    cortecs_lexer_test(empty_text, NULL, CORTECS_LEXER_TAG_INVALID);
     utext_close(empty_text);
 
     UText *end_of_text = utext_openUTF8(NULL, "asdf123", 0, &status);
     for (int i = 0; i < 7; i++) {
         utext_next32(end_of_text);
     }
-    cortecs_lexer_test(end_of_text, "", CORTECS_LEXER_TAG_INVALID);
+    cortecs_lexer_test(end_of_text, NULL, CORTECS_LEXER_TAG_INVALID);
     utext_close(end_of_text);
 }
 
@@ -313,8 +313,10 @@ void setUp() {
     srand(time(NULL));
     cortecs_world_init();
     cortecs_gc_init();
+    ecs_defer_begin(world);
 }
 
 void tearDown() {
+    ecs_defer_end(world);
     cortecs_world_cleanup();
 }

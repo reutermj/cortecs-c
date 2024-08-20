@@ -1,7 +1,10 @@
 #include <assert.h>
 #include <cJSON.h>
 #include <common.h>
+#include <cortecs/array.h>
+#include <cortecs/gc.h>
 #include <cortecs/lsp.h>
+#include <cortecs/string.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -25,17 +28,9 @@ static lsp_parse_error_t find_field(const cJSON *json, const char *field_name, b
             };
         }
 
-        char *error_message = malloc(LSP_ERROR_MESSAGE_MAX_SIZE);
-        snprintf(
-            error_message,
-            LSP_ERROR_MESSAGE_MAX_SIZE,
-            "%s expected but not found",
-            field_name
-        );
-
         return (lsp_parse_error_t){
             .tag = LSP_PARSE_MISSING_REQUIRED_FIELD,
-            .message = error_message,
+            .message = cortecs_string_new("%s expected but not found", field_name),
         };
     }
 
@@ -45,11 +40,8 @@ static lsp_parse_error_t find_field(const cJSON *json, const char *field_name, b
 }
 
 lsp_parse_error_t incorrect_type_message(const cJSON *field, const char *type_string) {
-    char *error_message = malloc(LSP_ERROR_MESSAGE_MAX_SIZE);
     char *field_str = cJSON_Print(field);
-    snprintf(
-        error_message,
-        LSP_ERROR_MESSAGE_MAX_SIZE,
+    cortecs_string error_message = cortecs_string_new(
         "%s expected to be %s, found %s",
         field->string,
         type_string,
@@ -75,14 +67,9 @@ static lsp_parse_error_t expect_string(const cJSON *field) {
     return incorrect_type_message(field, "string");
 }
 
-static string_t accept_string(const cJSON *field) {
+static cortecs_string accept_string(const cJSON *field) {
     assert(is_string(field));
-
-    uint8_t *name_string = (uint8_t *)field->valuestring;
-    return (string_t){
-        .content = name_string,
-        .length = strlen((const char *)name_string),  // TODO probably need to fix this because these messages are user inputted
-    };
+    return cortecs_string_new("%s", field->valuestring);
 }
 
 static bool is_object(const cJSON *field) {
@@ -104,40 +91,36 @@ static lsp_object accept_object(const cJSON *field) {
     if (field->child == NULL) {
         // object is empty: {}
         return (lsp_object){
-            .num_fields = 0,
             .field_names = NULL,
             .field_values = NULL,
         };
     }
 
-    cJSON *current = field->child;
-
     // count number of fields
-    uint32_t length = 0;
-    while (current != NULL) {
-        length++;
-        current = current->next;
+    uint32_t size = 0;
+    for (cJSON *current = field->child; current != NULL; current = current->next) {
+        size++;
     }
 
-    string_t *names = malloc(sizeof(string_t) * length);
-    lsp_any *values = malloc(sizeof(lsp_any) * length);
+    cortecs_array(cortecs_string) names = cortecs_gc_alloc_array(
+        sizeof(cortecs_string),
+        size,
+        0
+    );
+    cortecs_array(lsp_any) values = cortecs_gc_alloc_array(
+        sizeof(lsp_any),
+        size,
+        0
+    );
 
     // read all fields into the arrays
     uint32_t index = 0;
-    current = field->child;
-    while (current != NULL) {
-        names[index] = (string_t){
-            .length = strlen(current->string),  // TODO probably need to fix this because these messages are user inputted
-            .content = (uint8_t *)current->string,
-        };
-
-        values[index] = accept_any(current);
-
-        current = current->next;
+    for (cJSON *current = field->child; current != NULL; current = current->next) {
+        names->elements[index] = cortecs_string_new("%s", current->string);
+        values->elements[index] = accept_any(current);
     }
 
     return (lsp_object){
-        .num_fields = length,
         .field_names = names,
         .field_values = values,
     };

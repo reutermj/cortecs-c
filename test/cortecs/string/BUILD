@@ -1,5 +1,5 @@
 cc_test(
-    name = "common",
+    name = "string",
     size = "small",
     srcs = glob([
         "*.c",

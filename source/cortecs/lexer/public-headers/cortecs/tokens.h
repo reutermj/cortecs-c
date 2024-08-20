@@ -46,9 +46,7 @@ typedef enum {
 typedef struct {
     cortecs_lexer_tag_t tag;
     cortecs_span_t span;
-    string_t text;
-    // Strings are encoded using utf-8 to support unicode and
-    // maintain compatibility with C/OS api that expect ascii encoding.
+    cortecs_string text;
 } cortecs_lexer_token_t;
 
 const char *cortecs_lexer_tag_to_string(cortecs_lexer_tag_t tag);
