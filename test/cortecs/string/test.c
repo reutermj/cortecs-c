@@ -1,6 +1,6 @@
+#include <cortecs/gc.h>
 #include <cortecs/string.h>
 #include <cortecs/world.h>
-#include <cortecs/gc.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>

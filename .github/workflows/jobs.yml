@@ -15,6 +15,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       
+      # Make sure source has been formatted
+      - run: find source/ -iname '*.h' -o -iname '*.c' | xargs clang-format --dry-run --Werror
+      - run: find test/ -iname '*.h' -o -iname '*.c' | xargs clang-format --dry-run --Werror
+
       # Make sure it builds under both clang and gcc
       - run: CC=clang bazel build //...
       - run: CC=clang bazel run @hedron_compile_commands//:refresh_all # generates the compile_commands.json
