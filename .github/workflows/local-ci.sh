@@ -3,6 +3,8 @@
 bazel clean
 rm compile_commands.json
 
+clang-format --dry-run --Werror $(find source/ -iname '*.h' -o -iname '*.c')
+clang-format --dry-run --Werror $(find test/ -iname '*.h' -o -iname '*.c')
 CC=clang bazel build //...
 CC=clang bazel run @hedron_compile_commands//:refresh_all
 clang-tidy --config-file ./source/.clang-tidy -p ./ $(find source/. -name "*.c")
