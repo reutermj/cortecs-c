@@ -10,36 +10,36 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define LSP_SUCCESS               \
-    (lsp_parse_error_t) {         \
-        .tag = LSP_PARSE_SUCCESS, \
-        .message = NULL,          \
+#define CORTECS_LSP_SUCCESS               \
+    (cortecs_lsp_parse_error_t) {         \
+        .tag = CORTECS_LSP_PARSE_SUCCESS, \
+        .message = NULL,                  \
     }
 
-static lsp_any accept_any(const cJSON *field);
+static cortecs_lsp_any accept_any(const cJSON *field);
 
-static lsp_parse_error_t find_field(const cJSON *json, const char *field_name, bool is_optional, const cJSON **out) {
+static cortecs_lsp_parse_error_t find_field(const cJSON *json, const char *field_name, bool is_optional, const cJSON **out) {
     const cJSON *field = cJSON_GetObjectItemCaseSensitive(json, field_name);
     if (field == NULL) {
         if (is_optional) {
-            return (lsp_parse_error_t){
-                .tag = LSP_PARSE_SUCCESS_NOT_FOUND,
+            return (cortecs_lsp_parse_error_t){
+                .tag = CORTECS_LSP_PARSE_SUCCESS_NOT_FOUND,
                 .message = NULL,
             };
         }
 
-        return (lsp_parse_error_t){
-            .tag = LSP_PARSE_MISSING_REQUIRED_FIELD,
+        return (cortecs_lsp_parse_error_t){
+            .tag = CORTECS_LSP_PARSE_MISSING_REQUIRED_FIELD,
             .message = cortecs_string_new("%s expected but not found", field_name),
         };
     }
 
     *out = field;
 
-    return LSP_SUCCESS;
+    return CORTECS_LSP_SUCCESS;
 }
 
-lsp_parse_error_t incorrect_type_message(const cJSON *field, const char *type_string) {
+cortecs_lsp_parse_error_t incorrect_type_message(const cJSON *field, const char *type_string) {
     char *field_str = cJSON_Print(field);
     cortecs_string error_message = cortecs_string_new(
         "%s expected to be %s, found %s",
@@ -49,8 +49,8 @@ lsp_parse_error_t incorrect_type_message(const cJSON *field, const char *type_st
     );
     free(field_str);
 
-    return (lsp_parse_error_t){
-        .tag = LSP_PARSE_TYPE_ERROR,
+    return (cortecs_lsp_parse_error_t){
+        .tag = CORTECS_LSP_PARSE_TYPE_ERROR,
         .message = error_message,
     };
 }
@@ -59,9 +59,9 @@ static bool is_string(const cJSON *field) {
     return cJSON_IsString(field) && field->valuestring != NULL;
 }
 
-static lsp_parse_error_t expect_string(const cJSON *field) {
+static cortecs_lsp_parse_error_t expect_string(const cJSON *field) {
     if (is_string(field)) {
-        return LSP_SUCCESS;
+        return CORTECS_LSP_SUCCESS;
     }
 
     return incorrect_type_message(field, "string");
@@ -79,18 +79,18 @@ static bool is_object(const cJSON *field) {
 // something is complaining about these being unused. They'll be used at some point
 // static lsp_parse_error_t expect_object(const cJSON *field) {
 //     if (is_object(field)) {
-//         return LSP_SUCCESS;
+//         return CORTECS_LSP_SUCCESS;
 //     }
 
 //     return incorrect_type_message(field, "object");
 // }
 
-static lsp_object accept_object(const cJSON *field) {
+static cortecs_lsp_object accept_object(const cJSON *field) {
     assert(is_object(field));
 
     if (field->child == NULL) {
         // object is empty: {}
-        return (lsp_object){
+        return (cortecs_lsp_object){
             .field_names = NULL,
             .field_values = NULL,
         };
@@ -107,8 +107,8 @@ static lsp_object accept_object(const cJSON *field) {
         size,
         CORTECS_GC_NO_FINALIZER
     );
-    cortecs_array(lsp_any) values = cortecs_gc_alloc_array(
-        sizeof(lsp_any),
+    cortecs_array(cortecs_lsp_any) values = cortecs_gc_alloc_array(
+        sizeof(cortecs_lsp_any),
         size,
         CORTECS_GC_NO_FINALIZER
     );
@@ -120,7 +120,7 @@ static lsp_object accept_object(const cJSON *field) {
         values->elements[index] = accept_any(current);
     }
 
-    return (lsp_object){
+    return (cortecs_lsp_object){
         .field_names = names,
         .field_values = values,
     };
@@ -131,21 +131,21 @@ static bool is_array(const cJSON *field) {
 }
 
 // something is complaining about these being unused. They'll be used at some point
-// static lsp_parse_error_t expect_array(const cJSON *field) {
+// static cortecs_lsp_parse_error_t expect_array(const cJSON *field) {
 //     if (is_array(field)) {
-//         return LSP_SUCCESS;
+//         return CORTECS_LSP_SUCCESS;
 //     }
 
 //     return incorrect_type_message(field, "array");
 // }
 
-static cortecs_array(lsp_any) accept_array(const cJSON *field) {
+static cortecs_array(cortecs_lsp_any) accept_array(const cJSON *field) {
     assert(cJSON_IsArray(field));
 
     if (field->child == NULL) {
         // array is empty: []
         return cortecs_gc_alloc_array(
-            sizeof(lsp_any),
+            sizeof(cortecs_lsp_any),
             0,
             CORTECS_GC_NO_FINALIZER
         );
@@ -160,8 +160,8 @@ static cortecs_array(lsp_any) accept_array(const cJSON *field) {
         current = current->next;
     }
 
-    cortecs_array(lsp_any) elements = cortecs_gc_alloc_array(
-        sizeof(lsp_any),
+    cortecs_array(cortecs_lsp_any) elements = cortecs_gc_alloc_array(
+        sizeof(cortecs_lsp_any),
         length,
         CORTECS_GC_NO_FINALIZER
     );
@@ -177,24 +177,24 @@ static cortecs_array(lsp_any) accept_array(const cJSON *field) {
     return elements;
 }
 
-static lsp_any accept_any(const cJSON *field) {
+static cortecs_lsp_any accept_any(const cJSON *field) {
     if (is_array(field)) {
-        return (lsp_any){
-            .tag = LSP_ANY_ARRAY,
+        return (cortecs_lsp_any){
+            .tag = CORTECS_LSP_ANY_ARRAY,
             .value.array = accept_array(field),
         };
     }
 
     if (is_object(field)) {
-        return (lsp_any){
-            .tag = LSP_ANY_OBJECT,
+        return (cortecs_lsp_any){
+            .tag = CORTECS_LSP_ANY_OBJECT,
             .value.object = accept_object(field),
         };
     }
 
     if (is_string(field)) {
-        return (lsp_any){
-            .tag = LSP_ANY_STRING,
+        return (cortecs_lsp_any){
+            .tag = CORTECS_LSP_ANY_STRING,
             .value.string = accept_string(field),
         };
     }
@@ -202,63 +202,63 @@ static lsp_any accept_any(const cJSON *field) {
     assert(false);
 }
 
-lsp_parse_error_t parse_lsp_message(const cJSON *json, lsp_message *message) {
-    lsp_parse_error_t error_message;
+cortecs_lsp_parse_error_t parse_lsp_message(const cJSON *json, cortecs_lsp_message *message) {
+    cortecs_lsp_parse_error_t error_message;
 
     const cJSON *jsonrpc_field;
     error_message = find_field(json, "jsonrpc", false, &jsonrpc_field);
-    if (error_message.tag != LSP_PARSE_SUCCESS) {
+    if (error_message.tag != CORTECS_LSP_PARSE_SUCCESS) {
         return error_message;
     }
     error_message = expect_string(jsonrpc_field);
-    if (error_message.tag != LSP_PARSE_SUCCESS) {
+    if (error_message.tag != CORTECS_LSP_PARSE_SUCCESS) {
         return error_message;
     }
     message->jsonrpc = accept_string(jsonrpc_field);
 
-    return LSP_SUCCESS;
+    return CORTECS_LSP_SUCCESS;
 }
 
-lsp_parse_error_t parse_lsp_notification_message(const cJSON *json, lsp_notification_message *message) {
-    lsp_parse_error_t error_message;
+cortecs_lsp_parse_error_t parse_lsp_notification_message(const cJSON *json, cortecs_lsp_notification_message *message) {
+    cortecs_lsp_parse_error_t error_message;
 
     error_message = parse_lsp_message(json, &message->super);
-    if (error_message.tag != LSP_PARSE_SUCCESS) {
+    if (error_message.tag != CORTECS_LSP_PARSE_SUCCESS) {
         return error_message;
     }
 
     const cJSON *method_field;
     error_message = find_field(json, "method", false, &method_field);
-    if (error_message.tag != LSP_PARSE_SUCCESS) {
+    if (error_message.tag != CORTECS_LSP_PARSE_SUCCESS) {
         return error_message;
     }
     error_message = expect_string(method_field);
-    if (error_message.tag != LSP_PARSE_SUCCESS) {
+    if (error_message.tag != CORTECS_LSP_PARSE_SUCCESS) {
         return error_message;
     }
     message->method = accept_string(method_field);
 
     const cJSON *params_field;
     error_message = find_field(json, "params", true, &params_field);
-    if (error_message.tag == LSP_PARSE_SUCCESS_NOT_FOUND) {
+    if (error_message.tag == CORTECS_LSP_PARSE_SUCCESS_NOT_FOUND) {
         message->params.is_set = false;
         goto end_of_params;
-    } else if (error_message.tag != LSP_PARSE_SUCCESS) {
+    } else if (error_message.tag != CORTECS_LSP_PARSE_SUCCESS) {
         return error_message;
     }
     message->params.is_set = true;
     if (is_array(params_field)) {
-        message->params.tag = LSP_NOTIFICATION_MESSAGE_PARAMS_ARRAY;
+        message->params.tag = CORTECS_LSP_NOTIFICATION_MESSAGE_PARAMS_ARRAY;
         message->params.value.array = accept_array(params_field);
         goto end_of_params;
     }
     if (is_object(params_field)) {
-        message->params.tag = LSP_NOTIFICATION_MESSAGE_PARAMS_OBJECT;
+        message->params.tag = CORTECS_LSP_NOTIFICATION_MESSAGE_PARAMS_OBJECT;
         message->params.value.object = accept_object(params_field);
         goto end_of_params;
     }
     return incorrect_type_message(params_field, "array or object");
 end_of_params:
 
-    return LSP_SUCCESS;
+    return CORTECS_LSP_SUCCESS;
 }
