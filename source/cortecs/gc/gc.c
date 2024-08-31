@@ -72,6 +72,16 @@ cortecs_gc_finalizer_index cortecs_gc_register_finalizer(cortecs_gc_finalizer fi
     return index;
 }
 
+// the target of dec events
+static ecs_entity_t dec_target;
+typedef struct {
+    // currently contains nothing simply because I need a component
+    // to attach to the dec_target, but can be used later for tracking
+    // gc calls or something
+    uint32_t unused;
+} dec_target_info;
+static ECS_COMPONENT_DECLARE(dec_target_info);
+
 // declared as a component, but it's really just an event.
 // used to pass the allocation pointer to the dec observer
 // without needing to know what size class the allocation is in
@@ -103,7 +113,7 @@ static void on_dec(ecs_iter_t *iterator) {
             }
         }
 
-        ecs_delete(world, iterator->entities[0]);
+        ecs_delete(world, get_entity(allocation));
     }
 }
 
@@ -115,6 +125,37 @@ static void free_gc_buffer_ptr(void *ptr, int32_t count, const ecs_type_info_t *
 }
 
 void cortecs_gc_init() {
+    // initialize entity to be the target of dec events
+    // in flecs, events must be emitted on an entity that has components
+    // if dec events are enqueued on the allocation entity, there's edge cases
+    // that can lead to memory leaks:
+    // 1) allocate a1 (enqueue a dec on a1)
+    // 2) allocate a2 (enqueue a dec on a2)
+    // 3) a2 is referenced by a1 (eagerly inc a2)
+    // 4) a1 is never inced
+    // at the end of the deferred context the command queue is the following:
+    // Command Queue 0: Add size class to a1, Dec on a1, Add size class to a2, Dec on a2
+    // refernce counts are the following:
+    // a1: 1; a2: 2
+    // 5) process (Add size class to a1)
+    //   5.1) a1 has a component so a1 can be the target of an event
+    //   5.1) a2 dosnt have a component so a2 can't be the target of an event
+    // 6) process Dec on a1
+    //   6.1) decrement the reference count on a1: 1 -> 0
+    //   6.2) enqueue a dec on a2
+    //     6.2.1) this create a new Command Queue 1 with only the (Dec on a2) event
+    // 7) process Command Queue 1
+    //   7.1) event (Add size class to a2) in Command Queue 0 still hasnt been processed,
+    //        so a2 still has no components
+    //   7.2) process (Dec on a2). a2 has no components, so this event is a noop
+    // 8) finish processing Command Queue 0:
+    //   8.1) process (Add size class to a2)
+    //   8.2) process (Dec on a2) decremening the reference count on a2: 2 -> 1
+    //     8.2.1) memory leak
+    ECS_COMPONENT_DEFINE(world, dec_target_info);
+    dec_target = ecs_new(world);
+    ecs_add(world, dec_target, dec_target_info);
+
     // initialize the various size classes
     char name[name_max_size];
     for (int i = 0; i < CORTECS_GC_NUM_SIZES; i++) {
@@ -160,13 +201,13 @@ void cortecs_gc_init() {
     ecs_observer_init(world, &dec_desc);
 }
 
-void gc_dec(ecs_entity_t target, void *allocation) {
+void gc_dec(void *allocation) {
     // need to use a component event so that the pointer
     // can be passed to the observer without knowing which
     // size class was used to allocate it
     ecs_event_desc_t dec_event = {
         .event = ecs_id(dec),
-        .entity = target,
+        .entity = dec_target,
         .param = &(dec){.allocation = allocation},
     };
     ecs_enqueue(world, &dec_event);
@@ -199,7 +240,7 @@ initialize_allocation:;
 
     // defer a decrement to collect allocations that are never
     // attached to an entity
-    gc_dec(entity, out_pointer);
+    gc_dec(out_pointer);
 
     return out_pointer;
 }
@@ -226,7 +267,7 @@ void cortecs_gc_inc(void *allocation) {
 
 void cortecs_gc_dec(void *allocation) {
     // Deferred decrement
-    gc_dec(get_entity(allocation), allocation);
+    gc_dec(allocation);
 }
 
 bool cortecs_gc_is_alive(void *allocation) {

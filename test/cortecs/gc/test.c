@@ -171,6 +171,38 @@ static void test_noop_finalizer_array() {
     cortecs_world_cleanup();
 }
 
+typedef struct {
+    void *target;
+} single_target;
+
+void single_target_finalizer(void *allocation) {
+    single_target *data = allocation;
+    cortecs_gc_dec(data->target);
+}
+
+static void test_1_recursive_collect() {
+    cortecs_world_init();
+    cortecs_gc_init();
+    cortecs_gc_finalizer_index data_finalizer = cortecs_gc_register_finalizer(
+        single_target_finalizer,
+        sizeof(single_target)
+    );
+
+    ecs_defer_begin(world);
+
+    single_target *data = cortecs_gc_alloc(sizeof(single_target), data_finalizer);
+    void *target = cortecs_gc_alloc(128, CORTECS_GC_NO_FINALIZER);
+    cortecs_gc_inc(target);
+    data->target = target;
+
+    ecs_defer_end(world);
+
+    TEST_ASSERT_FALSE(cortecs_gc_is_alive(data));
+    TEST_ASSERT_FALSE(cortecs_gc_is_alive(target));
+
+    cortecs_world_cleanup();
+}
+
 int main() {
     UNITY_BEGIN();
 
@@ -184,6 +216,7 @@ int main() {
     RUN_TEST(test_allocate_sizes_array);
     RUN_TEST(test_noop_finalizer);
     RUN_TEST(test_noop_finalizer_array);
+    RUN_TEST(test_1_recursive_collect);
 
     return UNITY_END();
 }
