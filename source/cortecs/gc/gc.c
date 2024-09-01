@@ -21,10 +21,13 @@ typedef struct {
     uint16_t count;
 } gc_header;
 
-#define ENTITY_OFFSET (0)
-#define RC_OFFSET (FINALIZER_OFFSET + sizeof(cortecs_gc_finalizer))
-#define DATA_OFFSET (RC_OFFSET + sizeof(uint32_t))
-#define HEADER_SIZE DATA_OFFSET
+static gc_header *get_header(void *allocation) {
+    return (gc_header *)((uintptr_t)allocation - sizeof(gc_header));
+}
+
+static ecs_entity_t get_entity(void *allocation) {
+    return get_header(allocation)->entity;
+}
 
 #define CORTECS_GC_NUM_SIZES 5
 static const uint32_t buffer_sizes[CORTECS_GC_NUM_SIZES] = {32, 64, 128, 256, 512};
@@ -36,12 +39,11 @@ typedef struct {
     void *ptr;
 } gc_buffer_ptr;
 
-static gc_header *get_header(void *allocation) {
-    return (gc_header *)((uintptr_t)allocation - sizeof(gc_header));
-}
-
-static ecs_entity_t get_entity(void *allocation) {
-    return get_header(allocation)->entity;
+static void free_gc_buffer_ptr(void *ptr, int32_t count, const ecs_type_info_t *type_info) {
+    UNUSED(type_info);
+    assert(count == 1);
+    gc_buffer_ptr *buffer = (gc_buffer_ptr *)ptr;
+    free(buffer->ptr);
 }
 
 typedef struct {
@@ -56,7 +58,7 @@ typedef struct {
 #define TYPE_BITS 16
 #define MAX_REGISTERED_TYPES (1 << TYPE_BITS)
 static gc_type_info registered_types[MAX_REGISTERED_TYPES];
-static uint32_t next_type_index = 2;
+static uint32_t next_type_index;
 
 #define ARRAY_BIT_ON (1 << 15)
 #define ARRAY_BIT_OFF 0
@@ -72,16 +74,6 @@ cortecs_gc_finalizer_index cortecs_gc_register_finalizer(cortecs_gc_finalizer fi
     return index;
 }
 
-// the target of dec events
-static ecs_entity_t dec_target;
-typedef struct {
-    // currently contains nothing simply because I need a component
-    // to attach to the dec_target, but can be used later for tracking
-    // gc calls or something
-    uint32_t unused;
-} dec_target_info;
-static ECS_COMPONENT_DECLARE(dec_target_info);
-
 // declared as a component, but it's really just an event.
 // used to pass the allocation pointer to the dec observer
 // without needing to know what size class the allocation is in
@@ -90,10 +82,7 @@ typedef struct {
 } dec;
 static ECS_COMPONENT_DECLARE(dec);
 
-static void on_dec(ecs_iter_t *iterator) {
-    assert(iterator->count == 1);
-    dec *event = iterator->param;
-    void *allocation = event->allocation;
+static void perform_dec(ecs_entity_t entity, void *allocation) {
     gc_header *header = get_header(allocation);
     header->count--;
     if (header->count == 0) {
@@ -113,49 +102,45 @@ static void on_dec(ecs_iter_t *iterator) {
             }
         }
 
-        ecs_delete(world, get_entity(allocation));
+        ecs_delete(world, entity);
     }
 }
 
-static void free_gc_buffer_ptr(void *ptr, int32_t count, const ecs_type_info_t *type_info) {
-    UNUSED(type_info);
-    assert(count == 1);
-    gc_buffer_ptr *buffer = (gc_buffer_ptr *)ptr;
-    free(buffer->ptr);
+static void dec_event_handler(ecs_iter_t *iterator) {
+    assert(iterator->count == 1);
+    dec *event = iterator->param;
+    // suspend deferring so that recursive decs are immediately processed
+    ecs_defer_suspend(world);
+    perform_dec(iterator->entities[0], event->allocation);
+    ecs_defer_resume(world);
+}
+
+void enqueue_dec(ecs_entity_t entity, void *allocation) {
+    // need to use a component event so that the pointer
+    // can be passed to the observer without knowing which
+    // size class was used to allocate it
+    ecs_event_desc_t dec_event = {
+        .event = ecs_id(dec),
+        .entity = entity,
+        .param = &(dec){.allocation = allocation},
+    };
+    ecs_enqueue(world, &dec_event);
+}
+
+void cortecs_gc_dec(void *allocation) {
+    ecs_entity_t entity = get_entity(allocation);
+    if (ecs_is_deferred(world)) {
+        // a system is running.
+        // Defer the decrement until after system logic completes
+        enqueue_dec(entity, allocation);
+    } else {
+        // called as a result of another allocation being collected
+        // immediately perform the dec instead of deferring it
+        perform_dec(entity, allocation);
+    }
 }
 
 void cortecs_gc_init() {
-    // initialize entity to be the target of dec events
-    // in flecs, events must be emitted on an entity that has components
-    // if dec events are enqueued on the allocation entity, there's edge cases
-    // that can lead to memory leaks:
-    // 1) allocate a1 (enqueue a dec on a1)
-    // 2) allocate a2 (enqueue a dec on a2)
-    // 3) a2 is referenced by a1 (eagerly inc a2)
-    // 4) a1 is never inced
-    // at the end of the deferred context the command queue is the following:
-    // Command Queue 0: Add size class to a1, Dec on a1, Add size class to a2, Dec on a2
-    // refernce counts are the following:
-    // a1: 1; a2: 2
-    // 5) process (Add size class to a1)
-    //   5.1) a1 has a component so a1 can be the target of an event
-    //   5.1) a2 dosnt have a component so a2 can't be the target of an event
-    // 6) process Dec on a1
-    //   6.1) decrement the reference count on a1: 1 -> 0
-    //   6.2) enqueue a dec on a2
-    //     6.2.1) this create a new Command Queue 1 with only the (Dec on a2) event
-    // 7) process Command Queue 1
-    //   7.1) event (Add size class to a2) in Command Queue 0 still hasnt been processed,
-    //        so a2 still has no components
-    //   7.2) process (Dec on a2). a2 has no components, so this event is a noop
-    // 8) finish processing Command Queue 0:
-    //   8.1) process (Add size class to a2)
-    //   8.2) process (Dec on a2) decremening the reference count on a2: 2 -> 1
-    //     8.2.1) memory leak
-    ECS_COMPONENT_DEFINE(world, dec_target_info);
-    dec_target = ecs_new(world);
-    ecs_add(world, dec_target, dec_target_info);
-
     // initialize the various size classes
     char name[name_max_size];
     for (int i = 0; i < CORTECS_GC_NUM_SIZES; i++) {
@@ -196,21 +181,11 @@ void cortecs_gc_init() {
             .terms[0].id = EcsAny,
         },
         .events[0] = ecs_id(dec),
-        .callback = on_dec,
+        .callback = dec_event_handler,
     };
     ecs_observer_init(world, &dec_desc);
-}
 
-void gc_dec(void *allocation) {
-    // need to use a component event so that the pointer
-    // can be passed to the observer without knowing which
-    // size class was used to allocate it
-    ecs_event_desc_t dec_event = {
-        .event = ecs_id(dec),
-        .entity = dec_target,
-        .param = &(dec){.allocation = allocation},
-    };
-    ecs_enqueue(world, &dec_event);
+    next_type_index = 2;
 }
 
 static void *alloc(uint32_t size_of_allocation, cortecs_gc_finalizer_index finalizer_index, uint16_t array_bit) {
@@ -240,7 +215,7 @@ initialize_allocation:;
 
     // defer a decrement to collect allocations that are never
     // attached to an entity
-    gc_dec(out_pointer);
+    enqueue_dec(entity, out_pointer);
 
     return out_pointer;
 }
@@ -263,11 +238,6 @@ void cortecs_gc_inc(void *allocation) {
     // Immediate increment
     // TODO make atomic
     get_header(allocation)->count++;
-}
-
-void cortecs_gc_dec(void *allocation) {
-    // Deferred decrement
-    gc_dec(allocation);
 }
 
 bool cortecs_gc_is_alive(void *allocation) {
