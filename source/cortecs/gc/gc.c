@@ -86,19 +86,18 @@ static void perform_dec(ecs_entity_t entity, void *allocation) {
     gc_header *header = get_header(allocation);
     header->count--;
     if (header->count == 0) {
-        if (header->type) {
-            gc_type_info type = registered_types[header->type & ARRAY_BIT_CLEAR];
-            if (type.finalizer) {
-                if (header->type & ARRAY_BIT_ON) {
-                    uint32_t size = *(uint32_t *)allocation;
-                    void *current = (void *)((uintptr_t)allocation + sizeof(uint32_t));
-                    for (uint32_t i = 0; i < size; i++) {
-                        type.finalizer(current);
-                        current = (void *)((uintptr_t)current + type.size);
-                    }
-                } else {
-                    type.finalizer(allocation);
+        cortecs_gc_finalizer_index index = header->type & ARRAY_BIT_CLEAR;
+        if (index) {
+            gc_type_info type = registered_types[index];
+            if (header->type & ARRAY_BIT_ON) {
+                uint32_t size = *(uint32_t *)allocation;
+                void *current = (void *)((uintptr_t)allocation + sizeof(uint32_t));
+                for (uint32_t i = 0; i < size; i++) {
+                    type.finalizer(current);
+                    current = (void *)((uintptr_t)current + type.size);
                 }
+            } else {
+                type.finalizer(allocation);
             }
         }
 
