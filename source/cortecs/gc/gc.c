@@ -48,7 +48,7 @@ static void free_gc_buffer_ptr(void *ptr, int32_t count, const ecs_type_info_t *
 
 typedef struct {
     cortecs_gc_finalizer finalizer;
-    uint32_t size;
+    uintptr_t size;
 } gc_type_info;
 
 // Define registered type info
@@ -85,24 +85,31 @@ static ECS_COMPONENT_DECLARE(dec);
 static void perform_dec(ecs_entity_t entity, void *allocation) {
     gc_header *header = get_header(allocation);
     header->count--;
-    if (header->count == 0) {
-        cortecs_gc_finalizer_index index = header->type & ARRAY_BIT_CLEAR;
-        if (index) {
-            gc_type_info type = registered_types[index];
-            if (header->type & ARRAY_BIT_ON) {
-                uint32_t size = *(uint32_t *)allocation;
-                void *current = (void *)((uintptr_t)allocation + sizeof(uint32_t));
-                for (uint32_t i = 0; i < size; i++) {
-                    type.finalizer(current);
-                    current = (void *)((uintptr_t)current + type.size);
-                }
-            } else {
-                type.finalizer(allocation);
-            }
-        }
-
-        ecs_delete(world, entity);
+    if (header->count > 0) {
+        return;
     }
+
+    cortecs_gc_finalizer_index index = header->type & ARRAY_BIT_CLEAR;
+    if (!index) {
+        goto delete_entity;
+    }
+
+    gc_type_info type = registered_types[index];
+    if (header->type & ARRAY_BIT_ON) {
+        cortecs_array(void) array = allocation;
+        uintptr_t base = (uintptr_t)array->elements;
+        uintptr_t upper_bound = base + array->size * type.size;
+        for (uintptr_t element = base; element < upper_bound; element += type.size) {
+            type.finalizer((void *)element);
+        }
+    } else {
+        type.finalizer(allocation);
+    }
+
+delete_entity:;
+    // this must go after finalization because collection happens eagerly
+    // and flecs may overwrite the data before calling the finalizer
+    ecs_delete(world, entity);
 }
 
 static void dec_event_handler(ecs_iter_t *iterator) {
@@ -225,7 +232,7 @@ void *cortecs_gc_alloc(uint32_t size, cortecs_gc_finalizer_index finalizer_index
 
 void *cortecs_gc_alloc_array(uint32_t size_of_elements, uint32_t size_of_array, cortecs_gc_finalizer_index finalizer_index) {
     cortecs_array(void) allocation = alloc(
-        size_of_elements * size_of_array + (uint32_t)sizeof(uint32_t),
+        size_of_elements * size_of_array + (uint32_t)sizeof(cortecs_array(void)),
         finalizer_index,
         ARRAY_BIT_ON
     );
