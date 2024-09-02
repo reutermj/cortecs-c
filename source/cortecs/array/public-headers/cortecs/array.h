@@ -30,6 +30,7 @@ cortecs_array_declare(uint64_t);
 
 typedef struct {
     uint32_t size;
+    uint8_t elements[];
 } cortecs_array_void;
 
 #endif
