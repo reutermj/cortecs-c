@@ -4,13 +4,19 @@
 #include <common.h>
 #include <stdint.h>
 
-#define cortecs_array_forward_declare(TYPE) \
-    typedef struct CONCAT(cortecs_array_, TYPE) CONCAT(cortecs_array_, TYPE)
+#define cortecs_array_name(TYPE) \
+    CONCAT(cortecs_array_, TYPE)
 
-#define cortecs_array_define(TYPE)        \
-    struct CONCAT(cortecs_array_, TYPE) { \
-        uint32_t size;                    \
-        TYPE elements[];                  \
+#define cortecs_pointer_array_name(TYPE) \
+    CONCAT(cortecs_pointer_array_, TYPE)
+
+#define cortecs_array_forward_declare(TYPE) \
+    typedef struct cortecs_array_name(TYPE) cortecs_array_name(TYPE)
+
+#define cortecs_array_define(TYPE)    \
+    struct cortecs_array_name(TYPE) { \
+        uint32_t size;                \
+        TYPE elements[];              \
     }
 
 #define cortecs_array_declare(TYPE)      \
