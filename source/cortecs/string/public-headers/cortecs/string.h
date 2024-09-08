@@ -2,6 +2,7 @@
 #define CORTECS_STRING_STRING_H
 
 #include <cortecs/array.h>
+#include <cortecs/gc.h>
 #include <inttypes.h>
 #include <stdbool.h>
 
@@ -13,6 +14,7 @@ typedef struct {
     char content[];
 } cortecs_string_impl;
 typedef cortecs_string_impl *cortecs_string;
+extern cortecs_gc_finalizer_declare(cortecs_string);
 cortecs_array_declare(cortecs_string);
 
 cortecs_string cortecs_string_new(const char *format, ...);

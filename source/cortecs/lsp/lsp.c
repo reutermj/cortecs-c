@@ -102,16 +102,8 @@ static cortecs_lsp_object accept_object(const cJSON *field) {
         size++;
     }
 
-    cortecs_array(cortecs_string) names = cortecs_gc_alloc_array(
-        sizeof(cortecs_string),
-        size,
-        CORTECS_GC_NO_FINALIZER
-    );
-    cortecs_array(cortecs_lsp_any) values = cortecs_gc_alloc_array(
-        sizeof(cortecs_lsp_any),
-        size,
-        CORTECS_GC_NO_FINALIZER
-    );
+    cortecs_array(cortecs_string) names = cortecs_gc_alloc_array(cortecs_string, size);
+    cortecs_array(cortecs_lsp_any) values = cortecs_gc_alloc_array(cortecs_lsp_any, size);
 
     // read all fields into the arrays
     uint32_t index = 0;
@@ -144,27 +136,19 @@ static cortecs_array(cortecs_lsp_any) accept_array(const cJSON *field) {
 
     if (field->child == NULL) {
         // array is empty: []
-        return cortecs_gc_alloc_array(
-            sizeof(cortecs_lsp_any),
-            0,
-            CORTECS_GC_NO_FINALIZER
-        );
+        return cortecs_gc_alloc_array(cortecs_lsp_any, 0);
     }
 
     cJSON *current = field->child;
 
-    // count length of array
-    uint32_t length = 0;
+    // count size of array
+    uint32_t size = 0;
     while (current != NULL) {
-        length++;
+        size++;
         current = current->next;
     }
 
-    cortecs_array(cortecs_lsp_any) elements = cortecs_gc_alloc_array(
-        sizeof(cortecs_lsp_any),
-        length,
-        CORTECS_GC_NO_FINALIZER
-    );
+    cortecs_array(cortecs_lsp_any) elements = cortecs_gc_alloc_array(cortecs_lsp_any, size);
 
     // read all fields into the array
     uint32_t index = 0;

@@ -1,5 +1,4 @@
 #include <assert.h>
-#include <common.h>
 #include <cortecs/array.h>
 #include <cortecs/gc.h>
 #include <cortecs/world.h>
@@ -47,7 +46,7 @@ static void free_gc_buffer_ptr(void *ptr, int32_t count, const ecs_type_info_t *
 }
 
 typedef struct {
-    cortecs_gc_finalizer finalizer;
+    cortecs_gc_finalizer_type finalizer;
     uintptr_t size;
 } gc_type_info;
 
@@ -64,7 +63,7 @@ static uint32_t next_type_index;
 #define ARRAY_BIT_OFF 0
 #define ARRAY_BIT_CLEAR ~ARRAY_BIT_ON
 
-cortecs_gc_finalizer_index cortecs_gc_register_finalizer(cortecs_gc_finalizer finalizer, uint32_t size) {
+cortecs_gc_finalizer_index cortecs_gc_register_finalizer(cortecs_gc_finalizer_type finalizer, uint32_t size) {
     cortecs_gc_finalizer_index index = next_type_index;
     next_type_index++;
     registered_types[index] = (gc_type_info){
@@ -72,6 +71,13 @@ cortecs_gc_finalizer_index cortecs_gc_register_finalizer(cortecs_gc_finalizer fi
         .size = size,
     };
     return index;
+}
+
+static void cleanup_pointer(void *allocation) {
+    void *target = *(void **)allocation;
+    uintptr_t address = (uintptr_t)target;
+    printf("decing 0x%lx\n", address);
+    cortecs_gc_dec(target);
 }
 
 // declared as a component, but it's really just an event.
@@ -99,7 +105,9 @@ static void perform_dec(ecs_entity_t entity, void *allocation) {
         cortecs_array(void) array = allocation;
         uintptr_t base = (uintptr_t)array->elements;
         uintptr_t upper_bound = base + array->size * type.size;
+        printf("base 0x%lx upper_bound 0x%lx\n", base, upper_bound);
         for (uintptr_t element = base; element < upper_bound; element += type.size) {
+            printf("element 0x%lx\n", element);
             type.finalizer((void *)element);
         }
     } else {
@@ -192,6 +200,10 @@ void cortecs_gc_init() {
     ecs_observer_init(world, &dec_desc);
 
     next_type_index = 2;
+    registered_types[1] = (gc_type_info){
+        .finalizer = cleanup_pointer,
+        .size = sizeof(void *),
+    };
 }
 
 static void *alloc(uint32_t size_of_allocation, cortecs_gc_finalizer_index finalizer_index, uint16_t array_bit) {
@@ -226,17 +238,26 @@ initialize_allocation:;
     return out_pointer;
 }
 
-void *cortecs_gc_alloc(uint32_t size, cortecs_gc_finalizer_index finalizer_index) {
-    return alloc(size, finalizer_index, ARRAY_BIT_OFF);
+void *cortecs_gc_alloc_impl(uint32_t size_of_type, cortecs_gc_finalizer_index finalizer_index) {
+    return alloc(size_of_type, finalizer_index, ARRAY_BIT_OFF);
 }
 
-void *cortecs_gc_alloc_array(uint32_t size_of_elements, uint32_t size_of_array, cortecs_gc_finalizer_index finalizer_index) {
-    cortecs_array(void) allocation = alloc(
-        size_of_elements * size_of_array + (uint32_t)sizeof(cortecs_array(void)),
+void *cortecs_gc_alloc_array_impl(uint32_t size_of_type, uint32_t size_of_array, uint32_t offset_of_elements, cortecs_gc_finalizer_index finalizer_index) {
+    // offset_of_elements points to the variable length elements array in the cortecs_array_TYPE struct
+    // based on alignment of different types, the offset of the elements array may not be the same in
+    // both cortecs_array_uint32 and cortecs_array_uint64, and C compilers may add different amounts.
+    // of padding to both. We pass the offset of this element into this allocator to correctly allocate
+    // the right amount of space for the specific array type.
+
+    void *allocation = alloc(
+        size_of_type * size_of_array + offset_of_elements,
         finalizer_index,
         ARRAY_BIT_ON
     );
-    allocation->size = size_of_array;
+
+    uint32_t *size = allocation;
+    *size = size_of_array;
+
     return allocation;
 }
 

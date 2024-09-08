@@ -1,6 +1,7 @@
 #include <cortecs/gc.h>
 #include <cortecs/string.h>
 #include <stdarg.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -32,7 +33,7 @@ cortecs_string cortecs_string_new(const char *format, ...) {
     va_copy(args_out, args_size);
 
     // measure the output string
-    // there seems to be a bug in clang format that's false positive on this line
+    // there seems to be a bug in clang tidy that's false positive on this line
     int32_t size = vsnprintf(NULL, 0, format, args_size);  // NOLINT(clang-analyzer-valist.Uninitialized)
     if (size < 0) {
         // TODO encoding error. Have better error reporting
@@ -40,8 +41,8 @@ cortecs_string cortecs_string_new(const char *format, ...) {
     }
 
     // write the output string
-    cortecs_string out = cortecs_gc_alloc(
-        sizeof(uint32_t) + size + 1,
+    cortecs_string out = cortecs_gc_alloc_impl(
+        offsetof(cortecs_string_impl, content) + size + 1,
         CORTECS_GC_NO_FINALIZER
     );
     out->size = size;
