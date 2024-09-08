@@ -48,6 +48,7 @@ static void free_gc_buffer_ptr(void *ptr, int32_t count, const ecs_type_info_t *
 typedef struct {
     cortecs_gc_finalizer_type finalizer;
     uintptr_t size;
+    uintptr_t offset_of_elements;
 } gc_type_info;
 
 // Define registered type info
@@ -63,21 +64,19 @@ static uint32_t next_type_index;
 #define ARRAY_BIT_OFF 0
 #define ARRAY_BIT_CLEAR ~ARRAY_BIT_ON
 
-cortecs_gc_finalizer_index cortecs_gc_register_finalizer(cortecs_gc_finalizer_type finalizer, uint32_t size) {
+cortecs_gc_finalizer_index cortecs_gc_register_finalizer(cortecs_gc_finalizer_type finalizer, uintptr_t size, uintptr_t offset_of_elements) {
     cortecs_gc_finalizer_index index = next_type_index;
     next_type_index++;
     registered_types[index] = (gc_type_info){
         .finalizer = finalizer,
         .size = size,
+        .offset_of_elements = offset_of_elements,
     };
     return index;
 }
 
 static void cleanup_pointer(void *allocation) {
-    void *target = *(void **)allocation;
-    uintptr_t address = (uintptr_t)target;
-    printf("decing 0x%lx\n", address);
-    cortecs_gc_dec(target);
+    cortecs_gc_dec(*(void **)allocation);
 }
 
 // declared as a component, but it's really just an event.
@@ -102,12 +101,10 @@ static void perform_dec(ecs_entity_t entity, void *allocation) {
 
     gc_type_info type = registered_types[index];
     if (header->type & ARRAY_BIT_ON) {
-        cortecs_array(void) array = allocation;
-        uintptr_t base = (uintptr_t)array->elements;
-        uintptr_t upper_bound = base + array->size * type.size;
-        printf("base 0x%lx upper_bound 0x%lx\n", base, upper_bound);
+        uint32_t size_of_array = *(uint32_t *)allocation;
+        uintptr_t base = (uintptr_t)allocation + type.offset_of_elements;
+        uintptr_t upper_bound = base + size_of_array * type.size;
         for (uintptr_t element = base; element < upper_bound; element += type.size) {
-            printf("element 0x%lx\n", element);
             type.finalizer((void *)element);
         }
     } else {

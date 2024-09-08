@@ -186,6 +186,7 @@ static void test_noop_finalizer_array() {
 typedef struct {
     void *target;
 } single_target;
+cortecs_array_declare(single_target);
 cortecs_gc_finalizer_declare(single_target);
 
 void cortecs_gc_finalizer(single_target)(void *allocation) {

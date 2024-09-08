@@ -11,7 +11,7 @@
 typedef void (*cortecs_gc_finalizer_type)(void *allocation);
 typedef uint16_t cortecs_gc_finalizer_index;
 
-cortecs_gc_finalizer_index cortecs_gc_register_finalizer(cortecs_gc_finalizer_type finalizer, uint32_t size);
+cortecs_gc_finalizer_index cortecs_gc_register_finalizer(cortecs_gc_finalizer_type finalizer, uintptr_t size, uintptr_t offset_of_elements);
 
 #define cortecs_gc_finalizer(TYPE) \
     CONCAT(cortecs_gc_finalizer_, TYPE)
@@ -23,7 +23,7 @@ cortecs_gc_finalizer_index cortecs_gc_register_finalizer(cortecs_gc_finalizer_ty
     cortecs_gc_finalizer_index cortecs_gc_finalizer_index_name(TYPE);
 
 #define cortecs_gc_finalizer_init(TYPE) \
-    cortecs_gc_finalizer_index_name(TYPE) = cortecs_gc_register_finalizer(cortecs_gc_finalizer(TYPE), sizeof(TYPE));
+    cortecs_gc_finalizer_index_name(TYPE) = cortecs_gc_register_finalizer(cortecs_gc_finalizer(TYPE), sizeof(TYPE), offsetof(cortecs_array_name(TYPE), elements));
 
 void *cortecs_gc_alloc_impl(uint32_t size_of_type, cortecs_gc_finalizer_index finalizer_index);
 #define cortecs_gc_alloc(TYPE) \
