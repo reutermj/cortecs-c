@@ -1,5 +1,5 @@
-#ifndef COMMON_ARRAYS_H
-#define COMMON_ARRAYS_H
+#ifndef CORTECS_ARRAY_ARRAY_H
+#define CORTECS_ARRAY_ARRAY_H
 
 #include <common.h>
 #include <stdint.h>
