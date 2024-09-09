@@ -1,5 +1,5 @@
-#ifndef CORTECS_COMMON_SPAN_H
-#define CORTECS_COMMON_SPAN_H
+#ifndef CORTECS_LEXER_SPAN_H
+#define CORTECS_LEXER_SPAN_H
 
 #include <cortecs/string.h>
 #include <flecs.h>
