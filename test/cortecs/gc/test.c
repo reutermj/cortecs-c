@@ -36,8 +36,11 @@ static void test_collect_unused_allocation_array() {
     cortecs_gc_init();
 
     ecs_defer_begin(world);
-    cortecs_array(void) allocation = cortecs_gc_alloc_array(some_data, 4);
+    const int size_of_array = 4;
+    cortecs_array(void) allocation = cortecs_gc_alloc_array(some_data, size_of_array);
     TEST_ASSERT_NOT_NULL(allocation);
+
+    TEST_ASSERT_EQUAL_UINT32(size_of_array, allocation->size);
     ecs_defer_end(world);
 
     TEST_ASSERT_FALSE(cortecs_gc_is_alive(allocation));
@@ -128,9 +131,10 @@ static void test_allocate_sizes_array() {
     cortecs_world_init();
     cortecs_gc_init();
     for (uint32_t size_of_elements = 32; size_of_elements < 512; size_of_elements += 32) {
-        for (uint32_t size_of_array = 0; size_of_array < 128; size_of_array++) {
+        for (uint32_t size_of_array = 1; size_of_array < 128; size_of_array++) {
             ecs_defer_begin(world);
-            cortecs_gc_alloc_array_impl(size_of_elements, size_of_array, 8, CORTECS_GC_NO_FINALIZER);
+            cortecs_array(void) array = cortecs_gc_alloc_array_impl(size_of_elements, size_of_array, 8, CORTECS_GC_NO_FINALIZER);
+            TEST_ASSERT_EQUAL_UINT32(size_of_array, array->size);
             ecs_defer_end(world);
         }
     }
@@ -217,6 +221,33 @@ static void test_1_recursive_collect() {
     cortecs_world_cleanup();
 }
 
+static void test_1_recursive_collect_array() {
+    cortecs_world_init();
+    cortecs_gc_init();
+
+    cortecs_gc_finalizer_init(single_target);
+
+    some_data *targets[512];
+
+    ecs_defer_begin(world);
+
+    cortecs_array(single_target) data = cortecs_gc_alloc_array(single_target, 512);
+    for (int i = 0; i < 512; i++) {
+        targets[i] = cortecs_gc_alloc(some_data);
+        cortecs_gc_inc(targets[i]);
+        data->elements[i].target = targets[i];
+    }
+
+    ecs_defer_end(world);
+
+    TEST_ASSERT_FALSE(cortecs_gc_is_alive(data));
+    for (int i = 0; i < 512; i++) {
+        TEST_ASSERT_FALSE(cortecs_gc_is_alive(targets[i]));
+    }
+
+    cortecs_world_cleanup();
+}
+
 static void test_n_recursive_collect() {
     cortecs_world_init();
     cortecs_gc_init();
@@ -260,6 +291,7 @@ int main() {
     RUN_TEST(test_noop_finalizer);
     RUN_TEST(test_noop_finalizer_array);
     RUN_TEST(test_1_recursive_collect);
+    RUN_TEST(test_1_recursive_collect_array);
     RUN_TEST(test_n_recursive_collect);
 
     return UNITY_END();
