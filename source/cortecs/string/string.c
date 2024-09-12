@@ -6,6 +6,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+cortecs_finalizer_define(cortecs_string);
+
 bool cortecs_string_equals(cortecs_string left, cortecs_string right) {
     if (left == right) {
         return true;
@@ -43,7 +45,10 @@ cortecs_string cortecs_string_new(const char *format, ...) {
     // write the output string
     cortecs_string out = cortecs_gc_alloc_impl(
         offsetof(cortecs_string_impl, content) + size + 1,
-        CORTECS_GC_NO_FINALIZER
+        CORTECS_FINALIZER_NONE,
+        __FILE__,
+        __func__,
+        __LINE__
     );
     out->size = size;
     vsnprintf(out->content, size + 1, format, args_out);

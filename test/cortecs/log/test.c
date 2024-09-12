@@ -8,7 +8,8 @@
 
 void test_open_log() {
     cortecs_world_init();
-    cortecs_gc_init();
+    cortecs_finalizer_init();
+    cortecs_gc_init(NULL);
     cortecs_log_init();
 
     ecs_defer_begin(world);
@@ -23,7 +24,8 @@ void test_open_log() {
 
 void test_write_one_message() {
     cortecs_world_init();
-    cortecs_gc_init();
+    cortecs_finalizer_init();
+    cortecs_gc_init(NULL);
     cortecs_log_init();
 
     ecs_defer_begin(world);
@@ -55,7 +57,8 @@ void test_write_one_message() {
 
 void test_write_two_messages() {
     cortecs_world_init();
-    cortecs_gc_init();
+    cortecs_finalizer_init();
+    cortecs_gc_init(NULL);
     cortecs_log_init();
 
     ecs_defer_begin(world);

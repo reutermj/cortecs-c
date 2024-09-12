@@ -17,6 +17,7 @@
     }
 
 static cortecs_lsp_any accept_any(const cJSON *field);
+cortecs_finalizer_define(cortecs_lsp_any);
 
 static cortecs_lsp_parse_error_t find_field(const cJSON *json, const char *field_name, bool is_optional, const cJSON **out) {
     const cJSON *field = cJSON_GetObjectItemCaseSensitive(json, field_name);

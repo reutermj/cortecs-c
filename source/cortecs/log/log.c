@@ -6,14 +6,14 @@ struct cortecs_log_stream {
     FILE *log_file;
 };
 cortecs_array_declare(cortecs_log_stream);
-cortecs_gc_finalizer_declare(cortecs_log_stream);
-void cortecs_gc_finalizer(cortecs_log_stream)(void *allocation) {
+cortecs_finalizer_declare(cortecs_log_stream);
+void cortecs_finalizer(cortecs_log_stream)(void *allocation) {
     cortecs_log_stream log_stream = allocation;
     fclose(log_stream->log_file);
 }
 
 void cortecs_log_init() {
-    cortecs_gc_finalizer_init(cortecs_log_stream);
+    cortecs_finalizer_register(cortecs_log_stream);
 }
 
 cortecs_log_stream cortecs_log_open(cortecs_string path) {
