@@ -16,6 +16,8 @@ cc_library(
     deps = [
         "//source/common",
         "//source/cortecs/array",
+        "//source/cortecs/finalizer",
+        "//source/cortecs/string:public-headers",
     ],
 )
 
@@ -43,5 +45,6 @@ cc_library(
         ":public-headers",
         ":sources",
         "//source/cortecs/log:sources",
+        "//source/cortecs/string:sources",
     ],
 )

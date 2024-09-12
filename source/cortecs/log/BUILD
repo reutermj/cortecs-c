@@ -9,7 +9,10 @@ cc_library(
     hdrs = glob(["public-headers/cortecs/*.h"]),
     features = ["treat_warnings_as_errors"],
     includes = ["public-headers/"],
-    visibility = ["//source/cortecs/gc:__subpackages__"],
+    visibility = [
+        "//source/cortecs/gc:__subpackages__",
+        "//source/cortecs/string:__subpackages__",
+    ],
     deps = [
         "//source/cortecs/string:public-headers",
         "@cJSON",
@@ -21,9 +24,13 @@ cc_library(
     srcs = glob(["*.c"]),
     hdrs = glob(["*.h"]),
     features = ["treat_warnings_as_errors"],
-    visibility = ["//source/cortecs/gc:__subpackages__"],
+    visibility = [
+        "//source/cortecs/gc:__subpackages__",
+        "//source/cortecs/string:__subpackages__",
+    ],
     deps = [
         ":public-headers",
+        "//source/cortecs/finalizer",
         "//source/cortecs/gc:public-headers",
     ],
 )

@@ -312,7 +312,8 @@ int main() {
 void setUp() {
     srand(time(NULL));
     cortecs_world_init();
-    cortecs_gc_init();
+    cortecs_finalizer_init();
+    cortecs_gc_init(NULL);
     ecs_defer_begin(world);
 }
 

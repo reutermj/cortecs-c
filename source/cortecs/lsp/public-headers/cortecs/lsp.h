@@ -17,7 +17,7 @@ typedef struct {
 } cortecs_lsp_parse_error_t;
 
 typedef struct cortecs_lsp_any cortecs_lsp_any;
-extern cortecs_gc_finalizer_declare(cortecs_lsp_any);
+extern cortecs_finalizer_declare(cortecs_lsp_any);
 cortecs_array_forward_declare(cortecs_lsp_any);
 
 typedef struct {

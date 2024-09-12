@@ -1,6 +1,8 @@
 #include <assert.h>
+#include <common.h>
 #include <cortecs/array.h>
 #include <cortecs/gc.h>
+#include <cortecs/log.h>
 #include <cortecs/world.h>
 #include <flecs.h>
 #include <stdint.h>
@@ -45,39 +47,9 @@ static void free_gc_buffer_ptr(void *ptr, int32_t count, const ecs_type_info_t *
     free(buffer->ptr);
 }
 
-typedef struct {
-    cortecs_gc_finalizer_type finalizer;
-    uintptr_t size;
-    uintptr_t offset_of_elements;
-} gc_type_info;
-
-// Define registered type info
-// reserved types:
-//   0: NOOP on collection
-//   1: Decrement pointer on collection (mostly useful for arrays of pointers)
-#define TYPE_BITS 16
-#define MAX_REGISTERED_TYPES (1 << TYPE_BITS)
-static gc_type_info registered_types[MAX_REGISTERED_TYPES];
-static uint32_t next_type_index;
-
 #define ARRAY_BIT_ON (1 << 15)
 #define ARRAY_BIT_OFF 0
 #define ARRAY_BIT_CLEAR ~ARRAY_BIT_ON
-
-cortecs_gc_finalizer_index cortecs_gc_register_finalizer(cortecs_gc_finalizer_type finalizer, uintptr_t size, uintptr_t offset_of_elements) {
-    cortecs_gc_finalizer_index index = next_type_index;
-    next_type_index++;
-    registered_types[index] = (gc_type_info){
-        .finalizer = finalizer,
-        .size = size,
-        .offset_of_elements = offset_of_elements,
-    };
-    return index;
-}
-
-static void cleanup_pointer(void *allocation) {
-    cortecs_gc_dec(*(void **)allocation);
-}
 
 // declared as a component, but it's really just an event.
 // used to pass the allocation pointer to the dec observer
@@ -94,12 +66,12 @@ static void perform_dec(ecs_entity_t entity, void *allocation) {
         return;
     }
 
-    cortecs_gc_finalizer_index index = header->type & ARRAY_BIT_CLEAR;
+    cortecs_finalizer_index index = header->type & ARRAY_BIT_CLEAR;
     if (!index) {
         goto delete_entity;
     }
 
-    gc_type_info type = registered_types[index];
+    cortecs_finalizer_metadata type = cortecs_finalizer_get(index);
     if (header->type & ARRAY_BIT_ON) {
         uint32_t size_of_array = *(uint32_t *)allocation;
         uintptr_t base = (uintptr_t)allocation + type.offset_of_elements;
@@ -151,7 +123,9 @@ void cortecs_gc_dec(void *allocation) {
     }
 }
 
-void cortecs_gc_init() {
+static cortecs_log_stream log_stream;
+
+void cortecs_gc_init(cortecs_string log_path) {
     // initialize the various size classes
     char name[name_max_size];
     for (int i = 0; i < CORTECS_GC_NUM_SIZES; i++) {
@@ -196,14 +170,28 @@ void cortecs_gc_init() {
     };
     ecs_observer_init(world, &dec_desc);
 
-    next_type_index = 2;
-    registered_types[1] = (gc_type_info){
-        .finalizer = cleanup_pointer,
-        .size = sizeof(void *),
-    };
+    // initialize log stream
+    if (log_path != NULL) {
+        bool is_already_deferred = ecs_is_deferred(world);  // todo reconsider this part of the code
+        if (!is_already_deferred) {
+            ecs_defer_begin(world);
+        }
+
+        log_stream = cortecs_log_open(log_path);
+        cortecs_gc_inc(log_stream);
+
+        if (!is_already_deferred) {
+            ecs_defer_end(world);
+        }
+    }
 }
 
-static void *alloc(uint32_t size_of_allocation, cortecs_gc_finalizer_index finalizer_index, uint16_t array_bit) {
+typedef struct {
+    void *allocation;
+    ecs_entity_t entity;
+} allocation_metadata;
+
+static allocation_metadata alloc(uint32_t size_of_allocation, cortecs_finalizer_index finalizer_index, uint16_t array_bit) {
     ecs_entity_t entity = ecs_new(world);
 
     // first try to allocate from one of the size classes
@@ -232,30 +220,50 @@ initialize_allocation:;
     // attached to an entity
     enqueue_dec(entity, out_pointer);
 
-    return out_pointer;
+    return (allocation_metadata){
+        .allocation = out_pointer,
+        .entity = entity,
+    };
 }
 
-void *cortecs_gc_alloc_impl(uint32_t size_of_type, cortecs_gc_finalizer_index finalizer_index) {
-    return alloc(size_of_type, finalizer_index, ARRAY_BIT_OFF);
+void *cortecs_gc_alloc_impl(uint32_t size_of_type, cortecs_finalizer_index finalizer_index, const char *file, const char *function, int line) {
+    allocation_metadata metadata = alloc(size_of_type, finalizer_index, ARRAY_BIT_OFF);
+
+    char buffer[sizeof(uintptr_t) * 2 + 1];
+
+    cJSON *message = cJSON_CreateObject();
+    cJSON_AddStringToObject(message, "file", file);
+    cJSON_AddStringToObject(message, "function", function);
+
+    snprintf(buffer, sizeof(buffer), "%d", line);
+    cJSON_AddStringToObject(message, "line", buffer);
+
+    snprintf(buffer, sizeof(buffer), "%ld", (uintptr_t)metadata.allocation);
+    cJSON_AddStringToObject(message, "pointer", buffer);
+
+    snprintf(buffer, sizeof(buffer), "%ld", metadata.entity);
+    cJSON_AddStringToObject(message, "entity_id", buffer);
+
+    return metadata.allocation;
 }
 
-void *cortecs_gc_alloc_array_impl(uint32_t size_of_type, uint32_t size_of_array, uint32_t offset_of_elements, cortecs_gc_finalizer_index finalizer_index) {
+void *cortecs_gc_alloc_array_impl(uint32_t size_of_type, uint32_t size_of_array, uint32_t offset_of_elements, cortecs_finalizer_index finalizer_index) {
     // offset_of_elements points to the variable length elements array in the cortecs_array_TYPE struct
     // based on alignment of different types, the offset of the elements array may not be the same in
     // both cortecs_array_uint32 and cortecs_array_uint64, and C compilers may add different amounts.
     // of padding to both. We pass the offset of this element into this allocator to correctly allocate
     // the right amount of space for the specific array type.
 
-    void *allocation = alloc(
+    allocation_metadata metadata = alloc(
         size_of_type * size_of_array + offset_of_elements,
         finalizer_index,
         ARRAY_BIT_ON
     );
 
-    uint32_t *size = allocation;
+    uint32_t *size = metadata.allocation;
     *size = size_of_array;
 
-    return allocation;
+    return metadata.allocation;
 }
 
 void cortecs_gc_inc(void *allocation) {
@@ -265,6 +273,9 @@ void cortecs_gc_inc(void *allocation) {
 }
 
 bool cortecs_gc_is_alive(void *allocation) {
+    gc_header header = *(gc_header *)allocation;
+    UNUSED(header);
+
     ecs_entity_t entity = get_entity(allocation);
     return ecs_is_alive(world, entity);
 }
