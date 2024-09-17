@@ -1,7 +1,5 @@
 # Part of the gc -> log -> string -> gc cycle
-# public-headers and sources targets are for breaking the cycles.
-# these targets are only for use by targets in the cycle.
-# for other targets, use the string target to depend on this.
+# see: //source/cortecs/gc for more info
 
 cc_library(
     name = "public-headers",
