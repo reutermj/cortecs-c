@@ -24,6 +24,7 @@ typedef uint16_t cortecs_finalizer_index;
 #define cortecs_finalizer_register(TYPE)                                        \
     cortecs_finalizer_index_name(TYPE) = cortecs_finalizer_register_impl(       \
         (cortecs_finalizer_metadata){                                           \
+            .type_name = #TYPE,                                                 \
             .finalizer = cortecs_finalizer(TYPE),                               \
             .size = sizeof(TYPE),                                               \
             .offset_of_elements = offsetof(cortecs_array_name(TYPE), elements), \
@@ -31,6 +32,7 @@ typedef uint16_t cortecs_finalizer_index;
     );
 
 typedef struct {
+    const char *type_name;
     cortecs_finalizer_type finalizer;
     uintptr_t size;
     uintptr_t offset_of_elements;

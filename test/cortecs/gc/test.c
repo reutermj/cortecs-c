@@ -148,7 +148,15 @@ static void test_allocate_sizes_array() {
     for (uint32_t size_of_elements = 32; size_of_elements < 512; size_of_elements += 32) {
         for (uint32_t size_of_array = 1; size_of_array < 128; size_of_array++) {
             ecs_defer_begin(world);
-            cortecs_array(void) array = cortecs_gc_alloc_array_impl(size_of_elements, size_of_array, 8, CORTECS_FINALIZER_NONE);
+            cortecs_array(void) array = cortecs_gc_alloc_array_impl(
+                size_of_elements,
+                size_of_array,
+                8,
+                CORTECS_FINALIZER_NONE,
+                __FILE__,
+                __func__,
+                __LINE__
+            );
             TEST_ASSERT_EQUAL_UINT32(size_of_array, array->size);
             ecs_defer_end(world);
         }
