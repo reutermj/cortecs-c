@@ -4,6 +4,7 @@
 #include <cortecs/finalizer.h>
 #include <cortecs/gc.h>
 #include <cortecs/log.h>
+#include <cortecs/string.h>
 #include <cortecs/world.h>
 #include <flecs.h>
 #include <stdint.h>
@@ -237,7 +238,14 @@ void cortecs_gc_dec_impl(
     }
 }
 
-void cortecs_gc_init(cortecs_string log_path) {
+void cortecs_gc_init_impl(
+    // log_path needs to be const char * because it's impossible
+    // to construct a cortecs_string before GC is initialized
+    const char *log_path,
+    const char *file,
+    const char *function,
+    int line
+) {
     // initialize the various size classes
     char name[name_max_size];
     for (int i = 0; i < CORTECS_GC_NUM_SIZES; i++) {
@@ -290,8 +298,13 @@ void cortecs_gc_init(cortecs_string log_path) {
             ecs_defer_begin(world);
         }
 
-        log_stream = cortecs_log_open(log_path);
+        log_stream = cortecs_log_open(cortecs_string_new("%s", log_path));
         cortecs_gc_inc(log_stream);
+
+        cJSON *message = create_log_message("cortecs_gc_init");
+        log_source_location(message, file, function, line);
+        cortecs_log_write(log_stream, message);
+        cJSON_Delete(message);
 
         if (!is_already_deferred) {
             ecs_defer_end(world);
@@ -345,7 +358,7 @@ initialize_allocation:;
             cJSON_AddStringToObject(message, "size_class", "malloc");
         } else {
             char buffer[sizeof("0xFFFF_FFFF")];
-            snprintf(buffer, sizeof(buffer), "%d", buffer_sizes[size_class_index]);
+            snprintf(buffer, sizeof(buffer), "0x%x", buffer_sizes[size_class_index]);
             cJSON_AddStringToObject(message, "size_class", buffer);
         }
 

@@ -1,13 +1,23 @@
 #ifndef CORTECS_GC_GC_H
 #define CORTECS_GC_GC_H
 
-#include <common.h>
 #include <cortecs/finalizer.h>
-#include <cortecs/string.h>
 #include <stdbool.h>
 #include <stdint.h>
 
-void cortecs_gc_init(cortecs_string log_path);
+void cortecs_gc_init_impl(
+    const char *log_path,
+    const char *file,
+    const char *function,
+    int line
+);
+#define cortecs_gc_init(LOG_PATH) \
+    cortecs_gc_init_impl(         \
+        LOG_PATH,                 \
+        __FILE__,                 \
+        __func__,                 \
+        __LINE__                  \
+    )
 
 void *cortecs_gc_alloc_impl(
     uint32_t size_of_type,
