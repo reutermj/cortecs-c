@@ -31,15 +31,19 @@
 # |-------------------------------------------|
 # |  sources |  String  |    GC    |    GC    |
 # |          |  headers |  headers |  headers |
+# |          |          |          |          |
 # |          |   Log    |          |          |
 # |          |  headers |          |          |
 # |-------------------------------------------|
 # |  public  |    GC    |   Log    |  String  |
 # |  target  |  headers |  headers |  headers |
+# |          |          |          |          |
 # |          |    GC    |   Log    |  String  |
 # |          |  sources |  sources |  sources |
+# |          |          |          |          |
 # |          |   Log    |    GC    |    GC    |
 # |          |  sources |  sources |  sources |
+# |          |          |          |          |
 # |          |  String  |  String  |   Log    |
 # |          |  sources |  sources |  sources |
 # ---------------------------------------------

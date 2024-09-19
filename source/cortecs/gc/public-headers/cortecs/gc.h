@@ -19,6 +19,18 @@ void cortecs_gc_init_impl(
         __LINE__                  \
     )
 
+void cortecs_gc_cleanup_impl(
+    const char *file,
+    const char *function,
+    int line
+);
+#define cortecs_gc_cleanup() \
+    cortecs_gc_cleanup_impl( \
+        __FILE__,            \
+        __func__,            \
+        __LINE__             \
+    )
+
 void *cortecs_gc_alloc_impl(
     uint32_t size_of_type,
     cortecs_finalizer_index finalizer_index,

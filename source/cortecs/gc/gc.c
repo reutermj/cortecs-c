@@ -56,6 +56,22 @@ static void log_allocation_info(
     cJSON_AddStringToObject(message, "entity_id", buffer);
 }
 
+void cortecs_gc_cleanup_impl(
+    const char *file,
+    const char *function,
+    int line
+) {
+    if (log_stream) {
+        cJSON *message = create_log_message("cortecs_gc_cleanup");
+        log_source_location(message, file, function, line);
+        cortecs_log_write(log_stream, message);
+        cJSON_Delete(message);
+
+        cortecs_gc_dec(log_stream);
+        log_stream = NULL;
+    }
+}
+
 // Implementation of a size segregated, deferred reference counting gc
 // Allocations are made from a set of size classes or will fallback to
 // malloc if the allocation fits in none of the size classes
@@ -196,7 +212,7 @@ void enqueue_dec(
 
         char buffer[sizeof("0xFFFF_FFFF_FFFF_FFFF")];
         snprintf(buffer, sizeof(buffer), "0x%lx", event_id);
-        cJSON_AddStringToObject(message, "event_id", "event_id");
+        cJSON_AddStringToObject(message, "event_id", buffer);
 
         log_type_info(
             message,
@@ -303,6 +319,7 @@ void cortecs_gc_init_impl(
 
         cJSON *message = create_log_message("cortecs_gc_init");
         log_source_location(message, file, function, line);
+        cJSON_AddStringToObject(message, "log_path", log_path);
         cortecs_log_write(log_stream, message);
         cJSON_Delete(message);
 
