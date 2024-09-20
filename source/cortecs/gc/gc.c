@@ -52,8 +52,17 @@ static void log_allocation_info(
     snprintf(buffer, sizeof(buffer), "0x%lx", (uintptr_t)allocation);
     cJSON_AddStringToObject(message, "pointer", buffer);
 
-    snprintf(buffer, sizeof(buffer), "0x%lx", entity);
+    snprintf(buffer, sizeof(buffer), "%ld", entity);
     cJSON_AddStringToObject(message, "entity_id", buffer);
+}
+
+static void log_event_id(
+    cJSON *message,
+    uint64_t event_id
+) {
+    char buffer[sizeof("18,446,744,073,709,551,615")];
+    snprintf(buffer, sizeof(buffer), "%ld", event_id);
+    cJSON_AddStringToObject(message, "event_id", buffer);
 }
 
 void cortecs_gc_cleanup_impl(
@@ -62,12 +71,13 @@ void cortecs_gc_cleanup_impl(
     int line
 ) {
     if (log_stream) {
+        cortecs_gc_dec(log_stream);
+
         cJSON *message = create_log_message("cortecs_gc_cleanup");
         log_source_location(message, file, function, line);
         cortecs_log_write(log_stream, message);
         cJSON_Delete(message);
 
-        cortecs_gc_dec(log_stream);
         log_stream = NULL;
     }
 }
@@ -143,9 +153,7 @@ static void perform_dec(
         }
 
         if (event_id != 0) {
-            char buffer[sizeof("0xFFFF_FFFF_FFFF_FFFF")];
-            snprintf(buffer, sizeof(buffer), "0x%lx", event_id);
-            cJSON_AddStringToObject(message, "event_id", "event_id");
+            log_event_id(message, event_id);
         }
 
         log_type_info(
@@ -195,6 +203,29 @@ static void dec_event_handler(ecs_iter_t *iterator) {
     ecs_defer_resume(world);
 }
 
+void log_dec(
+    void *allocation,
+    const char *file,
+    const char *function,
+    int line,
+    uint64_t event_id
+) {
+    gc_header *header = get_header(allocation);
+    cJSON *message = create_log_message("cortecs_gc_dec");
+    log_source_location(message, file, function, line);
+
+    log_event_id(message, event_id);
+
+    log_type_info(
+        message,
+        header->type & ARRAY_BIT_CLEAR,
+        (header->type & ARRAY_BIT_ON) == ARRAY_BIT_ON
+    );
+    log_allocation_info(message, allocation, header->entity);
+    cortecs_log_write(log_stream, message);
+    cJSON_Delete(message);
+}
+
 void enqueue_dec(
     void *allocation,
     const char *file,
@@ -206,22 +237,7 @@ void enqueue_dec(
     dec_event_id++;
 
     if (log_stream != NULL) {
-        gc_header *header = get_header(allocation);
-        cJSON *message = create_log_message("cortecs_gc_inc");
-        log_source_location(message, file, function, line);
-
-        char buffer[sizeof("0xFFFF_FFFF_FFFF_FFFF")];
-        snprintf(buffer, sizeof(buffer), "0x%lx", event_id);
-        cJSON_AddStringToObject(message, "event_id", buffer);
-
-        log_type_info(
-            message,
-            header->type & ARRAY_BIT_CLEAR,
-            (header->type & ARRAY_BIT_ON) == ARRAY_BIT_ON
-        );
-        log_allocation_info(message, allocation, header->entity);
-        cortecs_log_write(log_stream, message);
-        cJSON_Delete(message);
+        log_dec(allocation, file, function, line, event_id);
     }
     // need to use a component event so that the pointer
     // can be passed to the observer without knowing which
@@ -252,6 +268,43 @@ void cortecs_gc_dec_impl(
         // immediately perform the dec instead of deferring it
         perform_dec(allocation, file, function, line, 0);
     }
+}
+
+int get_size_class(uint32_t size_of_allocation) {
+    for (int size_class_index = 0; size_class_index < CORTECS_GC_NUM_SIZES; size_class_index++) {
+        if (size_of_allocation < buffer_sizes[size_class_index]) {
+            return size_class_index;
+        }
+    }
+    return CORTECS_GC_NUM_SIZES;
+}
+
+void log_alloc(
+    const char *method,
+    const char *file,
+    const char *function,
+    int line,
+    cortecs_finalizer_index finalizer_index,
+    bool is_array,
+    void *allocation,
+    ecs_entity_t entity,
+    int size_class
+) {
+    cJSON *message = create_log_message(method);
+    log_source_location(message, file, function, line);
+    log_type_info(message, finalizer_index, is_array);
+    log_allocation_info(message, allocation, entity);
+
+    if (size_class == CORTECS_GC_NUM_SIZES) {
+        cJSON_AddStringToObject(message, "size_class", "malloc");
+    } else {
+        char buffer[sizeof("0xFFFF_FFFF")];
+        snprintf(buffer, sizeof(buffer), "0x%x", buffer_sizes[size_class]);
+        cJSON_AddStringToObject(message, "size_class", buffer);
+    }
+
+    cortecs_log_write(log_stream, message);
+    cJSON_Delete(message);
 }
 
 void cortecs_gc_init_impl(
@@ -309,13 +362,12 @@ void cortecs_gc_init_impl(
     // initialize log stream
     dec_event_id = 1;
     if (log_path != NULL) {
-        bool is_already_deferred = ecs_is_deferred(world);  // todo reconsider this part of the code
-        if (!is_already_deferred) {
-            ecs_defer_begin(world);
-        }
+        ecs_defer_begin(world);
 
-        log_stream = cortecs_log_open(cortecs_string_new("%s", log_path));
-        cortecs_gc_inc(log_stream);
+        uint64_t string_event_id = dec_event_id;
+        cortecs_string log_path_string = cortecs_string_new("%s", log_path);
+        uint64_t log_stream_event_id = dec_event_id;
+        log_stream = cortecs_log_open(log_path_string);
 
         cJSON *message = create_log_message("cortecs_gc_init");
         log_source_location(message, file, function, line);
@@ -323,9 +375,34 @@ void cortecs_gc_init_impl(
         cortecs_log_write(log_stream, message);
         cJSON_Delete(message);
 
-        if (!is_already_deferred) {
-            ecs_defer_end(world);
-        }
+        // spoof the log messages
+        log_alloc(
+            "cortecs_gc_alloc",
+            file,
+            function,
+            line,
+            cortecs_finalizer_index_name(cortecs_string),
+            false,
+            log_path_string,
+            get_entity(log_path_string),
+            get_size_class(sizeof(cortecs_string_impl))
+        );
+        log_dec(log_path_string, file, function, line, string_event_id);
+        log_alloc(
+            "cortecs_gc_alloc",
+            file,
+            function,
+            line,
+            cortecs_finalizer_index_name(cortecs_log_stream),
+            false,
+            log_stream,
+            get_entity(log_stream),
+            get_size_class(sizeof(struct cortecs_log_stream))
+        );
+        log_dec(log_stream, file, function, line, log_stream_event_id);
+        cortecs_gc_inc_impl(log_stream, file, function, line);
+
+        ecs_defer_end(world);
     } else {
         log_stream = NULL;
     }
@@ -342,22 +419,17 @@ void *alloc(
 ) {
     ecs_entity_t entity = ecs_new(world);
 
-    // first try to allocate from one of the size classes
     void *allocation;
-    int size_class_index = 0;
-    for (; size_class_index < CORTECS_GC_NUM_SIZES; size_class_index++) {
-        if (size_of_allocation < buffer_sizes[size_class_index]) {
-            allocation = ecs_emplace_id(world, entity, gc_buffers[size_class_index], NULL);
-            goto initialize_allocation;
-        }
+    int size_class = get_size_class(size_of_allocation);
+    if (size_class == CORTECS_GC_NUM_SIZES) {
+        // fallback to malloc based buffer
+        gc_buffer_ptr *buffer = ecs_emplace_id(world, entity, gc_buffers[CORTECS_GC_NUM_SIZES], NULL);
+        allocation = malloc(sizeof(gc_header) + size_of_allocation);
+        buffer->ptr = allocation;
+    } else {
+        allocation = ecs_emplace_id(world, entity, gc_buffers[size_class], NULL);
     }
 
-    // fallback to malloc based buffer
-    gc_buffer_ptr *buffer = ecs_emplace_id(world, entity, gc_buffers[CORTECS_GC_NUM_SIZES], NULL);
-    allocation = malloc(sizeof(gc_header) + size_of_allocation);
-    buffer->ptr = allocation;
-
-initialize_allocation:;
     gc_header *header = allocation;
     header->entity = entity;
     header->type = finalizer_index | array_bit;
@@ -366,21 +438,17 @@ initialize_allocation:;
     void *out_pointer = (void *)((uintptr_t)allocation + sizeof(gc_header));
 
     if (log_stream != NULL) {
-        cJSON *message = create_log_message(method);
-        log_source_location(message, file, function, line);
-        log_type_info(message, finalizer_index, array_bit == ARRAY_BIT_ON);
-        log_allocation_info(message, out_pointer, entity);
-
-        if (size_class_index == CORTECS_GC_NUM_SIZES) {
-            cJSON_AddStringToObject(message, "size_class", "malloc");
-        } else {
-            char buffer[sizeof("0xFFFF_FFFF")];
-            snprintf(buffer, sizeof(buffer), "0x%x", buffer_sizes[size_class_index]);
-            cJSON_AddStringToObject(message, "size_class", buffer);
-        }
-
-        cortecs_log_write(log_stream, message);
-        cJSON_Delete(message);
+        log_alloc(
+            method,
+            file,
+            function,
+            line,
+            finalizer_index,
+            array_bit == ARRAY_BIT_ON,
+            out_pointer,
+            entity,
+            size_class
+        );
     }
 
     // defer a decrement to collect allocations that are never
