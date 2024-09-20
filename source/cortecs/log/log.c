@@ -1,10 +1,6 @@
 #include <cortecs/gc.h>
 #include <cortecs/log.h>
-#include <stdio.h>
 
-struct cortecs_log_stream {
-    FILE *log_file;
-};
 cortecs_array_declare(cortecs_log_stream);
 cortecs_finalizer_declare(cortecs_log_stream);
 void cortecs_finalizer(cortecs_log_stream)(void *allocation) {

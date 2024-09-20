@@ -3,8 +3,13 @@
 
 #include <cJSON.h>
 #include <cortecs/string.h>
+#include <stdio.h>
 
 typedef struct cortecs_log_stream *cortecs_log_stream;
+struct cortecs_log_stream {
+    FILE *log_file;
+};
+extern cortecs_finalizer_declare(cortecs_log_stream);
 
 void cortecs_log_init();
 cortecs_log_stream cortecs_log_open(cortecs_string path);

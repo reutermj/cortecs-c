@@ -2,6 +2,7 @@
 #include <cortecs/array.h>
 #include <cortecs/finalizer.h>
 #include <cortecs/gc.h>
+#include <cortecs/log.h>
 #include <cortecs/world.h>
 #include <flecs.h>
 #include <stdbool.h>
@@ -305,8 +306,29 @@ static void test_n_recursive_collect() {
     cortecs_world_cleanup();
 }
 
+static void test_gc_log_open_close() {
+    const char *log_path = "./test_gc_log_open_close.log";
+    cortecs_world_init();
+    cortecs_finalizer_init();
+    cortecs_log_init();
+    cortecs_gc_init(log_path);
+    cortecs_gc_cleanup();
+    cortecs_world_cleanup();
+
+    FILE *log = fopen(log_path, "r");
+    char line[2048];
+    while (fgets(line, sizeof(line), log)) {
+        printf("%s", line);
+    }
+    fclose(log);
+
+    remove(log_path);
+}
+
 int main() {
     UNITY_BEGIN();
+
+    RUN_TEST(test_gc_log_open_close);
 
     RUN_TEST(test_collect_unused_allocation);
     RUN_TEST(test_collect_unused_allocation_array);
