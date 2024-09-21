@@ -65,23 +65,6 @@ static void log_event_id(
     cJSON_AddStringToObject(message, "event_id", buffer);
 }
 
-void cortecs_gc_cleanup_impl(
-    const char *file,
-    const char *function,
-    int line
-) {
-    if (log_stream) {
-        cortecs_gc_dec(log_stream);
-
-        cJSON *message = create_log_message("cortecs_gc_cleanup");
-        log_source_location(message, file, function, line);
-        cortecs_log_write(log_stream, message);
-        cJSON_Delete(message);
-
-        log_stream = NULL;
-    }
-}
-
 // Implementation of a size segregated, deferred reference counting gc
 // Allocations are made from a set of size classes or will fallback to
 // malloc if the allocation fits in none of the size classes
@@ -205,6 +188,7 @@ static void dec_event_handler(ecs_iter_t *iterator) {
 
 void log_dec(
     void *allocation,
+    const char *submethod,
     const char *file,
     const char *function,
     int line,
@@ -212,6 +196,7 @@ void log_dec(
 ) {
     gc_header *header = get_header(allocation);
     cJSON *message = create_log_message("cortecs_gc_dec");
+    cJSON_AddStringToObject(message, "submethod", submethod);
     log_source_location(message, file, function, line);
 
     log_event_id(message, event_id);
@@ -237,7 +222,7 @@ void enqueue_dec(
     dec_event_id++;
 
     if (log_stream != NULL) {
-        log_dec(allocation, file, function, line, event_id);
+        log_dec(allocation, "enqueue_dec", file, function, line, event_id);
     }
     // need to use a component event so that the pointer
     // can be passed to the observer without knowing which
@@ -387,7 +372,7 @@ void cortecs_gc_init_impl(
             get_entity(log_path_string),
             get_size_class(sizeof(cortecs_string_impl))
         );
-        log_dec(log_path_string, file, function, line, string_event_id);
+        log_dec(log_path_string, "enqueue_dec", file, function, line, string_event_id);
         log_alloc(
             "cortecs_gc_alloc",
             file,
@@ -399,12 +384,40 @@ void cortecs_gc_init_impl(
             get_entity(log_stream),
             get_size_class(sizeof(struct cortecs_log_stream))
         );
-        log_dec(log_stream, file, function, line, log_stream_event_id);
+        log_dec(log_stream, "enqueue_dec", file, function, line, log_stream_event_id);
         cortecs_gc_inc_impl(log_stream, file, function, line);
 
         ecs_defer_end(world);
     } else {
         log_stream = NULL;
+    }
+}
+
+void cortecs_gc_cleanup_impl(
+    const char *file,
+    const char *function,
+    int line
+) {
+    if (log_stream) {
+        // the dec cleans up the log stream causing a use-after-free error if
+        // the cleanup message is logged after the dec, but we want the dec
+        // message to come before the cleanup message in the logs.
+
+        // Spoof the dec message so that it comes before the cleanup message in the logs
+        log_dec(log_stream, "perform_dec", file, function, line, 0);
+
+        cJSON *message = create_log_message("cortecs_gc_cleanup");
+        log_source_location(message, file, function, line);
+        cortecs_log_write(log_stream, message);
+        cJSON_Delete(message);
+
+        // null out the global log_stream so that the dec api
+        // call doesnt log a message
+        cortecs_log_stream log_stream_local = log_stream;
+        log_stream = NULL;
+
+        // make sure this comes last too avoid use-after-free
+        cortecs_gc_dec(log_stream_local);
     }
 }
 
