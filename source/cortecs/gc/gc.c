@@ -11,60 +11,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-static cortecs_log_stream log_stream;
-
-static cJSON *create_log_message(const char *method) {
-    cJSON *message = cJSON_CreateObject();
-    cJSON_AddStringToObject(message, "method", method);
-    return message;
-}
-
-static void log_source_location(
-    cJSON *message,
-    const char *file,
-    const char *function,
-    int line
-) {
-    cJSON_AddStringToObject(message, "file", file);
-    cJSON_AddStringToObject(message, "function", function);
-
-    char buffer[sizeof("0xFFFF_FFFF_FFFF_FFFF")];
-    snprintf(buffer, sizeof(buffer), "%d", line);
-    cJSON_AddStringToObject(message, "line", buffer);
-}
-
-static void log_type_info(
-    cJSON *message,
-    cortecs_finalizer_index finalizer_index,
-    bool is_array
-) {
-    cortecs_finalizer_metadata finalizer_metadata = cortecs_finalizer_get(finalizer_index);
-    cJSON_AddStringToObject(message, "type_name", finalizer_metadata.type_name);
-    cJSON_AddBoolToObject(message, "is_array", is_array);
-}
-
-static void log_allocation_info(
-    cJSON *message,
-    void *allocation,
-    ecs_entity_t entity
-) {
-    char buffer[sizeof("0xFFFF_FFFF_FFFF_FFFF")];
-    snprintf(buffer, sizeof(buffer), "0x%lx", (uintptr_t)allocation);
-    cJSON_AddStringToObject(message, "pointer", buffer);
-
-    snprintf(buffer, sizeof(buffer), "%ld", entity);
-    cJSON_AddStringToObject(message, "entity_id", buffer);
-}
-
-static void log_event_id(
-    cJSON *message,
-    uint64_t event_id
-) {
-    char buffer[sizeof("18,446,744,073,709,551,615")];
-    snprintf(buffer, sizeof(buffer), "%ld", event_id);
-    cJSON_AddStringToObject(message, "event_id", buffer);
-}
-
 // Implementation of a size segregated, deferred reference counting gc
 // Allocations are made from a set of size classes or will fallback to
 // malloc if the allocation fits in none of the size classes
@@ -72,6 +18,9 @@ static void log_event_id(
 // Since all increments happen before any decrement, if the reference count
 // is ever 0, the allocation is garbage and can be collected.
 
+// ====================================================================================================================
+// Allocation Header
+// ====================================================================================================================
 typedef struct {
     ecs_entity_t entity;
     uint16_t type;
@@ -107,6 +56,124 @@ static void free_gc_buffer_ptr(void *ptr, int32_t count, const ecs_type_info_t *
 #define ARRAY_BIT_OFF 0
 #define ARRAY_BIT_CLEAR ~ARRAY_BIT_ON
 
+// ====================================================================================================================
+// Logging
+// ====================================================================================================================
+static cortecs_log_stream log_stream;
+
+static cJSON *create_log_message(const char *method) {
+    cJSON *message = cJSON_CreateObject();
+    cJSON_AddStringToObject(message, "method", method);
+    return message;
+}
+
+static void log_source_location(
+    cJSON *message,
+    const char *file,
+    const char *function,
+    int line
+) {
+    cJSON_AddStringToObject(message, "file", file);
+    cJSON_AddStringToObject(message, "function", function);
+
+    char buffer[sizeof("2,147,483,647")];
+    snprintf(buffer, sizeof(buffer), "%d", line);
+    cJSON_AddStringToObject(message, "line", buffer);
+}
+
+static void log_type_info(
+    cJSON *message,
+    cortecs_finalizer_index finalizer_index,
+    bool is_array
+) {
+    cortecs_finalizer_metadata finalizer_metadata = cortecs_finalizer_get(finalizer_index);
+    cJSON_AddStringToObject(message, "type_name", finalizer_metadata.type_name);
+    cJSON_AddBoolToObject(message, "is_array", is_array);
+}
+
+static void log_allocation_info(
+    cJSON *message,
+    void *allocation,
+    ecs_entity_t entity
+) {
+    char buffer[sizeof("0xFFFF_FFFF_FFFF_FFFF")];
+    snprintf(buffer, sizeof(buffer), "0x%lx", (uintptr_t)allocation);
+    cJSON_AddStringToObject(message, "pointer", buffer);
+
+    // only 32 bits. won't overflow buffer
+    snprintf(buffer, sizeof(buffer), "%lld", entity & ECS_ENTITY_MASK);
+    cJSON_AddStringToObject(message, "entity_id", buffer);
+
+    // only 16 bits. won't overflow buffer
+    snprintf(buffer, sizeof(buffer), "%lld", ECS_GENERATION(entity));
+    cJSON_AddStringToObject(message, "entity_generation", buffer);
+}
+
+static void log_event_id(
+    cJSON *message,
+    uint64_t event_id
+) {
+    char buffer[sizeof("18,446,744,073,709,551,615")];
+    snprintf(buffer, sizeof(buffer), "%ld", event_id);
+    cJSON_AddStringToObject(message, "event_id", buffer);
+}
+
+static void log_dec(
+    void *allocation,
+    const char *submethod,
+    const char *file,
+    const char *function,
+    int line,
+    uint64_t event_id
+) {
+    gc_header *header = get_header(allocation);
+    cJSON *message = create_log_message("cortecs_gc_dec");
+    cJSON_AddStringToObject(message, "submethod", submethod);
+    log_source_location(message, file, function, line);
+
+    log_event_id(message, event_id);
+
+    log_type_info(
+        message,
+        header->type & ARRAY_BIT_CLEAR,
+        (header->type & ARRAY_BIT_ON) == ARRAY_BIT_ON
+    );
+    log_allocation_info(message, allocation, header->entity);
+    cortecs_log_write(log_stream, message);
+    cJSON_Delete(message);
+}
+
+static void log_alloc(
+    const char *method,
+    const char *file,
+    const char *function,
+    int line,
+    cortecs_finalizer_index finalizer_index,
+    bool is_array,
+    void *allocation,
+    ecs_entity_t entity,
+    int size_class
+) {
+    cJSON *message = create_log_message(method);
+    log_source_location(message, file, function, line);
+    log_type_info(message, finalizer_index, is_array);
+    log_allocation_info(message, allocation, entity);
+
+    if (size_class == CORTECS_GC_NUM_SIZES) {
+        cJSON_AddStringToObject(message, "size_class", "malloc");
+    } else {
+        char buffer[sizeof("0xFFFF_FFFF")];
+        snprintf(buffer, sizeof(buffer), "0x%x", buffer_sizes[size_class]);
+        cJSON_AddStringToObject(message, "size_class", buffer);
+    }
+
+    cortecs_log_write(log_stream, message);
+    cJSON_Delete(message);
+}
+
+// ====================================================================================================================
+// Dec Impl
+// ====================================================================================================================
 // declared as a component, but it's really just an event.
 // used to pass the allocation pointer to the dec observer
 // without needing to know what size class the allocation is in
@@ -186,32 +253,7 @@ static void dec_event_handler(ecs_iter_t *iterator) {
     ecs_defer_resume(world);
 }
 
-void log_dec(
-    void *allocation,
-    const char *submethod,
-    const char *file,
-    const char *function,
-    int line,
-    uint64_t event_id
-) {
-    gc_header *header = get_header(allocation);
-    cJSON *message = create_log_message("cortecs_gc_dec");
-    cJSON_AddStringToObject(message, "submethod", submethod);
-    log_source_location(message, file, function, line);
-
-    log_event_id(message, event_id);
-
-    log_type_info(
-        message,
-        header->type & ARRAY_BIT_CLEAR,
-        (header->type & ARRAY_BIT_ON) == ARRAY_BIT_ON
-    );
-    log_allocation_info(message, allocation, header->entity);
-    cortecs_log_write(log_stream, message);
-    cJSON_Delete(message);
-}
-
-void enqueue_dec(
+static void enqueue_dec(
     void *allocation,
     const char *file,
     const char *function,
@@ -255,7 +297,39 @@ void cortecs_gc_dec_impl(
     }
 }
 
-int get_size_class(uint32_t size_of_allocation) {
+// ====================================================================================================================
+// Inc Impl
+// ====================================================================================================================
+void cortecs_gc_inc_impl(
+    void *allocation,
+    const char *file,
+    const char *function,
+    int line
+) {
+    gc_header *header = get_header(allocation);
+
+    if (log_stream != NULL) {
+        cJSON *message = create_log_message("cortecs_gc_inc");
+        log_source_location(message, file, function, line);
+        log_type_info(
+            message,
+            header->type & ARRAY_BIT_CLEAR,
+            (header->type & ARRAY_BIT_ON) == ARRAY_BIT_ON
+        );
+        log_allocation_info(message, allocation, header->entity);
+        cortecs_log_write(log_stream, message);
+        cJSON_Delete(message);
+    }
+
+    // Immediate increment
+    // TODO make atomic
+    header->count++;
+}
+
+// ====================================================================================================================
+// Alloc Impl
+// ====================================================================================================================
+static int get_size_class(uint32_t size_of_allocation) {
     for (int size_class_index = 0; size_class_index < CORTECS_GC_NUM_SIZES; size_class_index++) {
         if (size_of_allocation < buffer_sizes[size_class_index]) {
             return size_class_index;
@@ -264,164 +338,7 @@ int get_size_class(uint32_t size_of_allocation) {
     return CORTECS_GC_NUM_SIZES;
 }
 
-void log_alloc(
-    const char *method,
-    const char *file,
-    const char *function,
-    int line,
-    cortecs_finalizer_index finalizer_index,
-    bool is_array,
-    void *allocation,
-    ecs_entity_t entity,
-    int size_class
-) {
-    cJSON *message = create_log_message(method);
-    log_source_location(message, file, function, line);
-    log_type_info(message, finalizer_index, is_array);
-    log_allocation_info(message, allocation, entity);
-
-    if (size_class == CORTECS_GC_NUM_SIZES) {
-        cJSON_AddStringToObject(message, "size_class", "malloc");
-    } else {
-        char buffer[sizeof("0xFFFF_FFFF")];
-        snprintf(buffer, sizeof(buffer), "0x%x", buffer_sizes[size_class]);
-        cJSON_AddStringToObject(message, "size_class", buffer);
-    }
-
-    cortecs_log_write(log_stream, message);
-    cJSON_Delete(message);
-}
-
-void cortecs_gc_init_impl(
-    // log_path needs to be const char * because it's impossible
-    // to construct a cortecs_string before GC is initialized
-    const char *log_path,
-    const char *file,
-    const char *function,
-    int line
-) {
-    // initialize the various size classes
-    char name[name_max_size];
-    for (int i = 0; i < CORTECS_GC_NUM_SIZES; i++) {
-        uint32_t size = buffer_sizes[i];
-        snprintf(name, name_max_size, "gc_buffer_%d", size);
-        ecs_component_desc_t desc = {
-            .entity = ecs_entity_init(world, &(ecs_entity_desc_t){.name = name}),
-            .type = {
-                .size = (ecs_size_t)(sizeof(gc_header) + size),
-                .alignment = (ecs_size_t)(sizeof(gc_header) + size),
-            },
-        };
-        gc_buffers[i] = ecs_component_init(world, &desc);
-        // marking the buffer as sparse makes sure it doesnt get moved and
-        // pointers to it are stable
-        ecs_add_id(world, gc_buffers[i], EcsSparse);
-    }
-
-    // initialize the malloc based buffer
-    // malloc based buffer doesnt need to be sparse
-    ecs_component_desc_t desc = {
-        .entity = ecs_entity_init(world, &(ecs_entity_desc_t){.name = "gc_buffer_ptr"}),
-        .type = {
-            .size = ECS_SIZEOF(gc_buffer_ptr),
-            .alignment = ECS_ALIGNOF(gc_buffer_ptr),
-            .hooks = {
-                // hook to free the malloced pointer when deleting the entity
-                .dtor = free_gc_buffer_ptr,
-            },
-        },
-    };
-    gc_buffers[CORTECS_GC_NUM_SIZES] = ecs_component_init(world, &desc);
-
-    // initialize the dec event and observer
-    ECS_COMPONENT_DEFINE(world, dec);
-    ecs_observer_desc_t dec_desc = {
-        .query = {
-            .terms[0].id = EcsAny,
-        },
-        .events[0] = ecs_id(dec),
-        .callback = dec_event_handler,
-    };
-    ecs_observer_init(world, &dec_desc);
-
-    // initialize log stream
-    dec_event_id = 1;
-    if (log_path != NULL) {
-        ecs_defer_begin(world);
-
-        uint64_t string_event_id = dec_event_id;
-        cortecs_string log_path_string = cortecs_string_new("%s", log_path);
-        uint64_t log_stream_event_id = dec_event_id;
-        log_stream = cortecs_log_open(log_path_string);
-
-        cJSON *message = create_log_message("cortecs_gc_init");
-        log_source_location(message, file, function, line);
-        cJSON_AddStringToObject(message, "log_path", log_path);
-        cortecs_log_write(log_stream, message);
-        cJSON_Delete(message);
-
-        // spoof the log messages
-        log_alloc(
-            "cortecs_gc_alloc",
-            file,
-            function,
-            line,
-            cortecs_finalizer_index_name(cortecs_string),
-            false,
-            log_path_string,
-            get_entity(log_path_string),
-            get_size_class(sizeof(cortecs_string_impl))
-        );
-        log_dec(log_path_string, "enqueue_dec", file, function, line, string_event_id);
-        log_alloc(
-            "cortecs_gc_alloc",
-            file,
-            function,
-            line,
-            cortecs_finalizer_index_name(cortecs_log_stream),
-            false,
-            log_stream,
-            get_entity(log_stream),
-            get_size_class(sizeof(struct cortecs_log_stream))
-        );
-        log_dec(log_stream, "enqueue_dec", file, function, line, log_stream_event_id);
-        cortecs_gc_inc_impl(log_stream, file, function, line);
-
-        ecs_defer_end(world);
-    } else {
-        log_stream = NULL;
-    }
-}
-
-void cortecs_gc_cleanup_impl(
-    const char *file,
-    const char *function,
-    int line
-) {
-    if (log_stream) {
-        // the dec cleans up the log stream causing a use-after-free error if
-        // the cleanup message is logged after the dec, but we want the dec
-        // message to come before the cleanup message in the logs.
-
-        // Spoof the dec message so that it comes before the cleanup message in the logs
-        log_dec(log_stream, "perform_dec", file, function, line, 0);
-
-        cJSON *message = create_log_message("cortecs_gc_cleanup");
-        log_source_location(message, file, function, line);
-        cortecs_log_write(log_stream, message);
-        cJSON_Delete(message);
-
-        // null out the global log_stream so that the dec api
-        // call doesnt log a message
-        cortecs_log_stream log_stream_local = log_stream;
-        log_stream = NULL;
-
-        // make sure this comes last too avoid use-after-free
-        cortecs_gc_dec(log_stream_local);
-    }
-}
-
-void *alloc(
+static void *alloc(
     uint32_t size_of_allocation,
     cortecs_finalizer_index finalizer_index,
     uint16_t array_bit,
@@ -514,33 +431,149 @@ void *cortecs_gc_alloc_array_impl(
     return allocation;
 }
 
-void cortecs_gc_inc_impl(
-    void *allocation,
+// ====================================================================================================================
+// Init/cleanup impl
+// ====================================================================================================================
+void cortecs_gc_init_impl(
+    // log_path needs to be const char * because it's impossible
+    // to construct a cortecs_string before GC is initialized
+    const char *log_path,
     const char *file,
     const char *function,
     int line
 ) {
-    gc_header *header = get_header(allocation);
-
-    if (log_stream != NULL) {
-        cJSON *message = create_log_message("cortecs_gc_inc");
-        log_source_location(message, file, function, line);
-        log_type_info(
-            message,
-            header->type & ARRAY_BIT_CLEAR,
-            (header->type & ARRAY_BIT_ON) == ARRAY_BIT_ON
-        );
-        log_allocation_info(message, allocation, header->entity);
-        cortecs_log_write(log_stream, message);
-        cJSON_Delete(message);
+    // initialize the various size classes
+    char name[name_max_size];
+    for (int i = 0; i < CORTECS_GC_NUM_SIZES; i++) {
+        uint32_t size = buffer_sizes[i];
+        snprintf(name, name_max_size, "gc_buffer_%d", size);
+        ecs_component_desc_t desc = {
+            .entity = ecs_entity_init(world, &(ecs_entity_desc_t){.name = name}),
+            .type = {
+                .size = (ecs_size_t)(sizeof(gc_header) + size),
+                .alignment = (ecs_size_t)(sizeof(gc_header) + size),
+            },
+        };
+        gc_buffers[i] = ecs_component_init(world, &desc);
+        // marking the buffer as sparse makes sure it doesnt get moved and
+        // pointers to it are stable
+        ecs_add_id(world, gc_buffers[i], EcsSparse);
     }
 
-    // Immediate increment
-    // TODO make atomic
-    header->count++;
+    // initialize the malloc based buffer
+    // malloc based buffer doesnt need to be sparse
+    ecs_component_desc_t desc = {
+        .entity = ecs_entity_init(world, &(ecs_entity_desc_t){.name = "gc_buffer_ptr"}),
+        .type = {
+            .size = ECS_SIZEOF(gc_buffer_ptr),
+            .alignment = ECS_ALIGNOF(gc_buffer_ptr),
+            .hooks = {
+                // hook to free the malloced pointer when deleting the entity
+                .dtor = free_gc_buffer_ptr,
+            },
+        },
+    };
+    gc_buffers[CORTECS_GC_NUM_SIZES] = ecs_component_init(world, &desc);
+
+    // initialize the dec event and observer
+    ECS_COMPONENT_DEFINE(world, dec);
+    ecs_observer_desc_t dec_desc = {
+        .query = {
+            .terms[0].id = EcsAny,
+        },
+        .events[0] = ecs_id(dec),
+        .callback = dec_event_handler,
+    };
+    ecs_observer_init(world, &dec_desc);
+
+    // initialize log stream
+    dec_event_id = 1;
+    if (log_path != NULL) {
+        ecs_defer_begin(world);
+
+        // allocate the log stream
+        // the log stream is required to log the allocation messages.
+        // these drop the alloc and dec messages created during memory allocation.
+        // we spoof these messages after the init message for log completeness
+        uint64_t string_event_id = dec_event_id;
+        cortecs_string log_path_string = cortecs_string_new("%s", log_path);
+        uint64_t log_stream_event_id = dec_event_id;
+        log_stream = cortecs_log_open(log_path_string);
+
+        // log init message
+        cJSON *message = create_log_message("cortecs_gc_init");
+        log_source_location(message, file, function, line);
+        cJSON_AddStringToObject(message, "log_path", log_path);
+        cortecs_log_write(log_stream, message);
+        cJSON_Delete(message);
+
+        // spoof log_path_string log messages
+        log_alloc(
+            "cortecs_gc_alloc",
+            file,
+            function,
+            line,
+            cortecs_finalizer_index_name(cortecs_string),
+            false,
+            log_path_string,
+            get_entity(log_path_string),
+            get_size_class(sizeof(cortecs_string_impl))
+        );
+        log_dec(log_path_string, "enqueue_dec", file, function, line, string_event_id);
+
+        // spoof log_stream log messages
+        log_alloc(
+            "cortecs_gc_alloc",
+            file,
+            function,
+            line,
+            cortecs_finalizer_index_name(cortecs_log_stream),
+            false,
+            log_stream,
+            get_entity(log_stream),
+            get_size_class(sizeof(struct cortecs_log_stream))
+        );
+        log_dec(log_stream, "enqueue_dec", file, function, line, log_stream_event_id);
+
+        // keep the log stream but not the string
+        cortecs_gc_inc_impl(log_stream, file, function, line);
+
+        ecs_defer_end(world);
+    } else {
+        log_stream = NULL;
+    }
+}
+
+void cortecs_gc_cleanup_impl(
+    const char *file,
+    const char *function,
+    int line
+) {
+    if (log_stream) {
+        // the dec cleans up the log stream causing a use-after-free error if
+        // the cleanup message is logged after the dec, but we want the dec
+        // message to come before the cleanup message in the logs.
+
+        // Spoof the dec message so that it comes before the cleanup message in the logs
+        log_dec(log_stream, "perform_dec", file, function, line, 0);
+
+        cJSON *message = create_log_message("cortecs_gc_cleanup");
+        log_source_location(message, file, function, line);
+        cortecs_log_write(log_stream, message);
+        cJSON_Delete(message);
+
+        // null out the global log_stream so that the dec api
+        // call doesnt log a message
+        cortecs_log_stream log_stream_local = log_stream;
+        log_stream = NULL;
+
+        // make sure this comes last too avoid use-after-free
+        cortecs_gc_dec(log_stream_local);
+    }
 }
 
 bool cortecs_gc_is_alive(void *allocation) {
+    // TODO this api should be removed in favor of using logs
     gc_header header = *(gc_header *)allocation;
     UNUSED(header);
 
