@@ -27,7 +27,7 @@ git_override(
     module_name = "flecs",
     remote = "https://github.com/SanderMertens/flecs.git",
     # branch = "master",
-    commit = "3095237009b7099726c7aad83b190e07a09f139d",
+    commit = "bfaed68a5d38cbf4ffeed7d37b6df6533a177d20",
 )
 
 git_repository(
