@@ -51,7 +51,7 @@ git_repository(
     name = "cJSON",
     remote = "https://github.com/DaveGamble/cJSON.git",
     # branch = "master",
-    commit = "078c4e6c53f13dff15f0eaac1611abb6379e0206",
+    commit = "12c4bf1986c288950a3d06da757109a6aa1ece38",
     build_file_content = """
 cc_library(
     name = "cJSON",
