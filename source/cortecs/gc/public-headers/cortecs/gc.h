@@ -1,7 +1,7 @@
 #ifndef CORTECS_GC_GC_H
 #define CORTECS_GC_GC_H
 
-#include <cortecs/finalizer.h>
+#include <cortecs/type.h>
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -32,39 +32,33 @@ void cortecs_gc_cleanup_impl(
     )
 
 void *cortecs_gc_alloc_impl(
-    uint32_t size_of_type,
-    cortecs_finalizer_index finalizer_index,
+    cortecs_type_param(T),
     const char *file,
     const char *function,
     int line
 );
-#define cortecs_gc_alloc(TYPE)              \
-    cortecs_gc_alloc_impl(                  \
-        sizeof(TYPE),                       \
-        cortecs_finalizer_index_name(TYPE), \
-        __FILE__,                           \
-        __func__,                           \
-        __LINE__                            \
+#define cortecs_gc_alloc(TYPE) \
+    cortecs_gc_alloc_impl(     \
+        TYPE,                  \
+        __FILE__,              \
+        __func__,              \
+        __LINE__               \
     )
 
 void *cortecs_gc_alloc_array_impl(
-    uint32_t size_of_type,
-    uint32_t size_of_array,
-    uint32_t offset_of_elements,
-    cortecs_finalizer_index finalizer_index,
+    cortecs_type_param(T),
+    uint32_t size,
     const char *file,
     const char *function,
     int line
 );
-#define cortecs_gc_alloc_array(TYPE, SIZE)            \
-    cortecs_gc_alloc_array_impl(                      \
-        sizeof(TYPE),                                 \
-        SIZE,                                         \
-        offsetof(cortecs_array_name(TYPE), elements), \
-        cortecs_finalizer_index_name(TYPE),           \
-        __FILE__,                                     \
-        __func__,                                     \
-        __LINE__                                      \
+#define cortecs_gc_alloc_array(TYPE, SIZE) \
+    cortecs_gc_alloc_array_impl(           \
+        TYPE,                              \
+        SIZE,                              \
+        __FILE__,                          \
+        __func__,                          \
+        __LINE__                           \
     )
 
 void cortecs_gc_inc_impl(
