@@ -43,7 +43,7 @@ int main() {
 
 void setUp() {
     cortecs_world_init();
-    cortecs_finalizer_init();
+    cortecs_type_init();
     cortecs_gc_init(NULL);
     ecs_defer_begin(world);
 }

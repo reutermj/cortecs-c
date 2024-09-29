@@ -1,5 +1,5 @@
 cc_library(
-    name = "finalizer",
+    name = "type",
     srcs = glob(["*.c"]),
     hdrs = glob(["*.h"]) + glob(["public-headers/cortecs/*.h"]),
     features = ["treat_warnings_as_errors"],
