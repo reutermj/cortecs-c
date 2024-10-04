@@ -44,11 +44,7 @@ cortecs_string cortecs_string_new(const char *format, ...) {
 
     // write the output string
     cortecs_string out = cortecs_gc_alloc_impl(
-        (cortecs_type){
-            .index = CORTECS_TYPE_NO_FINALIZER,
-            .size = offsetof(struct cortecs_string, content) + size + 1,
-            .offset_of_elements = 0,  // unused
-        },
+        (cortecs_type)offsetof(struct cortecs_string, content) + size + 1,
         __FILE__,
         __func__,
         __LINE__

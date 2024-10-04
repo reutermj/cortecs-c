@@ -155,7 +155,7 @@ static void log_alloc(
 ) {
     cJSON *message = create_log_message(method);
     log_source_location(message, file, function, line);
-    log_type_info(message, cortecs_type_arg(T).index, is_array);
+    log_type_info(message, cortecs_type_index(cortecs_type_arg(T)), is_array);
     log_allocation_info(message, allocation, entity);
 
     if (size_class == CORTECS_GC_NUM_SIZES) {
@@ -228,10 +228,11 @@ static void perform_dec(
     cortecs_type_finalizer finalizer = cortecs_type_lookup_finalizer(index);
     if (header->type & ARRAY_BIT_ON) {
         uint32_t size_of_array = *(uint32_t *)allocation;
-        uintptr_t base = (uintptr_t)allocation + finalizer.type.offset_of_elements;
-        uintptr_t upper_bound = base + size_of_array * finalizer.type.size;
-        for (uintptr_t element = base; element < upper_bound; element += finalizer.type.size) {
+        uintptr_t base = (uintptr_t)allocation + CORTECS_ARRAY_ELEMENTS_OFFSET;
+        uintptr_t upper_bound = base + size_of_array * cortecs_type_size(finalizer.type);
+        for (uintptr_t element = base; element < upper_bound; element += cortecs_type_size(finalizer.type)) {
             finalizer.callback((void *)element);
+            NOOP;
         }
     } else {
         finalizer.callback(allocation);
@@ -361,7 +362,7 @@ static void *alloc(
 
     gc_header *header = allocation;
     header->entity = entity;
-    header->type = cortecs_type_arg(T).index | array_bit;
+    header->type = cortecs_type_index(cortecs_type_arg(T)) | array_bit;
     header->count = 1;
 
     void *out_pointer = (void *)((uintptr_t)allocation + sizeof(gc_header));
@@ -395,7 +396,7 @@ void *cortecs_gc_alloc_impl(
 ) {
     return alloc(
         cortecs_type_arg(T),
-        cortecs_type_arg(T).size,
+        cortecs_type_size(cortecs_type_arg(T)),
         ARRAY_BIT_OFF,
         "cortecs_gc_alloc",
         file,
@@ -413,7 +414,7 @@ void *cortecs_gc_alloc_array_impl(
 ) {
     void *allocation = alloc(
         cortecs_type_arg(T),
-        cortecs_type_arg(T).size * size_of_array + cortecs_type_arg(T).offset_of_elements,
+        cortecs_type_size(cortecs_type_arg(T)) * size_of_array + CORTECS_ARRAY_ELEMENTS_OFFSET,
         ARRAY_BIT_ON,
         "cortecs_gc_alloc_array",
         file,

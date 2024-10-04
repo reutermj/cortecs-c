@@ -131,11 +131,7 @@ static void test_allocate_sizes() {
     for (uint32_t size = 32; size < 1024; size += 32) {
         ecs_defer_begin(world);
         cortecs_gc_alloc_impl(
-            (cortecs_type){
-                .size = size,
-                .offset_of_elements = 8,
-                .index = CORTECS_TYPE_NO_FINALIZER,
-            },
+            (cortecs_type)size,
             __FILE__,
             __func__,
             __LINE__
@@ -153,11 +149,7 @@ static void test_allocate_sizes_array() {
         for (uint32_t size_of_array = 1; size_of_array < 128; size_of_array++) {
             ecs_defer_begin(world);
             cortecs_array(void) array = cortecs_gc_alloc_array_impl(
-                (cortecs_type){
-                    .size = size_of_elements,
-                    .offset_of_elements = 8,
-                    .index = CORTECS_TYPE_NO_FINALIZER,
-                },
+                (cortecs_type)size_of_elements,
                 size_of_array,
                 __FILE__,
                 __func__,
@@ -262,13 +254,14 @@ static void test_1_recursive_collect_array() {
 
     cortecs_type_register_finalizer(single_target);
 
-    some_data *targets[512];
+#define NUM_ELEMENTS 512
+    some_data *targets[NUM_ELEMENTS];
 
     ecs_defer_begin(world);
 
-    cortecs_array(single_target) data = cortecs_gc_alloc_array(cortecs_type_arg(single_target), 512);
-    for (int i = 0; i < 512; i++) {
-        targets[i] = cortecs_gc_alloc(cortecs_type_arg(single_target));
+    cortecs_array(single_target) data = cortecs_gc_alloc_array(cortecs_type_arg(single_target), NUM_ELEMENTS);
+    for (int i = 0; i < NUM_ELEMENTS; i++) {
+        targets[i] = cortecs_gc_alloc(cortecs_type_arg(some_data));
         cortecs_gc_inc(targets[i]);
         data->elements[i].target = targets[i];
     }
@@ -276,7 +269,7 @@ static void test_1_recursive_collect_array() {
     ecs_defer_end(world);
 
     TEST_ASSERT_FALSE(cortecs_gc_is_alive(data));
-    for (int i = 0; i < 512; i++) {
+    for (int i = 0; i < NUM_ELEMENTS; i++) {
         TEST_ASSERT_FALSE(cortecs_gc_is_alive(targets[i]));
     }
 
