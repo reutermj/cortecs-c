@@ -12,7 +12,7 @@
 #include <time.h>
 #include <unity.h>
 
-typedef struct {
+typedef struct some_data {
     uint32_t the_data[5];
 } some_data;
 cortecs_type_forward_declare(some_data);
@@ -162,7 +162,7 @@ static void test_allocate_sizes_array() {
     cortecs_world_cleanup();
 }
 
-typedef struct {
+typedef struct noop_data {
     uint32_t some_data[5];
 } noop_data;
 cortecs_type_forward_declare(noop_data);
@@ -211,7 +211,7 @@ static void test_noop_finalizer_array() {
     cortecs_world_cleanup();
 }
 
-typedef struct {
+typedef struct single_target {
     void *target;
 } single_target;
 cortecs_type_forward_declare(single_target);
