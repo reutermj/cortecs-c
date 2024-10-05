@@ -15,6 +15,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       
+      # TODO: these will eventually overflow the shell line length
       # Make sure source has been formatted
       - run: clang-format --dry-run --Werror $(find source/ -iname '*.h' -o -iname '*.c')
       - run: clang-format --dry-run --Werror $(find test/ -iname '*.h' -o -iname '*.c')
