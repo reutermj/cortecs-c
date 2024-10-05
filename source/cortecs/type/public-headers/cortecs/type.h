@@ -95,7 +95,7 @@ cortecs_type_finalizer_index cortecs_type_index(cortecs_type type);
     cortecs_array_declare(TYPE)
 
 #define cortecs_type_define(TYPE) \
-    cortecs_type cortecs_type_declaration_name(TYPE) = (sizeof(TYPE) << CORTECS_TYPE_SIZE_SHIFT)
+    cortecs_type cortecs_type_declaration_name(TYPE) = (sizeof(struct TYPE) << CORTECS_TYPE_SIZE_SHIFT)
 
 #define cortecs_type_declaration_name(TYPE) CONCAT(cortecs_type_declaration_, TYPE)
 #define cortecs_type_param(TYPE) cortecs_type cortecs_type_declaration_name(TYPE)
