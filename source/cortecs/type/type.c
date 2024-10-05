@@ -1,5 +1,7 @@
 #include <assert.h>
 #include <cortecs/type.h>
+#include <stddef.h>
+#include <string.h>
 
 // Define registered type info
 // reserved types:
@@ -35,4 +37,13 @@ uint64_t cortecs_type_size(cortecs_type type) {
 }
 cortecs_type_finalizer_index cortecs_type_index(cortecs_type type) {
     return (cortecs_type_finalizer_index)((type & CORTECS_TYPE_INDEX_MASK) >> CORTECS_TYPE_INDEX_SHIFT);
+}
+
+void *cortecs_array_generic_get(cortecs_array_generic(T) array, uint32_t index) {
+    assert(index < array->size);
+    return &array->data[(uint32_t)(index * array->stride)];
+}
+
+void cortecs_array_generic_set(cortecs_array_generic(T) array, uint32_t index, void *element) {
+    memcpy(cortecs_array_generic_get(array, index), element, array->stride);
 }

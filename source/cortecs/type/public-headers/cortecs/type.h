@@ -26,6 +26,16 @@
     }
 
 #define cortecs_array(TYPE) CONCAT(cortecs_array_, TYPE) *
+#define cortecs_array_generic(TYPE) cortecs_array_generic_impl *
+typedef struct {
+    uint32_t size;
+    uint32_t stride;
+    uint8_t padding[CORTECS_ARRAY_ELEMENTS_OFFSET - (2 * sizeof(uint32_t))];
+    uint8_t data[];
+} cortecs_array_generic_impl;
+
+void *cortecs_array_generic_get(cortecs_array_generic(T) array, uint32_t index);
+void cortecs_array_generic_set(cortecs_array_generic(T) array, uint32_t index, void *element);
 
 cortecs_array_forward_declare(int8_t);
 cortecs_array_declare(int8_t);
