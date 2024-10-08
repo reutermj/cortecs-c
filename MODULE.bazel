@@ -1,5 +1,5 @@
 "Contains code related to the Cortecs programming language"
-module(name = "cortecs", version = "2024.10.06")
+module(name = "cortecs", version = "2024.09.28")
 
 git_repository = use_repo_rule("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
@@ -27,7 +27,7 @@ git_override(
     module_name = "flecs",
     remote = "https://github.com/SanderMertens/flecs.git",
     # branch = "master",
-    commit = "b002dcb57592ae751bd20dcc0a7d8198a163460f",
+    commit = "5abfb06a4b90859e497d6722214b7118413083d8",
 )
 
 git_repository(
@@ -75,7 +75,7 @@ git_override(
     module_name = "hedron_compile_commands",
     remote = "https://github.com/hedronvision/bazel-compile-commands-extractor.git",
     # branch = "main",
-    commit = "4f28899228fb3ad0126897876f147ca15026151e",
+    commit = "1e08f8e0507b6b6b1f4416a9a22cf5c28beaba93",
 )
 
 http_archive(

@@ -13,7 +13,6 @@ cc_library(
     ],
     deps = [
         "//source/cortecs/string:public-headers",
-        "//source/cortecs/type",
         "@cJSON",
     ],
 )
@@ -29,6 +28,7 @@ cc_library(
     ],
     deps = [
         ":public-headers",
+        "//source/cortecs/finalizer",
         "//source/cortecs/gc:public-headers",
     ],
 )

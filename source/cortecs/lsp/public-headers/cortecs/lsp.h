@@ -1,9 +1,9 @@
 #ifndef CORTECS_LSP_LSP_H
 #define CORTECS_LSP_LSP_H
 
+#include <cortecs/array.h>
 #include <cortecs/gc.h>
 #include <cortecs/string.h>
-#include <cortecs/type.h>
 #include <stdbool.h>
 
 typedef struct {
@@ -17,7 +17,8 @@ typedef struct {
 } cortecs_lsp_parse_error_t;
 
 typedef struct cortecs_lsp_any cortecs_lsp_any;
-cortecs_type_forward_declare(cortecs_lsp_any);
+extern cortecs_finalizer_declare(cortecs_lsp_any);
+cortecs_array_forward_declare(cortecs_lsp_any);
 
 typedef struct {
     cortecs_array(cortecs_string) field_names;
@@ -46,7 +47,7 @@ struct cortecs_lsp_any {
         cortecs_array(cortecs_lsp_any) array;
     } value;
 };
-cortecs_type_declare(cortecs_lsp_any);
+cortecs_array_define(cortecs_lsp_any);
 
 typedef struct {
     cortecs_string jsonrpc;

@@ -1,9 +1,10 @@
 #include <assert.h>
 #include <common.h>
+#include <cortecs/array.h>
+#include <cortecs/finalizer.h>
 #include <cortecs/gc.h>
 #include <cortecs/log.h>
 #include <cortecs/string.h>
-#include <cortecs/type.h>
 #include <cortecs/world.h>
 #include <flecs.h>
 #include <stdint.h>
@@ -82,11 +83,11 @@ static void log_source_location(
 
 static void log_type_info(
     cJSON *message,
-    cortecs_type_finalizer_index index,
+    cortecs_finalizer_index finalizer_index,
     bool is_array
 ) {
-    cortecs_type_finalizer metadata = cortecs_type_lookup_finalizer(index);
-    cJSON_AddStringToObject(message, "type_name", metadata.name);
+    cortecs_finalizer_metadata finalizer_metadata = cortecs_finalizer_get(finalizer_index);
+    cJSON_AddStringToObject(message, "type_name", finalizer_metadata.type_name);
     cJSON_AddBoolToObject(message, "is_array", is_array);
 }
 
@@ -143,11 +144,11 @@ static void log_dec(
 }
 
 static void log_alloc(
-    cortecs_type_param(T),
     const char *method,
     const char *file,
     const char *function,
     int line,
+    cortecs_finalizer_index finalizer_index,
     bool is_array,
     void *allocation,
     ecs_entity_t entity,
@@ -155,7 +156,7 @@ static void log_alloc(
 ) {
     cJSON *message = create_log_message(method);
     log_source_location(message, file, function, line);
-    log_type_info(message, cortecs_type_index(cortecs_type_arg(T)), is_array);
+    log_type_info(message, finalizer_index, is_array);
     log_allocation_info(message, allocation, entity);
 
     if (size_class == CORTECS_GC_NUM_SIZES) {
@@ -220,22 +221,21 @@ static void perform_dec(
         return;
     }
 
-    cortecs_type_finalizer_index index = header->type & ARRAY_BIT_CLEAR;
+    cortecs_finalizer_index index = header->type & ARRAY_BIT_CLEAR;
     if (!index) {
         goto delete_entity;
     }
 
-    cortecs_type_finalizer finalizer = cortecs_type_lookup_finalizer(index);
+    cortecs_finalizer_metadata type = cortecs_finalizer_get(index);
     if (header->type & ARRAY_BIT_ON) {
         uint32_t size_of_array = *(uint32_t *)allocation;
-        uintptr_t base = (uintptr_t)allocation + CORTECS_ARRAY_ELEMENTS_OFFSET;
-        uintptr_t upper_bound = base + size_of_array * cortecs_type_size(finalizer.type);
-        for (uintptr_t element = base; element < upper_bound; element += cortecs_type_size(finalizer.type)) {
-            finalizer.callback((void *)element);
-            NOOP;
+        uintptr_t base = (uintptr_t)allocation + type.offset_of_elements;
+        uintptr_t upper_bound = base + size_of_array * type.size;
+        for (uintptr_t element = base; element < upper_bound; element += type.size) {
+            type.finalizer((void *)element);
         }
     } else {
-        finalizer.callback(allocation);
+        type.finalizer(allocation);
     }
 
 delete_entity:;
@@ -339,8 +339,8 @@ static int get_size_class(uint32_t size_of_allocation) {
 }
 
 static void *alloc(
-    cortecs_type_param(T),
     uint32_t size_of_allocation,
+    cortecs_finalizer_index finalizer_index,
     uint16_t array_bit,
     const char *method,
     const char *file,
@@ -362,18 +362,18 @@ static void *alloc(
 
     gc_header *header = allocation;
     header->entity = entity;
-    header->type = cortecs_type_index(cortecs_type_arg(T)) | array_bit;
+    header->type = finalizer_index | array_bit;
     header->count = 1;
 
     void *out_pointer = (void *)((uintptr_t)allocation + sizeof(gc_header));
 
     if (log_stream != NULL) {
         log_alloc(
-            cortecs_type_arg(T),
             method,
             file,
             function,
             line,
+            finalizer_index,
             array_bit == ARRAY_BIT_ON,
             out_pointer,
             entity,
@@ -389,14 +389,15 @@ static void *alloc(
 }
 
 void *cortecs_gc_alloc_impl(
-    cortecs_type_param(T),
+    uint32_t size_of_type,
+    cortecs_finalizer_index finalizer_index,
     const char *file,
     const char *function,
     int line
 ) {
     return alloc(
-        cortecs_type_arg(T),
-        cortecs_type_size(cortecs_type_arg(T)),
+        size_of_type,
+        finalizer_index,
         ARRAY_BIT_OFF,
         "cortecs_gc_alloc",
         file,
@@ -406,15 +407,17 @@ void *cortecs_gc_alloc_impl(
 }
 
 void *cortecs_gc_alloc_array_impl(
-    cortecs_type_param(T),
+    uint32_t size_of_type,
     uint32_t size_of_array,
+    uint32_t offset_of_elements,
+    cortecs_finalizer_index finalizer_index,
     const char *file,
     const char *function,
     int line
 ) {
     void *allocation = alloc(
-        cortecs_type_arg(T),
-        cortecs_type_size(cortecs_type_arg(T)) * size_of_array + CORTECS_ARRAY_ELEMENTS_OFFSET,
+        size_of_type * size_of_array + offset_of_elements,
+        finalizer_index,
         ARRAY_BIT_ON,
         "cortecs_gc_alloc_array",
         file,
@@ -506,25 +509,25 @@ void cortecs_gc_init_impl(
 
         // spoof log_path_string log messages
         log_alloc(
-            cortecs_type_arg(cortecs_string),
             "cortecs_gc_alloc",
             file,
             function,
             line,
+            cortecs_finalizer_index_name(cortecs_string),
             false,
             log_path_string,
             get_entity(log_path_string),
-            get_size_class(sizeof(struct cortecs_string))
+            get_size_class(sizeof(cortecs_string_impl))
         );
         log_dec(log_path_string, "enqueue_dec", file, function, line, string_event_id);
 
         // spoof log_stream log messages
         log_alloc(
-            cortecs_type_arg(cortecs_log_stream),
             "cortecs_gc_alloc",
             file,
             function,
             line,
+            cortecs_finalizer_index_name(cortecs_log_stream),
             false,
             log_stream,
             get_entity(log_stream),
