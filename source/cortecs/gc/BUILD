@@ -59,7 +59,8 @@ cc_library(
     ],
     deps = [
         "//source/common",
-        "//source/cortecs/type",
+        "//source/cortecs/array",
+        "//source/cortecs/finalizer",
     ],
 )
 

@@ -1,6 +1,7 @@
 #include <assert.h>
 #include <cJSON.h>
 #include <common.h>
+#include <cortecs/array.h>
 #include <cortecs/gc.h>
 #include <cortecs/lsp.h>
 #include <cortecs/string.h>
@@ -9,8 +10,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-cortecs_type_define(cortecs_lsp_any);
-
 #define CORTECS_LSP_SUCCESS               \
     (cortecs_lsp_parse_error_t) {         \
         .tag = CORTECS_LSP_PARSE_SUCCESS, \
@@ -18,6 +17,7 @@ cortecs_type_define(cortecs_lsp_any);
     }
 
 static cortecs_lsp_any accept_any(const cJSON *field);
+cortecs_finalizer_define(cortecs_lsp_any);
 
 static cortecs_lsp_parse_error_t find_field(const cJSON *json, const char *field_name, bool is_optional, const cJSON **out) {
     const cJSON *field = cJSON_GetObjectItemCaseSensitive(json, field_name);
@@ -103,8 +103,8 @@ static cortecs_lsp_object accept_object(const cJSON *field) {
         size++;
     }
 
-    cortecs_array(cortecs_string) names = cortecs_gc_alloc_array(cortecs_type_arg(cortecs_string), size);
-    cortecs_array(cortecs_lsp_any) values = cortecs_gc_alloc_array(cortecs_type_arg(cortecs_lsp_any), size);
+    cortecs_array(cortecs_string) names = cortecs_gc_alloc_array(cortecs_string, size);
+    cortecs_array(cortecs_lsp_any) values = cortecs_gc_alloc_array(cortecs_lsp_any, size);
 
     // read all fields into the arrays
     uint32_t index = 0;
@@ -137,7 +137,7 @@ static cortecs_array(cortecs_lsp_any) accept_array(const cJSON *field) {
 
     if (field->child == NULL) {
         // array is empty: []
-        return cortecs_gc_alloc_array(cortecs_type_arg(cortecs_lsp_any), 0);
+        return cortecs_gc_alloc_array(cortecs_lsp_any, 0);
     }
 
     cJSON *current = field->child;
@@ -149,7 +149,7 @@ static cortecs_array(cortecs_lsp_any) accept_array(const cJSON *field) {
         current = current->next;
     }
 
-    cortecs_array(cortecs_lsp_any) elements = cortecs_gc_alloc_array(cortecs_type_arg(cortecs_lsp_any), size);
+    cortecs_array(cortecs_lsp_any) elements = cortecs_gc_alloc_array(cortecs_lsp_any, size);
 
     // read all fields into the array
     uint32_t index = 0;

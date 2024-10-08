@@ -3,7 +3,6 @@
 bazel clean
 rm compile_commands.json
 
-# TODO: these will eventually overflow the shell line length
 clang-format --dry-run --Werror $(find source/ -iname '*.h' -o -iname '*.c')
 clang-format --dry-run --Werror $(find test/ -iname '*.h' -o -iname '*.c')
 CC=clang bazel build //...
