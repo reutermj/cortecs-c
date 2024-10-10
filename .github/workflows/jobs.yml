@@ -16,14 +16,14 @@ jobs:
         uses: actions/checkout@v4
       
       # Make sure source has been formatted
-      - run: clang-format --dry-run --Werror $(find source/ -iname '*.h' -o -iname '*.c')
-      - run: clang-format --dry-run --Werror $(find test/ -iname '*.h' -o -iname '*.c')
+      - run: find source/ -iname '*.h' -o -iname '*.c' -exec clang-format --dry-run --Werror {} \;
+      - run: find test/ -iname '*.h' -o -iname '*.c' -exec clang-format --dry-run --Werror {} \;
 
       # Make sure it builds under both clang and gcc
       - run: CC=clang bazel build //...
       - run: CC=clang bazel run @hedron_compile_commands//:refresh_all # generates the compile_commands.json
-      - run: clang-tidy --config-file ./source/.clang-tidy -p ./ $(find source/. -name "*.c")
-      - run: clang-tidy --config-file ./test/.clang-tidy -p ./ $(find test/. -name "*.c")
+      - run: find source/ -type f -iname '*.c' ! -iname '*.template.c' -exec clang-tidy --config-file ./source/.clang-tidy -p ./ {} \;
+      - run: find test/ -type f -iname '*.c' -exec clang-tidy --config-file ./test/.clang-tidy -p ./ {} \;
 
       # Currently only running coverage for tracking. 
       # May eventually start failing CI if code isnt covered
