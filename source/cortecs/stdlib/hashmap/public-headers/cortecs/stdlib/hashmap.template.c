@@ -1,6 +1,7 @@
 #include "hashmap.h"
 
 #include <cortecs/array.h>
+#include <cortecs/finalizer.h>
 #include <cortecs/gc.h>
 #include <stdlib.h>
 
@@ -29,7 +30,10 @@ struct cortecs_hashmap(TYPE_PARAM_KEY, TYPE_PARAM_VALUE) {
     } value;
 };
 cortecs_array_define(cortecs_hashmap(TYPE_PARAM_KEY, TYPE_PARAM_VALUE));
+cortecs_finalizer_define(cortecs_hashmap(TYPE_PARAM_KEY, TYPE_PARAM_VALUE));
 
 cortecs_hashmap(TYPE_PARAM_KEY, TYPE_PARAM_VALUE) cortecs_hashmap_new(TYPE_PARAM_KEY, TYPE_PARAM_VALUE)() {
-    return NULL;
+    cortecs_hashmap(TYPE_PARAM_KEY, TYPE_PARAM_VALUE) map = cortecs_gc_alloc(cortecs_hashmap(TYPE_PARAM_KEY, TYPE_PARAM_VALUE));
+    map->tag = CORTECS_HASHMAP_NONE;
+    return map;
 }
