@@ -9,6 +9,8 @@
 static cortecs_finalizer_metadata registered_types[MAX_REGISTERED_TYPES];
 static uint32_t next_type_index;
 
+cortecs_finalizer_define(uint32_t);
+
 void cortecs_finalizer_init() {
     next_type_index = 1;
 }

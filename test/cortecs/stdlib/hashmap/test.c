@@ -18,6 +18,15 @@ void test_new() {
     ecs_defer_end(world);
 }
 
+void test_set_and_get_one_value() {
+    ecs_defer_begin(world);
+    cortecs_hashmap(uint32_t, uint32_t) empty = cortecs_hashmap_new(uint32_t, uint32_t)();
+    cortecs_hashmap(uint32_t, uint32_t) has_value = cortecs_hashmap_set(uint32_t, uint32_t)(empty, 10, 20);
+    uint32_t retrieved_value = cortecs_hashmap_get(uint32_t, uint32_t)(has_value, 10);
+    TEST_ASSERT_EQUAL_UINT32(20, retrieved_value);
+    ecs_defer_end(world);
+}
+
 int main() {
     UNITY_BEGIN();
     RUN_TEST(test_new);

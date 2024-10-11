@@ -13,3 +13,12 @@
 typedef struct cortecs_hashmap(TYPE_PARAM_KEY, TYPE_PARAM_VALUE) * cortecs_hashmap(TYPE_PARAM_KEY, TYPE_PARAM_VALUE);
 cortecs_array_forward_declare(cortecs_hashmap(TYPE_PARAM_KEY, TYPE_PARAM_VALUE));
 cortecs_hashmap(TYPE_PARAM_KEY, TYPE_PARAM_VALUE) cortecs_hashmap_new(TYPE_PARAM_KEY, TYPE_PARAM_VALUE)();
+cortecs_hashmap(TYPE_PARAM_KEY, TYPE_PARAM_VALUE) cortecs_hashmap_set(TYPE_PARAM_KEY, TYPE_PARAM_VALUE)(
+    cortecs_hashmap(TYPE_PARAM_KEY, TYPE_PARAM_VALUE) map,
+    TYPE_PARAM_KEY key,
+    TYPE_PARAM_VALUE value
+);
+TYPE_PARAM_VALUE cortecs_hashmap_get(TYPE_PARAM_KEY, TYPE_PARAM_VALUE)(
+    cortecs_hashmap(TYPE_PARAM_KEY, TYPE_PARAM_VALUE) map,
+    TYPE_PARAM_KEY key
+);
