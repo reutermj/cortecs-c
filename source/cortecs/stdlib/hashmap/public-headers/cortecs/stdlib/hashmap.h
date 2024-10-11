@@ -7,6 +7,8 @@
 #define cortecs_hashmap_branch(KEY, VALUE) CONCAT(cortecs_hashmap(KEY, VALUE), _branch)
 #define cortecs_hashmap_bucket(KEY, VALUE) CONCAT(cortecs_hashmap(KEY, VALUE), _bucket)
 #define cortecs_hashmap_new(KEY, VALUE) CONCAT(cortecs_hashmap(KEY, VALUE), _new)
+#define cortecs_hashmap_set(KEY, VALUE) CONCAT(cortecs_hashmap(KEY, VALUE), _set)
+#define cortecs_hashmap_get(KEY, VALUE) CONCAT(cortecs_hashmap(KEY, VALUE), _get)
 
 typedef enum {
     CORTECS_HASHMAP_NONE,

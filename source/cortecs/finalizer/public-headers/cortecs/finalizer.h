@@ -42,4 +42,6 @@ void cortecs_finalizer_init();
 cortecs_finalizer_index cortecs_finalizer_register_impl(cortecs_finalizer_metadata metadata);
 cortecs_finalizer_metadata cortecs_finalizer_get(cortecs_finalizer_index index);
 
+extern cortecs_finalizer_declare(uint32_t);
+
 #endif
