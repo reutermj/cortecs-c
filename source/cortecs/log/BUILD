@@ -20,7 +20,6 @@ cc_library(
 cc_library(
     name = "sources",
     srcs = glob(["*.c"]),
-    hdrs = glob(["*.h"]),
     features = ["treat_warnings_as_errors"],
     visibility = [
         "//source/cortecs/gc:__subpackages__",
