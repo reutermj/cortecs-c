@@ -33,6 +33,24 @@ struct cortecs_hashmap(TYPE_PARAM_KEY, TYPE_PARAM_VALUE) {
 cortecs_array_define(cortecs_hashmap(TYPE_PARAM_KEY, TYPE_PARAM_VALUE));
 cortecs_finalizer_define(cortecs_hashmap(TYPE_PARAM_KEY, TYPE_PARAM_VALUE));
 
+void cortecs_finalizer(cortecs_hashmap(TYPE_PARAM_KEY, TYPE_PARAM_VALUE))(void *allocation) {
+    cortecs_hashmap(TYPE_PARAM_KEY, TYPE_PARAM_VALUE) map = allocation;
+    switch (map->tag) {
+        case CORTECS_HASHMAP_NONE:;
+            break;
+        case CORTECS_HASHMAP_BUCKET:;
+            cortecs_gc_dec(map->value.bucket.keys);
+            cortecs_gc_dec(map->value.bucket.values);
+            break;
+        case CORTECS_HASHMAP_BRANCH:;
+            assert(0);
+    }
+}
+
+void cortecs_hashmap_register_finalizer(TYPE_PARAM_KEY, TYPE_PARAM_VALUE)() {
+    cortecs_finalizer_register(cortecs_hashmap(TYPE_PARAM_KEY, TYPE_PARAM_VALUE));
+}
+
 cortecs_hashmap(TYPE_PARAM_KEY, TYPE_PARAM_VALUE) cortecs_hashmap_new(TYPE_PARAM_KEY, TYPE_PARAM_VALUE)() {
     cortecs_hashmap(TYPE_PARAM_KEY, TYPE_PARAM_VALUE) map = cortecs_gc_alloc(cortecs_hashmap(TYPE_PARAM_KEY, TYPE_PARAM_VALUE));
     map->tag = CORTECS_HASHMAP_NONE;

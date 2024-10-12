@@ -9,6 +9,7 @@
 #define cortecs_hashmap_new(KEY, VALUE) CONCAT(cortecs_hashmap(KEY, VALUE), _new)
 #define cortecs_hashmap_set(KEY, VALUE) CONCAT(cortecs_hashmap(KEY, VALUE), _set)
 #define cortecs_hashmap_get(KEY, VALUE) CONCAT(cortecs_hashmap(KEY, VALUE), _get)
+#define cortecs_hashmap_register_finalizer(KEY, VALUE) CONCAT(cortecs_hashmap(KEY, VALUE), _register_finalizer)
 
 typedef enum {
     CORTECS_HASHMAP_NONE,
