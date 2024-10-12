@@ -22,3 +22,4 @@ TYPE_PARAM_VALUE cortecs_hashmap_get(TYPE_PARAM_KEY, TYPE_PARAM_VALUE)(
     cortecs_hashmap(TYPE_PARAM_KEY, TYPE_PARAM_VALUE) map,
     TYPE_PARAM_KEY key
 );
+void cortecs_hashmap_register_finalizer(TYPE_PARAM_KEY, TYPE_PARAM_VALUE)();
