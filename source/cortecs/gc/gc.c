@@ -286,6 +286,10 @@ void cortecs_gc_dec_impl(
     const char *function,
     int line
 ) {
+    if (allocation == NULL) {
+        return;
+    }
+
     if (ecs_is_deferred(world)) {
         // a system is running.
         // Defer the decrement until after system logic completes
@@ -306,6 +310,10 @@ void cortecs_gc_inc_impl(
     const char *function,
     int line
 ) {
+    if (allocation == NULL) {
+        return;
+    }
+
     gc_header *header = get_header(allocation);
 
     if (log_stream != NULL) {
