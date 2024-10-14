@@ -325,11 +325,22 @@ static void test_gc_log_open_close() {
     remove(log_path);
 }
 
+static void test_inc_dec_null() {
+    cortecs_world_init();
+    cortecs_finalizer_init();
+    cortecs_gc_init(NULL);
+
+    cortecs_gc_inc(NULL);
+    cortecs_gc_dec(NULL);
+
+    cortecs_world_cleanup();
+}
+
 int main() {
     UNITY_BEGIN();
 
     RUN_TEST(test_gc_log_open_close);
-
+    RUN_TEST(test_inc_dec_null);
     RUN_TEST(test_collect_unused_allocation);
     RUN_TEST(test_collect_unused_allocation_array);
     RUN_TEST(test_keep_used_allocation);
