@@ -70,11 +70,10 @@ cc_library(
 # Sometimes helpful to clear the bazel cache:
 # bazel clean
 # rm -r $(bazel info repository_cache)
-bazel_dep(name = "hedron_compile_commands", dev_dependency = True)
+bazel_dep(name = "hedron_compile_commands", version = "0.0.0", dev_dependency = True)
 git_override(
     module_name = "hedron_compile_commands",
     remote = "https://github.com/hedronvision/bazel-compile-commands-extractor.git",
-    # branch = "main",
     commit = "4f28899228fb3ad0126897876f147ca15026151e",
 )
 
