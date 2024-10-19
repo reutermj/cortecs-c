@@ -36,8 +36,10 @@
 #define OVERLOAD_EXPAND(macroName, number_of_args) CONCAT_INNER(macroName, number_of_args)
 #define OVERLOADED_MACRO_0(macroName, ...) OVERLOAD_EXPAND(macroName, __NARG__(__VA_ARGS__))(__VA_ARGS__)
 #define OVERLOADED_MACRO_1(macroName, arg1, ...) OVERLOAD_EXPAND(macroName, __NARG__(__VA_ARGS__))(arg1, __VA_ARGS__)
+#define OVERLOADED_MACRO_2(macroName, arg1, arg2, ...) OVERLOAD_EXPAND(macroName, __NARG__(__VA_ARGS__))(arg1, arg2, __VA_ARGS__)
 
 #define CONCAT_INNER(a, b) a##b
+#define CONCAT_1(a) a
 #define CONCAT_2(a, b) CONCAT_INNER(a, b)
 #define CONCAT_3(a, ...) CONCAT_2(a, CONCAT_2(__VA_ARGS__))
 #define CONCAT_4(a, ...) CONCAT_2(a, CONCAT_3(__VA_ARGS__))

@@ -1,6 +1,5 @@
 cc_library(
-    name = "function",
-    srcs = glob(["*.c"]),
+    name = "mangle",
     hdrs = glob(["public-headers/cortecs/*.h"]),
     features = ["treat_warnings_as_errors"],
     includes = ["public-headers/"],
