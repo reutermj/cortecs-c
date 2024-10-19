@@ -3,7 +3,7 @@ module(name = "cortecs", version = "2024.10.19")
 
 git_repository = use_repo_rule("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
-bazel_dep(name = "rules_cc", version = "0.0.12")
+bazel_dep(name = "rules_cc", version = "0.0.13")
 
 # Dependencies are auto updated by a github action that
 # * scans for lines that start with git_repository( or git_override(
