@@ -1,0 +1,5 @@
+{
+  "extends": ["config:base"],
+  "separateMajorMinor": false, // always take the latest version.
+  "dependencyDashboard": true,
+}
