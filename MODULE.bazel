@@ -72,7 +72,8 @@ cc_library(
 # Sometimes helpful to clear the bazel cache:
 # bazel clean
 # rm -r $(bazel info repository_cache)
-# this must have a version even though it's not declared in the hedron_compile_commands MODULE.bazel
+# To have renovate update this dependency, this must have a version even though
+# it's not declared in the hedron_compile_commands MODULE.bazel
 bazel_dep(name = "hedron_compile_commands", version = "0.0.0", dev_dependency = True)
 git_override(
     module_name = "hedron_compile_commands",
