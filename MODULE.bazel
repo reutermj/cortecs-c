@@ -22,7 +22,7 @@ bazel_dep(name = "rules_cc", version = "0.0.12")
 # due to a bit of laziness in the script, the error checking only looks for build_file_content or )
 # to determine end of declaration.
 
-bazel_dep(name = "flecs")
+bazel_dep(name = "flecs", version = "4.0.1")
 git_override(
     module_name = "flecs",
     remote = "https://github.com/SanderMertens/flecs.git",
