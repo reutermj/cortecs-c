@@ -75,7 +75,7 @@ while line_number < len(lines):
     line = lines[line_number]
     line_number = line_number + 1
 
-    if line.startswith("git_override(") or line.startswith("git_repository("):
+    if line.startswith("git_repository("):
         print("found dependency declaration on line", line_number)
         name = ""
         remote = ""
