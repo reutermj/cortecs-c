@@ -56,16 +56,50 @@ void CN(Cortecs, foo)();
 ### Generics
 
 ```
+foo.cortecs:
+
 namespace Cortecs
 
 function foo[T](x: T) { ... }
 
 function bar() {
     foo(1)
+    foo(1.1)
 }
 ```
 
-`foo[T]` is an uninstantiated generic type, and so it does not correspond to a name in the CIR. However, when `foo` is used inside `bar` with an `I32` argument, it is translated to `cortecs_name(Cortecs, foo, cortecs_type_params(I32))` in the CIR.
+```
+foo.template.h:
+
+void CN(Cortecs, foo)(TYPE_PARAM_T x);
+
+foo.template.c:
+
+void CN(Cortecs, foo)(TYPE_PARAM_T x) { ... }
+
+foo.h:
+
+#define TYPE_PARAM_T CN(Cortecs, I32)
+#include "foo.template.h"
+
+#define TYPE_PARAM_T CN(Cortecs, F32)
+#include "foo.template.h"
+
+void CN(Cortecs, bar)();
+
+foo.c:
+
+#define TYPE_PARAM_T CN(Cortecs, I32)
+#include "foo.template.c"
+
+#define TYPE_PARAM_T CN(Cortecs, F32)
+#include "foo.template.c"
+
+void CN(Cortecs, bar)() {
+    CN(Cortecs, foo, CTP(CN(Cortecs, I32)))(1)
+    CN(Cortecs, foo, CTP(CN(Cortecs, F32)))(1.1)
+}
+```
 
 ## Records
 
