@@ -15,8 +15,10 @@
 <args> ::= <empty> | <expression> (',' <expression>)*
 <block> ::= '{' ... '}'
 
+declaration syntax:
 'function' <name>('[' <types> ('where' <constraints>)? ']')? '(' <params> ')' (':' <type>)? <block>
 
+usage syntax:
 (<namespaces> ':')? <name> ('<' <types> '>')? '(' <args> ')'
 ```
 
@@ -37,13 +39,9 @@ As well, the parser must gracefully handle error cases with clear error messages
 
 ### Overloading
 
-* Cortecs permits function overloading
-* function overloads can conflict with generic functions
+Cortecs permits function overloading, and function overloads can conflict with generic functions. For example, both `foo<T>(x: T)` and `foo(x: I32)` can accept an `I32` argument. To resolve such ambiguities, Cortecs prioritizes more specific instantiations over generic ones. For example, when calling `foo(1)`, the function `foo(x: I32)` is chosen over the generic function `foo<T>(x: T)`. 
 
-```
-function foo(x: I32)
-function foo[T]()
-```
+In cases where neither definition is more specific than the other, Cortecs resolves the ambiguity by prioritizing the arguments from left to right. For example, the function `foo<T>(x: I32, y: T)` is chosen over `foo<T>(x: T, y: I32)` when calling `foo(1, 2)`.
 
 ## Records
 
