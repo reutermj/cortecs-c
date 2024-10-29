@@ -1,45 +1,6 @@
 # Generics
 
-## Functions
 
-```bnf
-<name> ::= [a-z][a-zA-Z]*
-<type_name> ::= [A-Z][a-zA-Z]*
-<namespace> ::= [A-Z][a-zA-Z]*
-<namespaces> ::= <namespace> (':' <namespace>)*
-<type> ::= <type_name> | <type_name> '<' <types> '>'
-<types> ::= <type> (',' <type>)*
-<constraint> ::= <type> '<' <types> '>'
-<constraints> ::= <constraints> (',' <constraints>)*
-<param> ::= <name> ':' <type>
-<params> ::= <empty> | <param> (',' <param>)*
-<args> ::= <empty> | <expression> (',' <expression>)*
-<block> ::= '{' ... '}'
-
-<function_declaration> ::= 'function' <name>('<' <types> ('where' <constraints>)? '>')? '(' <params> ')' (':' <type>)? <block>
-<function_call> ::= (<namespaces> ':')? <name> ('<' <types> '>')? '(' <args> ')'
-```
-
-Generics in Cortecs are designed to be easily and unambiguously parsed using LL parsing without type information. The syntax must also maintain the use of `[...]` as the accessor operator and allow operator overloading for `<` and `>`. Typically, these requirements are unsatisfiable, but Cortecs addresses them by enforcing strict naming conventions: variable and function names must start with a lowercase letter, whereas type names and namespaces must start with an uppercase letter.
-
-To disambiguate the use of `<` in the syntax, the parser employs a simple algorithm. If the first non-whitespace token following the `<` is a type name or namespace, it is interpreted as a generic function application. Otherwise, it is treated as a binary operator. The following are examples illustrating how the parser distinguishes between various uses of `<`:
-
-* `let x = f<T>(x)` is parsed as generic function application.
-* `let x = f<t>(x)` is parsed with both `<` and `>` as binary operators, and `<` is applied first.
-* `let x = f<>(x)` is parsed with `<>` as a binary operator.
-* `let x = f< >(x)` is parsed with `<` as a binary operator and `>` as a unary operator.
-* `let x = f(x)<y>(z)` is parsed with both `<` and `>` as binary operators, and `<` is applied first.
-
-As well, the parser must gracefully handle error cases with clear error messages
-
-* `let x = f <` produces the syntax error `expected type name or expression`
-* `let x = f(x)<T>(y)` produces the syntax error `unexpected type name T`
-
-### Overloading
-
-Cortecs permits function overloading, and function overloads can conflict with generic functions. For example, both `foo<T>(x: T)` and `foo(x: I32)` can accept an `I32` argument. To resolve such ambiguities, Cortecs prioritizes more specific instantiations over generic ones. For example, when calling `foo(1)`, the function `foo(x: I32)` is chosen over the generic function `foo<T>(x: T)`. 
-
-In cases where neither definition is more specific than the other, Cortecs resolves the ambiguity by prioritizing the arguments from left to right. For example, the function `foo<T>(x: I32, y: T)` is chosen over `foo<T>(x: T, y: I32)` when calling `foo(1, 2)`.
 
 ## Records
 
@@ -54,7 +15,18 @@ In cases where neither definition is more specific than the other, Cortecs resol
 <record_construction> ::= <type> ('<' <types> '>') '{' <field_instantiations> '}'
 ```
 
-Records are analogous to C structs, providing a way to group related data together. When parsing the construction of a generic record, there is no need for disambiguation because binary operators are not valid immediately following a type name.
+Records are analogous to C structs, providing a way to group related data together. 
+
+```cortecs
+record RecordsName {
+    field1: Type1
+    field2: Type2
+    ...
+    fieldN: TypeN
+}
+```
+
+When parsing the construction of a generic record, there is no need for disambiguation because binary operators are not valid immediately following a type name.
 
 ## Constraints
 
@@ -107,7 +79,9 @@ func main() {
 
 
 
-## Monomorphization 
+## Monomorphization
+
+* MVP1 will only support generic compiliation in the form of monomorphization
 
 ### Diamond Problem
 
