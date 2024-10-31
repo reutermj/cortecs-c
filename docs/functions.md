@@ -100,7 +100,64 @@ test recursion {
 
 ## Generic Functions
 
+Cortecs allows for generic functions that define type parameters and can operate on many different types and records passed to it.
 
+```
+function greet(name: String) {
+    println("Hello, {name}!")
+}
+
+function add(x: I32, y: I32): I32 {
+    return x + y
+}
+
+function identity<T>(t: T): T {
+    return t
+}
+
+test generic {
+    greet(identity("Alice"))
+    let sum = add(identity(2), 3)
+    println("Result of addition: {result}")
+}
+
+// stdout
+// Hello, Alice!
+// Result of addition: 5
+```
+
+## Constrained Generic Functions
+
+Cortecs allows for generic functions to be constrained by constraints, which declare a set of functions defined for the generic type parameters of the function.
+
+```
+constraint Addable[S, T, R] {
+    add(x: S, y: T): R
+}
+
+function addTogether<S, T where Addable[S, T, T]>(x: S, y: T): T {
+    return add(x, y)
+}
+
+function add(x: I32, y: I32): I32 {
+    return x + y
+}
+
+function add(x: I32, y: F32): I32 {
+    return toF32(x) + y
+}
+
+test constrainedGenerics {
+    val i32Result = addTogether(2, 3)
+    println("Result of I32 addition: {i32Result}")
+    val f32Result = addTogether(3, 4.1)
+    println("Result of F32 addition: {f32Result}")
+}
+
+// stdout
+// Result of I32 addition: 5
+// Result of F32 addition: 7.1
+```
 
 ## Overloading
 
