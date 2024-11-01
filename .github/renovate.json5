@@ -1,9 +1,10 @@
 {
-  "extends": ["config:base"],
-  "separateMajorMinor": false, // always take the latest version.
-  "dependencyDashboard": true,
-
-  "automerge": true,
-  "automergeType": "pr-comment",
-  "automergeComment": "/trunk merge"
+  extends: [
+    'config:recommended',
+  ],
+  separateMajorMinor: false,
+  dependencyDashboard: true,
+  automerge: true,
+  automergeType: 'pr-comment',
+  automergeComment: '/trunk merge',
 }
