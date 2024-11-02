@@ -24,6 +24,8 @@ bazel_dep(name = "rules_cc", version = "0.0.13")
 
 # git_override dependencies are auto updated by renovate
 # due to laziness on the renovate side, bazel_dep must have a version
+# it doesn't need to be any particular version,
+# so we use "0.0.0" to indicate the version is overridden by git commit
 
 bazel_dep(name = "flecs", version = "0.0.0")
 git_override(
