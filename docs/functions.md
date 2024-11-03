@@ -182,7 +182,7 @@ test overloading {
 // Calling foo specialized for F32: 1.1
 ```
 
-Function overloads can conflict with generic functions. To resolve such ambiguities, Cortecs prioritizes more specific instantiations over generic ones.
+Function overloads can conflict with generic functions. Cortecs resolves these ambiguities by prioritizing more specific overloads over generic ones. Specifying the type arguments overrides this default.
 
 ```cortecs
 function foo<T>(x: T) {
@@ -194,17 +194,23 @@ function foo(x: I32) {
     println("Calling foo specialized for I32: {x}")
 }
 
+function foo<T>(x: I32, y: T) {...}
+function foo<T>(x: T, y: I32) {...}
+function foo(x: I32, y: I32) {...}
+
 test overloadingResolution {
     foo(1)
     foo(1.2)
+    foo<I32>(1)
 }
 
 // stdout
 // Calling foo specialized for I32: 1
 // Calling generic foo
+// Calling generic foo
 ```
 
-In cases where no definition is more specific than another, Cortecs resolves the ambiguity by prioritizing the arguments from left to right.
+In cases where no definition is more specific than another, Cortecs resolves the ambiguity by prioritizing the arguments from left to right. TODO: Figure if there are ways to override this disambiguation default.
 
 ```cortecs
 function foo<T>(x: I32, y: T) {
@@ -229,9 +235,11 @@ test overloadingResolution {
 // Calling leftmost specialized foo: 1
 ```
 
+# Design Considerations
+
 ## Parsing
 
-Generics in Cortecs are designed to be:
+The syntax of generics in Cortecs is designed to be:
 * easily and unambiguously parsed using LL parsing without type information,
 * maintain the use of `[...]` as the accessor operator, and
 * allow operator overloading for `<` and `>`. 
@@ -246,38 +254,51 @@ To disambiguate the use of `<` in the syntax, the parser employs a simple algori
 * `let x = foo< >(y)` is parsed with `<` as a binary operator and `>` as a unary operator.
 * `let x = foo(y)<z>(w)` is parsed with both `<` and `>` as binary operators, and `<` is applied first.
 
-```cortecs
-// Example 1: Generic function application
-function foo<T>(x: T): T {
-    return x
-}
-let x = f(10)
-
-
-// Example 3: Binary operator <>
-func f(x: Int) -> Int {
-    return x
-}
-let x = f<>(10) // x is 10 (assuming <> is a no-op)
-
-// Example 4: Unary and binary operators
-func f(x: Int) -> Int {
-    return x
-}
-let x = f< >(10) // x is 10 (assuming < is a no-op and > is a unary operator)
-
-// Example 5: Mixed operators
-func f(x: Int) -> Int {
-    return x
-}
-let x = f(10)<5>(20) // x is 15 (assuming < and > are overloaded for addition)
-
-// Error handling examples
-// let x = f < // Syntax error: expected type name or expression
-// let x = f(10)<Int>(20) // Syntax error: unexpected type name Int
-```
-
 As well, the parser must gracefully handle error cases with clear error messages
 
 * `let x = f <` produces the syntax error `expected type name or expression`
 * `let x = f(x)<T>(y)` produces the syntax error `unexpected type name T`
+
+## Representation in CIR
+
+The Cortecs compiler must lower high level concepts of function overloading and generics into valid C Intermediate Represetion (CIR). In MVP1, monomorphization is the method for representing overloading and generics. The monomorphization must be able to represent:
+
+* instantiations of generic functions,
+* overloaded functions, and
+* the ability to override default disambiguation of generic and overloaded function.
+
+Name mangling must also have a direct reverse mapping back to the original Cortecs function.
+
+Key:
+* `_` -> separator
+* `_0` -> open generic type argument list
+* `_1` -> close generic type argument list
+* `_2` -> open/close generic type parameter list
+
+```
+namespace Cortecs
+
+function foo() -> 
+    CN(Cortecs, foo) -> 
+    Cortecs_foo
+
+function foo(x: I32) -> 
+    CN(Cortecs, foo, CT(I32)) -> 
+    Cortecs_foo_1I32_2
+
+function foo(x: Foo<Bar<I32>>, y: Baz<Biz<F32, I32>>) -> 
+    CN(Cortecs, foo, CT(I32)) -> 
+    Cortecs_foo_0Foo_0Bar_0I32_1_1_Baz_0Biz_0F32_I32_1_1_1
+
+function foo<T>(x: T) instantiated for I32 -> 
+    CN(Cortecs, foo, CG(I32), CT(T)) -> 
+    Cortecs_foo_2I32_2_0T_1
+
+function foo<T>(x: T) instantiated for F32 -> 
+    CN(Cortecs, foo, CG(F32), CT(T)) -> 
+    Cortecs_foo_2F32_2_0T_1
+
+function foo(x: I32, y: F32) ->
+    CN(Cortecs, foo, CT(I32, F32)) ->
+    Cortecs_foo_0I32_F32_1
+```
