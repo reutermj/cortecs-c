@@ -100,7 +100,7 @@ test recursion {
 
 ## Generic Functions
 
-Cortecs allows for generic functions that define type parameters and can operate on many different types and records passed to it.
+Cortecs allows for generic functions that define type parameters and can operate on many different types passed to it.
 
 ```
 function greet(name: String) {
