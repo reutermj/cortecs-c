@@ -29,7 +29,7 @@ jobs:
       # May eventually start failing CI if code isnt covered
       - run: CC=gcc bazel coverage --instrumentation_filter //source/... --combined_report=lcov //test/...
       - run: echo "COVERAGE_DAT=$(bazel info output_path)/_coverage/_coverage_report.dat" >> $GITHUB_ENV
-      - uses: codecov/codecov-action@v4
+      - uses: codecov/codecov-action@v5
         with:
           fail_ci_if_error: true
           files: ${{ env.COVERAGE_DAT }}
