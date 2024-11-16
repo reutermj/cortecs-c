@@ -123,14 +123,14 @@
 //     return cJSON_IsArray(field);
 // }
 
-// // something is complaining about these being unused. They'll be used at some point
-// // static cortecs_lsp_parse_error_t expect_array(const cJSON *field) {
-// //     if (is_array(field)) {
-// //         return CORTECS_LSP_SUCCESS;
-// //     }
+// something is complaining about these being unused. They'll be used at some point
+// static cortecs_lsp_parse_error_t expect_array(const cJSON *field) {
+//     if (is_array(field)) {
+//         return CORTECS_LSP_SUCCESS;
+//     }
 
-// //     return incorrect_type_message(field, "array");
-// // }
+//     return incorrect_type_message(field, "array");
+// }
 
 // static cortecs_array(cortecs_lsp_any) accept_array(const cJSON *field) {
 //     assert(cJSON_IsArray(field));

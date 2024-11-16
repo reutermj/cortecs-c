@@ -36,7 +36,7 @@ static ecs_entity_t get_entity(void *allocation) {
 
 #define CORTECS_GC_NUM_SIZES 5
 static const uint32_t buffer_sizes[CORTECS_GC_NUM_SIZES] = {32, 64, 128, 256, 512};
-static const uint32_t name_max_size = sizeof("gc_buffer_512");
+#define NAME_MAX_SIZE sizeof("gc_buffer_512")
 static ecs_entity_t gc_buffers[CORTECS_GC_NUM_SIZES + 1];
 
 // struct for the malloc based fallback
@@ -76,7 +76,7 @@ static void log_source_location(
     cJSON_AddStringToObject(message, "function", function);
 
     char buffer[sizeof("2,147,483,647")];
-    snprintf(buffer, sizeof(buffer), "%d", line);
+    snprintf(buffer, sizeof(buffer), "%" PRId32, line);
     cJSON_AddStringToObject(message, "line", buffer);
 }
 
@@ -96,15 +96,15 @@ static void log_allocation_info(
     ecs_entity_t entity
 ) {
     char buffer[sizeof("0xFFFF_FFFF_FFFF_FFFF")];
-    snprintf(buffer, sizeof(buffer), "0x%lx", (uintptr_t)allocation);
+    snprintf(buffer, sizeof(buffer), "0x%" PRIxPTR, (uintptr_t)allocation);
     cJSON_AddStringToObject(message, "pointer", buffer);
 
     // only 32 bits. won't overflow buffer
-    snprintf(buffer, sizeof(buffer), "%lld", entity & ECS_ENTITY_MASK);
+    snprintf(buffer, sizeof(buffer), "%" PRIu32, (uint32_t)(entity & ECS_ENTITY_MASK));
     cJSON_AddStringToObject(message, "entity_id", buffer);
 
     // only 16 bits. won't overflow buffer
-    snprintf(buffer, sizeof(buffer), "%lld", ECS_GENERATION(entity));
+    snprintf(buffer, sizeof(buffer), "%" PRIu16, (uint16_t)ECS_GENERATION(entity));
     cJSON_AddStringToObject(message, "entity_generation", buffer);
 }
 
@@ -113,7 +113,7 @@ static void log_event_id(
     uint64_t event_id
 ) {
     char buffer[sizeof("18,446,744,073,709,551,615")];
-    snprintf(buffer, sizeof(buffer), "%ld", event_id);
+    snprintf(buffer, sizeof(buffer), "%" PRIu64, event_id);
     cJSON_AddStringToObject(message, "event_id", buffer);
 }
 
@@ -162,7 +162,7 @@ static void log_alloc(
         cJSON_AddStringToObject(message, "size_class", "malloc");
     } else {
         char buffer[sizeof("0xFFFF_FFFF")];
-        snprintf(buffer, sizeof(buffer), "0x%x", buffer_sizes[size_class]);
+        snprintf(buffer, sizeof(buffer), "0x%" PRIu32, buffer_sizes[size_class]);
         cJSON_AddStringToObject(message, "size_class", buffer);
     }
 
@@ -450,10 +450,10 @@ void cortecs_gc_init_impl(
     int line
 ) {
     // initialize the various size classes
-    char name[name_max_size];
+    char name[NAME_MAX_SIZE];
     for (int i = 0; i < CORTECS_GC_NUM_SIZES; i++) {
         uint32_t size = buffer_sizes[i];
-        snprintf(name, name_max_size, "gc_buffer_%d", size);
+        snprintf(name, NAME_MAX_SIZE, "gc_buffer_%" PRIu32, size);
         ecs_component_desc_t desc = {
             .entity = ecs_entity_init(world, &(ecs_entity_desc_t){.name = name}),
             .type = {
