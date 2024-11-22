@@ -351,7 +351,7 @@ cortecs_lexer_token_t cortecs_lexer_next(UText *text) {
     if (text == NULL) {
         return (cortecs_lexer_token_t){
             .tag = CORTECS_LEXER_TAG_INVALID,
-            .text = NULL,
+            .text = {.content = NULL},
             .span = {
                 .lines = 0,
                 .columns = 0,
@@ -374,7 +374,7 @@ cortecs_lexer_token_t cortecs_lexer_next(UText *text) {
     if (codepoint == U_SENTINEL) {
         return (cortecs_lexer_token_t){
             .tag = CORTECS_LEXER_TAG_INVALID,
-            .text = NULL,
+            .text = {.content = NULL},
             .span = {
                 .lines = 0,
                 .columns = 0,

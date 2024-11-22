@@ -520,8 +520,8 @@ void cortecs_gc_init_impl(
             file,
             function,
             line,
-            cortecs_finalizer_index_name(CN(Cortecs, String)), false, log_path_string, get_entity(log_path_string), get_size_class(sizeof(struct CN(Cortecs, String))));
-        log_dec(log_path_string, "enqueue_dec", file, function, line, string_event_id);
+            cortecs_finalizer_index_name(CN(Cortecs, Char)), false, log_path_string.content, get_entity(log_path_string.content), get_size_class(sizeof(CN(Cortecs, Char))));
+        log_dec(log_path_string.content, "enqueue_dec", file, function, line, string_event_id);
 
         // spoof log_stream log messages
         log_alloc(

@@ -9,23 +9,27 @@
 cortecs_finalizer_define(CN(Cortecs, String));
 
 bool CN(Cortecs, String, equals)(CN(Cortecs, String) left, CN(Cortecs, String) right) {
-    if (left == right) {
+    if (left.content == right.content) {
         return true;
     }
 
-    if (left == NULL) {
+    if (left.content == NULL) {
         return false;
     }
 
-    if (right == NULL) {
+    if (right.content == NULL) {
         return false;
     }
 
-    if (left->size != right->size) {
+    if (left.content->size != right.content->size) {
         return false;
     }
 
-    return strncmp(left->content, right->content, left->size) == 0;
+    return strncmp(left.content->elements, right.content->elements, left.content->size) == 0;
+}
+
+uint32_t CN(Cortecs, String, capacity)(CN(Cortecs, String) str) {
+    return str.content->size;
 }
 
 CN(Cortecs, String) CN(Cortecs, String, new)(const char *format, ...) {
@@ -33,7 +37,7 @@ CN(Cortecs, String) CN(Cortecs, String, new)(const char *format, ...) {
     va_list args_out;
     va_start(args_size, format);
     va_copy(args_out, args_size);
-    CN(Cortecs, String) ret = NULL;
+    CN(Cortecs, String) ret = {.content = NULL};
 
     // measure the output string
     // there seems to be a bug in clang tidy that's false positive on this line
@@ -48,9 +52,8 @@ CN(Cortecs, String) CN(Cortecs, String, new)(const char *format, ...) {
     // Adding the following option messed up formatting the arguments on separate lines
     // WhitespaceSensitiveMacros:
     //   - CN
-    ret = cortecs_gc_alloc_impl(offsetof(struct CN(Cortecs, String), content) + size + 1, CORTECS_FINALIZER_NONE, __FILE__, __func__, __LINE__);
-    ret->size = size;
-    vsnprintf(ret->content, size + 1, format, args_out);
+    ret.content = cortecs_gc_alloc_array(CN(Cortecs, Char), size + 1);
+    vsnprintf(ret.content->elements, size + 1, format, args_out);
 
 cleanup:
     va_end(args_size);

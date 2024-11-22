@@ -7,10 +7,10 @@
 #include <unity.h>
 
 static void run_test_new_string(const char *target) {
-    uint32_t target_length = strlen(target);
+    uint32_t target_length = strlen(target) + 1;
     CN(Cortecs, String) out = CN(Cortecs, String, new)("%s", target);
-    TEST_ASSERT_EQUAL_UINT32(target_length, out->size);
-    TEST_ASSERT_EQUAL_MEMORY(target, out->content, target_length + 1);  // + 1 for the null terminator
+    TEST_ASSERT_EQUAL_UINT32(target_length, CN(Cortecs, String, capacity)(out));
+    TEST_ASSERT_EQUAL_MEMORY(target, out.content->elements, target_length);
 }
 
 static void test_copy_cstring(void) {

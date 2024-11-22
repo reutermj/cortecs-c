@@ -13,7 +13,7 @@ void CN(Cortecs, Log, init)() {
 
 CN(Cortecs, Ptr, CT(CN(Cortecs, Log))) CN(Cortecs, Log, open)(CN(Cortecs, String) path) {
     CN(Cortecs, Ptr, CT(CN(Cortecs, Log))) log_stream = cortecs_gc_alloc(CN(Cortecs, Log));
-    log_stream->log_file = fopen(path->content, "a+");
+    log_stream->log_file = fopen(path.content->elements, "a+");
     if (log_stream->log_file == NULL) {
         // todo error
         return NULL;
