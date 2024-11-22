@@ -9,7 +9,7 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         "//source/common",
-        "//source/cortecs/array",
         "//source/cortecs/gc",
+        "//source/cortecs/types",
     ],
 )

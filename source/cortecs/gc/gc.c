@@ -1,6 +1,5 @@
 #include <assert.h>
 #include <common.h>
-#include <cortecs/array.h>
 #include <cortecs/finalizer.h>
 #include <cortecs/gc.h>
 #include <cortecs/log.h>
@@ -59,7 +58,7 @@ static void free_gc_buffer_ptr(void *ptr, int32_t count, const ecs_type_info_t *
 // ====================================================================================================================
 // Logging
 // ====================================================================================================================
-static cortecs_log_stream log_stream;
+static CN(Cortecs, Ptr, CT(CN(Cortecs, Log))) log_stream;
 
 static cJSON *create_log_message(const char *method) {
     cJSON *message = cJSON_CreateObject();
@@ -139,7 +138,7 @@ static void log_dec(
         (header->type & ARRAY_BIT_ON) == ARRAY_BIT_ON
     );
     log_allocation_info(message, allocation, header->entity);
-    cortecs_log_write(log_stream, message);
+    CN(Cortecs, Log, write)(log_stream, message);
     cJSON_Delete(message);
 }
 
@@ -167,7 +166,7 @@ static void log_alloc(
         cJSON_AddStringToObject(message, "size_class", buffer);
     }
 
-    cortecs_log_write(log_stream, message);
+    CN(Cortecs, Log, write)(log_stream, message);
     cJSON_Delete(message);
 }
 
@@ -212,7 +211,7 @@ static void perform_dec(
             (header->type & ARRAY_BIT_ON) == ARRAY_BIT_ON
         );
         log_allocation_info(message, allocation, header->entity);
-        cortecs_log_write(log_stream, message);
+        CN(Cortecs, Log, write)(log_stream, message);
         cJSON_Delete(message);
     }
 
@@ -325,7 +324,7 @@ void cortecs_gc_inc_impl(
             (header->type & ARRAY_BIT_ON) == ARRAY_BIT_ON
         );
         log_allocation_info(message, allocation, header->entity);
-        cortecs_log_write(log_stream, message);
+        CN(Cortecs, Log, write)(log_stream, message);
         cJSON_Delete(message);
     }
 
@@ -504,15 +503,15 @@ void cortecs_gc_init_impl(
         // these drop the alloc and dec messages created during memory allocation.
         // we spoof these messages after the init message for log completeness
         uint64_t string_event_id = dec_event_id;
-        cortecs_string log_path_string = cortecs_string_new("%s", log_path);
+        CN(Cortecs, String) log_path_string = CN(Cortecs, String, new)("%s", log_path);
         uint64_t log_stream_event_id = dec_event_id;
-        log_stream = cortecs_log_open(log_path_string);
+        log_stream = CN(Cortecs, Log, open)(log_path_string);
 
         // log init message
         cJSON *message = create_log_message("cortecs_gc_init");
         log_source_location(message, file, function, line);
         cJSON_AddStringToObject(message, "log_path", log_path);
-        cortecs_log_write(log_stream, message);
+        CN(Cortecs, Log, write)(log_stream, message);
         cJSON_Delete(message);
 
         // spoof log_path_string log messages
@@ -521,12 +520,7 @@ void cortecs_gc_init_impl(
             file,
             function,
             line,
-            cortecs_finalizer_index_name(cortecs_string),
-            false,
-            log_path_string,
-            get_entity(log_path_string),
-            get_size_class(sizeof(cortecs_string_impl))
-        );
+            cortecs_finalizer_index_name(CN(Cortecs, String)), false, log_path_string, get_entity(log_path_string), get_size_class(sizeof(struct CN(Cortecs, String))));
         log_dec(log_path_string, "enqueue_dec", file, function, line, string_event_id);
 
         // spoof log_stream log messages
@@ -535,12 +529,7 @@ void cortecs_gc_init_impl(
             file,
             function,
             line,
-            cortecs_finalizer_index_name(cortecs_log_stream),
-            false,
-            log_stream,
-            get_entity(log_stream),
-            get_size_class(sizeof(struct cortecs_log_stream))
-        );
+            cortecs_finalizer_index_name(CN(Cortecs, Log)), false, log_stream, get_entity(log_stream), get_size_class(sizeof(struct CN(Cortecs, Log))));
         log_dec(log_stream, "enqueue_dec", file, function, line, log_stream_event_id);
 
         // keep the log stream but not the string
@@ -567,12 +556,12 @@ void cortecs_gc_cleanup_impl(
 
         cJSON *message = create_log_message("cortecs_gc_cleanup");
         log_source_location(message, file, function, line);
-        cortecs_log_write(log_stream, message);
+        CN(Cortecs, Log, write)(log_stream, message);
         cJSON_Delete(message);
 
         // null out the global log_stream so that the dec api
         // call doesnt log a message
-        cortecs_log_stream log_stream_local = log_stream;
+        CN(Cortecs, Ptr, CT(CN(Cortecs, Log))) log_stream_local = log_stream;
         log_stream = NULL;
 
         // make sure this comes last too avoid use-after-free

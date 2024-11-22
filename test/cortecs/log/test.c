@@ -10,12 +10,12 @@ void test_open_log() {
     cortecs_world_init();
     cortecs_finalizer_init();
     cortecs_gc_init(NULL);
-    cortecs_log_init();
+    CN(Cortecs, Log, init)();
 
     ecs_defer_begin(world);
 
-    cortecs_string path = cortecs_string_new("./test_open_log.log");
-    cortecs_log_open(path);
+    CN(Cortecs, String) path = CN(Cortecs, String, new)("./test_open_log.log");
+    CN(Cortecs, Log, open)(path);
 
     ecs_defer_end(world);
 
@@ -26,23 +26,23 @@ void test_write_one_message() {
     cortecs_world_init();
     cortecs_finalizer_init();
     cortecs_gc_init(NULL);
-    cortecs_log_init();
+    CN(Cortecs, Log, init)();
 
     ecs_defer_begin(world);
 
-    cortecs_string path = cortecs_string_new("./test_write_one_message.log");
-    cortecs_log_stream log_stream = cortecs_log_open(path);
+    CN(Cortecs, String) path = CN(Cortecs, String, new)("./test_write_one_message.log");
+    CN(Cortecs, Ptr, CT(CN(Cortecs, Log))) log_stream = CN(Cortecs, Log, open)(path);
 
     cJSON *hello_world = cJSON_CreateObject();
     cJSON_AddStringToObject(hello_world, "message", "hello world");
-    cortecs_log_write(log_stream, hello_world);
+    CN(Cortecs, Log, write)(log_stream, hello_world);
     cJSON_Delete(hello_world);
 
     ecs_defer_end(world);
 
     // cJSON *hi_there = cJSON_CreateObject();
     // cJSON_AddStringToObject(hi_there, "message", "hi there");
-    // cortecs_log_write(log_stream, hi_there);
+    // CN(Cortecs, Log, write)(log_stream, hi_there);
     // cJSON_Delete(hi_there);
 
     FILE *file = fopen("./test_write_one_message.log", "r");
@@ -59,21 +59,21 @@ void test_write_two_messages() {
     cortecs_world_init();
     cortecs_finalizer_init();
     cortecs_gc_init(NULL);
-    cortecs_log_init();
+    CN(Cortecs, Log, init)();
 
     ecs_defer_begin(world);
 
-    cortecs_string path = cortecs_string_new("./test_write_two_messages.log");
-    cortecs_log_stream log_stream = cortecs_log_open(path);
+    CN(Cortecs, String) path = CN(Cortecs, String, new)("./test_write_two_messages.log");
+    CN(Cortecs, Ptr, CT(CN(Cortecs, Log))) log_stream = CN(Cortecs, Log, open)(path);
 
     cJSON *hello_world = cJSON_CreateObject();
     cJSON_AddStringToObject(hello_world, "message", "hello world");
-    cortecs_log_write(log_stream, hello_world);
+    CN(Cortecs, Log, write)(log_stream, hello_world);
     cJSON_Delete(hello_world);
 
     cJSON *hi_there = cJSON_CreateObject();
     cJSON_AddStringToObject(hi_there, "message", "hi there");
-    cortecs_log_write(log_stream, hi_there);
+    CN(Cortecs, Log, write)(log_stream, hi_there);
     cJSON_Delete(hi_there);
 
     ecs_defer_end(world);

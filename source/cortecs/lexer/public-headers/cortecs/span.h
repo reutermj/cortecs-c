@@ -12,7 +12,7 @@ typedef struct {
 extern ECS_COMPONENT_DECLARE(cortecs_span_t);
 
 int cortecs_span_compare(cortecs_span_t left, cortecs_span_t right);
-cortecs_span_t cortecs_span_of(cortecs_string text);
+cortecs_span_t cortecs_span_of(CN(Cortecs, String) text);
 cortecs_span_t cortecs_span_add(cortecs_span_t left, cortecs_span_t right);
 
 #endif

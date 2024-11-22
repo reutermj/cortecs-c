@@ -11,8 +11,9 @@ cc_library(
         "//source/cortecs/log:__subpackages__",
     ],
     deps = [
-        "//source/cortecs/array",
         "//source/cortecs/finalizer",
+        "//source/cortecs/mangle",
+        "//source/cortecs/types",
     ],
 )
 

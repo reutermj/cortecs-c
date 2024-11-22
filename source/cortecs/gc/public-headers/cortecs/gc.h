@@ -56,16 +56,16 @@ void *cortecs_gc_alloc_array_impl(
     const char *function,
     int line
 );
-#define cortecs_gc_alloc_array(TYPE, SIZE)            \
-    cortecs_gc_alloc_array_impl(                      \
-        sizeof(TYPE),                                 \
-        SIZE,                                         \
-        offsetof(cortecs_array_name(TYPE), elements), \
-        cortecs_finalizer_index_name(TYPE),           \
-        __FILE__,                                     \
-        __func__,                                     \
-        __LINE__                                      \
-    )
+#define cortecs_gc_alloc_array(TYPE, SIZE)                       \
+    cortecs_gc_alloc_array_impl(                                 \
+        sizeof(TYPE),                                            \
+        SIZE,                                                    \
+        offsetof(struct CN(Cortecs, Array, CT(TYPE)), elements), \
+                 cortecs_finalizer_index_name(TYPE),             \
+                 __FILE__,                                       \
+                 __func__,                                       \
+                 __LINE__                                        \
+        )
 
 void cortecs_gc_inc_impl(
     void *allocation,

@@ -57,7 +57,7 @@ static cortecs_lexer_token_t construct_result(cortecs_lexer_tag_t tag, lexer_sta
     }
     content[state->u8_length] = 0;
 
-    cortecs_string out = cortecs_string_new("%s", content);
+    CN(Cortecs, String) out = CN(Cortecs, String, new)("%s", content);
 
     free(content);
 

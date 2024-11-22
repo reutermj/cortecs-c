@@ -3,7 +3,8 @@
 
 #include <common.h>
 
-// I have no idea why I need CONCAT_3 here but it doesn't work if using overloaded CONCAT.
+// I have no idea why I need CONCAT_3 here but it doesn't work if using
+// overloaded CONCAT.
 #define CMP_1(arg0) arg0
 #define CMP_2(arg0, arg1) CONCAT_3(arg0, _0, arg1)
 #define CMP_3(arg0, arg1, ...) CMP_2(CONCAT_3(arg0, _0, arg1), __VA_ARGS__)
@@ -133,8 +134,9 @@
 #define CN_63(arg0, arg1, ...) CN_62(CONCAT_3(arg0, _, arg1), __VA_ARGS__)
 #define CN(...) OVERLOADED_MACRO_0(CN_, __VA_ARGS__)
 
-// I also have no idea why it all works here. the C macro system is quite lovely...
-#define CTP(...) CONCAT(1, CMP(__VA_ARGS__), _2)
+// I also have no idea why it all works here. the C macro system is quite
+// lovely...
+#define CT(...) CONCAT(1, CMP(__VA_ARGS__), _2)
 
 #define FOOBAR_PREFIX(name) CONCAT(FOOBAR_, name)
 

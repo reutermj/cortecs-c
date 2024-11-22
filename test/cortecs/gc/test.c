@@ -1,5 +1,4 @@
 #include <common.h>
-#include <cortecs/array.h>
 #include <cortecs/finalizer.h>
 #include <cortecs/gc.h>
 #include <cortecs/log.h>
@@ -17,7 +16,9 @@ typedef struct {
     uint32_t the_data[5];
 } some_data;
 cortecs_finalizer_declare(some_data);
-cortecs_array_declare(some_data);
+#define TYPE_PARAM_T some_data
+#include <cortecs/array.template.h>
+#undef TYPE_PARAM_T
 
 static void test_collect_unused_allocation() {
     cortecs_world_init();
@@ -41,10 +42,10 @@ static void test_collect_unused_allocation_array() {
 
     ecs_defer_begin(world);
     const int size_of_array = 4;
-    cortecs_array(void) allocation = cortecs_gc_alloc_array(some_data, size_of_array);
+    uint32_t *allocation = cortecs_gc_alloc_array(some_data, size_of_array);
     TEST_ASSERT_NOT_NULL(allocation);
 
-    TEST_ASSERT_EQUAL_UINT32(size_of_array, allocation->size);
+    TEST_ASSERT_EQUAL_UINT32(size_of_array, *allocation);
     ecs_defer_end(world);
 
     TEST_ASSERT_FALSE(cortecs_gc_is_alive(allocation));
@@ -73,7 +74,7 @@ static void test_keep_used_allocation_array() {
     cortecs_gc_init(NULL);
 
     ecs_defer_begin(world);
-    cortecs_array(void) allocation = cortecs_gc_alloc_array(some_data, 4);
+    void *allocation = cortecs_gc_alloc_array(some_data, 4);
     cortecs_gc_inc(allocation);
     ecs_defer_end(world);
 
@@ -109,7 +110,7 @@ static void test_keep_then_collect_array() {
     cortecs_gc_init(NULL);
 
     ecs_defer_begin(world);
-    cortecs_array(void) allocation = cortecs_gc_alloc_array(some_data, 4);
+    void *allocation = cortecs_gc_alloc_array(some_data, 4);
     cortecs_gc_inc(allocation);
     ecs_defer_end(world);
 
@@ -149,7 +150,7 @@ static void test_allocate_sizes_array() {
     for (uint32_t size_of_elements = 32; size_of_elements < 512; size_of_elements += 32) {
         for (uint32_t size_of_array = 1; size_of_array < 128; size_of_array++) {
             ecs_defer_begin(world);
-            cortecs_array(void) array = cortecs_gc_alloc_array_impl(
+            uint32_t *array = cortecs_gc_alloc_array_impl(
                 size_of_elements,
                 size_of_array,
                 8,
@@ -158,7 +159,7 @@ static void test_allocate_sizes_array() {
                 __func__,
                 __LINE__
             );
-            TEST_ASSERT_EQUAL_UINT32(size_of_array, array->size);
+            TEST_ASSERT_EQUAL_UINT32(size_of_array, *array);
             ecs_defer_end(world);
         }
     }
@@ -169,7 +170,9 @@ typedef struct {
     uint32_t some_data[5];
 } noop_data;
 cortecs_finalizer_declare(noop_data);
-cortecs_array_declare(noop_data);
+#define TYPE_PARAM_T noop_data
+#include <cortecs/array.template.h>
+#undef TYPE_PARAM_T
 
 static uint32_t noop_finalizer_called = 0;
 void cortecs_finalizer(noop_data)(void *allocation) {
@@ -216,8 +219,11 @@ static void test_noop_finalizer_array() {
 typedef struct {
     void *target;
 } single_target;
-cortecs_array_declare(single_target);
 cortecs_finalizer_define(single_target);
+
+#define TYPE_PARAM_T single_target
+#include <cortecs/array.template.h>
+#undef TYPE_PARAM_T
 
 void cortecs_finalizer(single_target)(void *allocation) {
     single_target *data = allocation;
@@ -259,7 +265,7 @@ static void test_1_recursive_collect_array() {
 
     ecs_defer_begin(world);
 
-    cortecs_array(single_target) data = cortecs_gc_alloc_array(single_target, 512);
+    CN(Cortecs, Array, CT(single_target)) data = cortecs_gc_alloc_array(single_target, 512);
     for (int i = 0; i < 512; i++) {
         targets[i] = cortecs_gc_alloc(some_data);
         cortecs_gc_inc(targets[i]);
@@ -310,7 +316,7 @@ static void test_gc_log_open_close() {
     const char *log_path = "./test_gc_log_open_close.log";
     cortecs_world_init();
     cortecs_finalizer_init();
-    cortecs_log_init();
+    CN(Cortecs, Log, init)();
     cortecs_gc_init(log_path);
     cortecs_gc_cleanup();
     cortecs_world_cleanup();
@@ -339,7 +345,6 @@ static void test_inc_dec_null() {
 int main() {
     UNITY_BEGIN();
 
-    RUN_TEST(test_gc_log_open_close);
     RUN_TEST(test_inc_dec_null);
     RUN_TEST(test_collect_unused_allocation);
     RUN_TEST(test_collect_unused_allocation_array);
@@ -354,6 +359,7 @@ int main() {
     RUN_TEST(test_1_recursive_collect);
     RUN_TEST(test_1_recursive_collect_array);
     RUN_TEST(test_n_recursive_collect);
+    RUN_TEST(test_gc_log_open_close);
 
     return UNITY_END();
 }
