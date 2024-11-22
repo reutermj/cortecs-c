@@ -86,6 +86,8 @@ cortecs_hashmap(TYPE_PARAM_KEY, TYPE_PARAM_VALUE) cortecs_hashmap_set(TYPE_PARAM
             assert(0);  // TODO
             return NULL;
     }
+    assert(0);  // TODO
+    return NULL;
 }
 
 TYPE_PARAM_VALUE cortecs_hashmap_get(TYPE_PARAM_KEY, TYPE_PARAM_VALUE)(
@@ -109,4 +111,6 @@ TYPE_PARAM_VALUE cortecs_hashmap_get(TYPE_PARAM_KEY, TYPE_PARAM_VALUE)(
             assert(0);
             return 0;
     }
+    assert(0);
+    return 0;
 }

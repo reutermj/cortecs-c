@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <unity.h>
 
-void test_open_log() {
+void test_open_log(void) {
     cortecs_world_init();
     cortecs_finalizer_init();
     cortecs_gc_init(NULL);
@@ -22,7 +22,7 @@ void test_open_log() {
     cortecs_world_cleanup();
 }
 
-void test_write_one_message() {
+void test_write_one_message(void) {
     cortecs_world_init();
     cortecs_finalizer_init();
     cortecs_gc_init(NULL);
@@ -55,7 +55,7 @@ void test_write_one_message() {
     cortecs_world_cleanup();
 }
 
-void test_write_two_messages() {
+void test_write_two_messages(void) {
     cortecs_world_init();
     cortecs_finalizer_init();
     cortecs_gc_init(NULL);
