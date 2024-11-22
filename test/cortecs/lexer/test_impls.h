@@ -33,7 +33,7 @@ typedef struct {
     uint32_t num_configs;
 } cortecs_lexer_test_multi_config_t;
 
-void cortecs_lexer_test(UText *text, cortecs_string gold, cortecs_lexer_tag_t tag);
+void cortecs_lexer_test(UText *text, CN(Cortecs, String) gold, cortecs_lexer_tag_t tag);
 void cortecs_lexer_test_fuzz(cortecs_lexer_test_config_t config);
 void cortecs_lexer_test_fuzz_multi(cortecs_lexer_test_multi_config_t config);
 void cortecs_lexer_test_exhaustive(cortecs_lexer_test_config_t config);

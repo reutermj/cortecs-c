@@ -3,3 +3,5 @@ AlignAfterOpenBracket: BlockIndent
 TabWidth: 4
 IndentWidth: 4
 ColumnLimit: 0
+WhitespaceSensitiveMacros:
+  - CN

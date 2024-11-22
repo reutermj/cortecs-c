@@ -46,7 +46,7 @@ typedef enum {
 typedef struct {
     cortecs_lexer_tag_t tag;
     cortecs_span_t span;
-    cortecs_string text;
+    CN(Cortecs, String) text;
 } cortecs_lexer_token_t;
 
 const char *cortecs_lexer_tag_to_string(cortecs_lexer_tag_t tag);

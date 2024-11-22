@@ -34,7 +34,7 @@ cortecs_span_t cortecs_span_add(cortecs_span_t left, cortecs_span_t right) {
     };
 }
 
-cortecs_span_t cortecs_span_of(cortecs_string text) {
+cortecs_span_t cortecs_span_of(CN(Cortecs, String) text) {
     if (text == NULL) {
         return (cortecs_span_t){
             .lines = 0,

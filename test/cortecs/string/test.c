@@ -8,7 +8,7 @@
 
 static void run_test_new_string(const char *target) {
     uint32_t target_length = strlen(target);
-    cortecs_string out = cortecs_string_new("%s", target);
+    CN(Cortecs, String) out = CN(Cortecs, String, new)("%s", target);
     TEST_ASSERT_EQUAL_UINT32(target_length, out->size);
     TEST_ASSERT_EQUAL_MEMORY(target, out->content, target_length + 1);  // + 1 for the null terminator
 }
@@ -19,10 +19,10 @@ static void test_copy_cstring(void) {
 }
 
 static void test_equality(const char *left, const char *right, bool areEqual) {
-    cortecs_string left_str = cortecs_string_new("%s", left);
-    cortecs_string right_str = cortecs_string_new("%s", right);
+    CN(Cortecs, String) left_str = CN(Cortecs, String, new)("%s", left);
+    CN(Cortecs, String) right_str = CN(Cortecs, String, new)("%s", right);
 
-    TEST_ASSERT_TRUE(cortecs_string_equals(left_str, right_str) == areEqual);
+    TEST_ASSERT_TRUE(CN(Cortecs, String, equals)(left_str, right_str) == areEqual);
 }
 
 static void test_string_equals(void) {

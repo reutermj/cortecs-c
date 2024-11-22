@@ -10,7 +10,7 @@
 #include <unicode/utypes.h>
 #include <unity.h>
 
-void cortecs_lexer_test(UText *text, cortecs_string gold_text, cortecs_lexer_tag_t tag) {
+void cortecs_lexer_test(UText *text, CN(Cortecs, String) gold_text, cortecs_lexer_tag_t tag) {
     cortecs_lexer_token_t out = cortecs_lexer_next(text);
     cortecs_span_t gold_span = cortecs_span_of(gold_text);
 
@@ -29,7 +29,7 @@ void cortecs_lexer_test(UText *text, cortecs_string gold_text, cortecs_lexer_tag
     }
     TEST_ASSERT_TRUE(out.tag == tag);
 
-    int areEqual = cortecs_string_equals(gold_text, out.text);
+    int areEqual = CN(Cortecs, String, equals)(gold_text, out.text);
     if (!areEqual) {
         NOOP;
     }
@@ -82,7 +82,7 @@ void cortecs_lexer_test_fuzz(cortecs_lexer_test_config_t config) {
                 UErrorCode status = U_ZERO_ERROR;
                 UText *text = utext_openUTF8(NULL, input, input_length, &status);
                 utext_setNativeIndex(text, offset);
-                cortecs_lexer_test(text, cortecs_string_new("%s", gold), config.tag);
+                cortecs_lexer_test(text, CN(Cortecs, String, new)("%s", gold), config.tag);
                 utext_close(text);
                 free(input);
                 free(gold);
@@ -165,7 +165,7 @@ void cortecs_lexer_test_fuzz_multi(cortecs_lexer_test_multi_config_t config) {
     UText *text = utext_openUTF8(NULL, input, offset + 1, &status);
     for (int i = 0; i < num_cases; i++) {
         lexer_fuzz_case_t gold = cases[i];
-        cortecs_lexer_test(text, cortecs_string_new("%s", gold.gold), gold.tag);
+        cortecs_lexer_test(text, CN(Cortecs, String, new)("%s", gold.gold), gold.tag);
         free(gold.gold);
     }
     utext_close(text);
@@ -194,7 +194,7 @@ void cortecs_lexer_test_exhaustive_two_token(cortecs_lexer_test_multi_config_t c
                 UText *text = utext_openUTF8(NULL, input, first_length + second_length + 1, &status);
                 for (int i = 0; i < 2; i++) {
                     lexer_fuzz_case_t gold = cases[i];
-                    cortecs_lexer_test(text, cortecs_string_new("%s", gold.gold), gold.tag);
+                    cortecs_lexer_test(text, CN(Cortecs, String, new)("%s", gold.gold), gold.tag);
                 }
                 utext_close(text);
                 free(cases[1].gold);
@@ -223,7 +223,7 @@ static void lexer_test_exhaustive_run(cortecs_lexer_test_config_t config, cortec
         UErrorCode status = U_ZERO_ERROR;
         UText *text = utext_openUTF8(NULL, state.in, state.offset + state.length + 1, &status);
         utext_setNativeIndex(text, state.offset);
-        cortecs_lexer_test(text, cortecs_string_new("%s", state.gold), config.tag);
+        cortecs_lexer_test(text, CN(Cortecs, String, new)("%s", state.gold), config.tag);
         utext_close(text);
 
         return;
