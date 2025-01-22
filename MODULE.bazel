@@ -38,7 +38,7 @@ git_repository(
     name = "unity",
     remote = "https://github.com/ThrowTheSwitch/Unity.git",
     # branch = "master",
-    commit = "cbcd08fa7de711053a3deec6339ee89cad5d2697",
+    commit = "ce122c4d8a850c538706e4a3c32dfb0231855eee",
     build_file_content = """
 cc_library(
     name = "unity",
